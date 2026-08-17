@@ -131,7 +131,7 @@ tags: [<string>]          # optional
 
 ### 4.3 Links
 
-Links are written in the file, in one of two forms: `[[wikilink]]` (Obsidian-compatible, resolved by title/path) or `[text](fehrest://object/<uuid>)` (identity-stable).
+Links are written in the file, in one of two forms: `[[wikilink]]` (Obsidian-compatible, resolved by title/path) or a standard Markdown link whose target is `fehrest://object/<uuid>` (identity-stable).
 
 The tension is real and worth naming: wikilinks are human-writable and portable to other tools but break on rename; ID links are rename-stable but unreadable and Fehrest-specific.
 
