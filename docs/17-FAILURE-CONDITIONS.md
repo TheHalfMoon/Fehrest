@@ -28,34 +28,43 @@ Each condition names the trigger, the detecting benchmark, the consequence, and 
 
 ## 2. Donor replacement
 
-### F-3 — The Graph Intelligence *capability* does not earn its cost
+### F-3 — Graph Intelligence does not deliver material benefit at acceptable cost
 
-> **REWRITTEN IN F1-R1 ([R1-06](reviews/F1-R1-RECONCILIATION.md)).** F1 permitted "drop the graph entirely." That conflated **implementation cost** with **capability importance**, and would have let an implementation problem delete a thesis-critical capability.
+> **AMENDED PRE-G2 (governance correction 2).** The F1-R1 revision of this condition stated that the capability "may be REPLACED, never DROPPED." That made a core product claim **unfalsifiable**, which is exactly what this document exists to prevent. Removal is now explicitly permitted on evidence.
 
-**The split that governs this condition:**
+**Status of the claim under test:**
 
 ```
-GRAPH_INTELLIGENCE_CAPABILITY  = CORE          -> may be REPLACED, never DROPPED
-GRAPHIFY_PYTHON_RUNTIME        = REPLACEABLE   -> may be replaced freely
+GRAPH INTELLIGENCE:
+CORE CURRENT PRODUCT HYPOTHESIS
+EXPLICITLY FALSIFIABLE
 ```
 
-**Trigger.** [B-3](10-BENCHMARK-PLAN.md) ablation shows graph expansion adds no measurable recall over FTS + memory; **or** [GI-BENCH](10-BENCHMARK-PLAN.md#b-11--gi-bench--graph-intelligence-benchmark-matrix) shows the runtime is untenable in a target corpus type; **or** [H-5](research/EVIDENCE_LOG.md#h-5--a-single-sidecar-process-is-sufficient-isolation-for-the-extraction-path) is falsified and parser fuzzing yields escapes.
+Graph Intelligence is a **current product hypothesis**, not an axiom. The hypothesis: answering *"what is connected?"* materially improves agent continuation over simpler local retrieval, at acceptable cost.
 
-**Consequence, graduated by trigger:**
+**The governing failure condition:**
 
-| Trigger | Permitted response | **Forbidden** |
-|---|---|---|
-| No recall gain in the tested retrieval configuration | Re-examine how the graph is *used* (expansion depth, seeding, ranking); evaluate an alternative extractor; scope to corpus types where it helps | Concluding "connections do not matter" from one retrieval design |
-| Superlinear scaling | Partition or scope the graph; evaluate an alternative extractor; reconsider runtime shape | Dropping the capability |
-| Sandbox escape | **Halt graph work**; require per-parser WASM isolation ([SRC-043](research/FEHREST_SOURCE_REGISTRY.md#7-agent-protocol-authorization-isolation)) before resuming | Shipping anyway |
+> **If controlled continuation/retrieval benchmarks show that graph-assisted understanding does not provide a material benefit over simpler local retrieval approaches at acceptable cost, Fehrest MUST permit redesign or removal of Graph Intelligence from the core product hypothesis.**
 
-**Why dropping is forbidden.** Graph Intelligence answers *"what is connected?"* — one of the four questions in the [four-layer architecture](00-PRODUCT-THESIS.md#5-the-four-layer-architecture). Lexical search cannot answer it. Without it the product reduces toward a local RAG app with a temporal layer, which is not the thesis. A benchmark showing *one implementation* underperforms *one retrieval configuration* is evidence about that pairing, not about whether relationships matter.
+**Trigger.** [B-3](10-BENCHMARK-PLAN.md) ablation shows graph expansion adds no material recall or answer-quality gain over FTS + memory; **or** [B-7](10-BENCHMARK-PLAN.md#b-7--agent-continuation-the-defining-experiment) shows no material continuation gain attributable to graph-assisted understanding; **or** [GI-BENCH](10-BENCHMARK-PLAN.md#b-11--gi-bench--graph-intelligence-benchmark-matrix) shows the cost (latency, memory, packaging, rebuild time) is unacceptable for the benefit measured; **or** [H-5](research/EVIDENCE_LOG.md#h-5--a-single-sidecar-process-is-sufficient-isolation-for-the-extraction-path) is falsified and parser fuzzing yields escapes.
 
-**Invalidates.** [ADR-0003](09-TECHNOLOGY-DECISIONS.md#adr-0003--graph-intelligence-runtime-integration-shape), [SRC-001](research/FEHREST_SOURCE_REGISTRY.md#21-graphify), graph rows in [O](14-PERFORMANCE-BUDGETS.md). **Does not invalidate** [E §5](04-DERIVED-DATA-MODEL.md#5-graph-intelligence-capability-vs-implementation) or the four-layer architecture.
+**Consequence, graduated by what the evidence actually shows:**
 
-**Detected at.** Phase 3 (recall, GI-BENCH), continuous (fuzzing).
+| Finding | Permitted response |
+|---|---|
+| A specific **implementation** underperforms | Replace the extractor; reconsider runtime shape ([ADR-0003](09-TECHNOLOGY-DECISIONS.md#adr-0003--graph-intelligence-runtime-integration-shape)) |
+| A specific **retrieval configuration** underperforms | Re-examine expansion depth, seeding and ranking; retest |
+| The **capability** shows no material benefit at acceptable cost across configurations and corpus types | **REDESIGN or REMOVE Graph Intelligence from the core product hypothesis.** Revise [A §5](00-PRODUCT-THESIS.md#5-the-four-layer-architecture), this condition, and the affected ADRs |
+| Cost is unacceptable but benefit is real | Redesign for cost: scope, partition, or restrict to corpus types where it pays |
+| Sandbox escape | **Halt graph work**; require per-parser WASM isolation ([SRC-043](research/FEHREST_SOURCE_REGISTRY.md#7-agent-protocol-authorization-isolation)) before resuming |
 
-**Structural protection.** The capability sits behind a wire contract and a rebuildable ID mapping ([E §5.3](04-DERIVED-DATA-MODEL.md#53-id-mapping-is-the-critical-seam)), so replacing the implementation touches no canonical record — which is what makes "replaceable" true in practice rather than in principle.
+**Evidential discipline — what still may not be concluded carelessly.** Removal must follow from evidence about the *capability*, not from a single pairing. One implementation underperforming one retrieval configuration on one corpus type is evidence about that pairing. The row above requires "across configurations and corpus types" precisely so that a weak result cannot be used to delete a capability prematurely — and equally, so that a genuinely negative result cannot be deflected indefinitely as "we configured it wrong."
+
+**If removal is chosen**, the following must be revised together, and the product thesis restated honestly: [A §5](00-PRODUCT-THESIS.md#5-the-four-layer-architecture) (four-layer architecture), [E §5](04-DERIVED-DATA-MODEL.md#5-graph-intelligence-capability-vs-implementation), [ADR-0003](09-TECHNOLOGY-DECISIONS.md#adr-0003--graph-intelligence-runtime-integration-shape), [SRC-001](research/FEHREST_SOURCE_REGISTRY.md#21-graphify), graph rows in [O](14-PERFORMANCE-BUDGETS.md), and the [v1 wedge](00-PRODUCT-THESIS.md#4-the-v1-user-wedge) consequence that keeps the graph in v1.
+
+**Detected at.** Phase 3 (B-3 ablation, GI-BENCH), Phase 6 (B-7 continuation), continuous (fuzzing).
+
+**Structural protection.** The capability sits behind a wire contract and a rebuildable ID mapping ([E §5.3](04-DERIVED-DATA-MODEL.md#53-id-mapping-is-the-critical-seam)), so both replacement *and removal* touch no canonical record. Nothing in the canonical data model depends on the graph existing.
 
 ### F-4 — No editor candidate clears the fidelity floor
 
@@ -120,7 +129,7 @@ GRAPHIFY_PYTHON_RUNTIME        = REPLACEABLE   -> may be replaced freely
 
 ### F-11 — Sidecar confinement is insufficient
 **Trigger.** [H-5](research/EVIDENCE_LOG.md#h-5--a-single-sidecar-process-is-sufficient-isolation-for-the-extraction-path) falsified — fuzzing yields host code execution or egress from vault content.
-**Consequence.** Per-parser WASM isolation becomes mandatory before shipping the graph, **or** the graph is dropped ([F-3](#f-3--the-graph-intelligence-capability-does-not-earn-its-cost)).
+**Consequence.** Per-parser WASM isolation becomes mandatory before shipping the graph, **or** the graph is dropped ([F-3](#f-3--graph-intelligence-does-not-deliver-material-benefit-at-acceptable-cost)).
 **Detected at.** Phase 3 onward, continuously.
 
 ### F-12 — Event-log tamper-evidence is defeatable
@@ -168,7 +177,7 @@ If several fire at once:
 | 3 | [F-1](#f-1--compiled-context-does-not-beat-a-competent-agent-with-plain-file-tools) thesis | Determines whether to continue |
 | 4 | [F-2](#f-2--deterministic-current-state-resolution-is-unachievable) determinism | Core differentiator |
 | 5 | [F-11](#f-11--sidecar-confinement-is-insufficient) sidecar escape | Blocks a subsystem |
-| 6 | [F-3](#f-3--the-graph-intelligence-capability-does-not-earn-its-cost) Graphify | Removal, not rewrite |
+| 6 | [F-3](#f-3--graph-intelligence-does-not-deliver-material-benefit-at-acceptable-cost) Graphify | Removal, not rewrite |
 | 7 | Everything else | Localised |
 
 ---

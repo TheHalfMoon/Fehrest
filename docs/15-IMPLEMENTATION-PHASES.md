@@ -153,7 +153,7 @@ Rule 2 is what prevents the failure the brief names: downstream work starting wh
 
 **Benchmarks (added in R1).** [GI-BENCH](10-BENCHMARK-PLAN.md#b-11--gi-bench--graph-intelligence-benchmark-matrix) runs here. **No packaging or runtime decision may be finalised before it reports** ([ADR-0003](09-TECHNOLOGY-DECISIONS.md#adr-0003--graph-intelligence-runtime-integration-shape) is PROVISIONAL until then).
 
-**Decision point.** If B-3 shows graph expansion adds no measurable recall over FTS + memory, or GI-BENCH shows the runtime is untenable, invoke [failure condition F-3](17-FAILURE-CONDITIONS.md#f-3--the-graph-intelligence-capability-does-not-earn-its-cost). Note what that permits and forbids: **the implementation may be replaced; the capability may not be dropped** ([R1-06](reviews/F1-R1-RECONCILIATION.md)). Graph Intelligence answers "what is connected?", one of the four questions Fehrest exists to answer.
+**Decision point.** If B-3 shows graph expansion adds no material recall gain over FTS + memory, or GI-BENCH shows cost is unacceptable for the benefit measured, invoke [failure condition F-3](17-FAILURE-CONDITIONS.md#f-3--graph-intelligence-does-not-deliver-material-benefit-at-acceptable-cost). It is graduated: a weak result from *one implementation* or *one retrieval configuration* means replace or retune that; a capability showing no material benefit at acceptable cost **across configurations and corpus types** permits **redesign or removal of Graph Intelligence from the core product hypothesis**. Removal touches no canonical record.
 
 **Rollback.** Disable the sidecar; the system reverts to Phase 2 behaviour with no data loss.
 

@@ -17,17 +17,17 @@ Read this section first. **Four dispositions changed in F1-R1 itself**, correcti
 | ⚠️ **CodeMirror 6** | *absent* | ❌ USE (decided) | **CANDIDATE A in the Editor Gate** | Strong candidate, but must win on measurement, not argument ([R1-03](reviews/F1-R1-RECONCILIATION.md)) |
 | ⚠️ **Yjs** | `USE / PROTOTYPE` | DEFER (flat) | **CONDITIONAL / EDITOR-DEPENDENT** | Healthy (MIT, 13.6.32). If Candidate B wins, Yjs arrives with the substrate ([R1-09](reviews/F1-R1-RECONCILIATION.md)) |
 | ⚠️ **AFFiNE** | `ADAPT` | STUDY | **STUDY + SOURCE OF CANDIDATE B** | Split license and 446 MB monorepo are real costs — but it is where the maintained editor lives |
-| **Graphify** | `USE + ADAPT` | ADAPT | **ADAPT — one implementation of a CORE capability** | Extractor IDs are path-derived and scheme-versioned *by design* ([E-4](research/EVIDENCE_LOG.md#e-4--extractor-ids-are-name-derived-by-design-not-by-defect)); runtime shape pending GI-BENCH |
+| **Graphify** | `USE + ADAPT` | ADAPT | **ADAPT — one implementation of a core, falsifiable product hypothesis** | Extractor IDs are path-derived and scheme-versioned *by design* ([E-4](research/EVIDENCE_LOG.md#e-4--extractor-ids-are-name-derived-by-design-not-by-defect)); runtime shape pending GI-BENCH |
 | **DuckDB** | `USE`, Priority **S** | DEFER | **DEFER** (confirmed) | Data Intelligence is outside MVP by the brief's own scope |
 
 **The capability/implementation distinction that governs this whole matrix ([R1-06](reviews/F1-R1-RECONCILIATION.md)):**
 
 ```
-GRAPH_INTELLIGENCE_CAPABILITY  = CORE          (never dropped)
-GRAPHIFY_PYTHON_RUNTIME        = REPLACEABLE   (one candidate)
+GRAPH INTELLIGENCE:       CORE CURRENT PRODUCT HYPOTHESIS — EXPLICITLY FALSIFIABLE
+GRAPHIFY_PYTHON_RUNTIME:  REPLACEABLE IMPLEMENTATION CANDIDATE
 ```
 
-No donor's implementation cost may delete a core capability. Donors are replaceable; capabilities are not.
+No donor's implementation cost may by itself delete a core capability — a weak result from one donor is evidence about that donor. But the capability is a **hypothesis, not an axiom**: if benchmarks show graph-assisted understanding gives no material benefit over simpler local retrieval at acceptable cost, Fehrest must permit redesign or removal ([F-3](17-FAILURE-CONDITIONS.md#f-3--graph-intelligence-does-not-deliver-material-benefit-at-acceptable-cost)).
 
 Everything else in the brief's registry is confirmed, with reasoning tightened.
 

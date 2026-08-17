@@ -87,21 +87,29 @@ Each question records: what is unresolved, why I did not decide it, what depends
 
 **Founder decision if the gain is small.** Drop it entirely (simpler, smaller, safer), restrict it to code-only vaults, or keep it as an optional install for users who want it. My recommendation is the optional-install path regardless, since it makes the decision reversible without a rebuild.
 
-### Q-8 — V1 user wedge: RESOLVED (candidate)
+### Q-8 — V1 target wedge: PROVISIONALLY ACCEPTED FOR PLANNING
 
-> **RESOLVED IN F1-R1 ([R1-11](reviews/F1-R1-RECONCILIATION.md))** as a founder-decision candidate. F1 left it vague, which was a real gap — it changes architecture.
+```
+V1 TARGET WEDGE:
+PROVISIONALLY_ACCEPTED_FOR_PLANNING
+FOUNDER_RATIFICATION_REQUIRED
+```
 
-**Adopted wedge:**
+> **STATUS CORRECTED PRE-G2.** An earlier revision recorded this as "RESOLVED (candidate)," which read as closer to settled than it is. It is a **planning assumption only**. **This question remains OPEN.**
+
+**Current planning candidate — NOT founder-approved:**
 
 > Fehrest v1 targets **power users, developers, researchers and AI-native knowledge workers who regularly use multiple agents** and need durable local project memory across tools, sessions and model providers.
 
-Such a user plausibly runs several of: Claude, Codex, Gemini, GLM, Cursor, local models, MCP tools. **Fehrest makes memory portable across them** — the defining requirement, and one no incumbent serves.
+Such a user plausibly runs several of: Claude, Codex, Gemini, GLM, Cursor, local models, MCP tools. **Fehrest would make memory portable across them** — the defining requirement, and one no incumbent serves.
 
-**Architecture consequences** ([A §4](00-PRODUCT-THESIS.md#4-the-v1-user-wedge)): MCP gateway is v1 rather than deferred; CLI-first through Phase 6; Graph Intelligence stays in v1; local-first is a feature rather than a constraint; rich block editing informs but does not decide the [Editor Gate](18-EDITOR-GATE.md).
+**Why it is adopted provisionally.** Architecture work needs a coherent target to reason against; leaving the persona blank was a genuine F1 gap. Adopting it as a stated assumption lets design proceed while keeping the decision visibly unmade.
 
-**Strongest alternative considered:** general knowledge workers (Obsidian-adjacent). Rejected for v1 because it would make the editor the product, demote the agent gateway, and force direct feature competition with mature incumbents on their strongest axis — while leaving the actual thesis untested. It remains the natural **second** market.
+**Architecture consequences that depend on ratification** ([A §4](00-PRODUCT-THESIS.md#4-the-v1-user-wedge)): MCP gateway is v1 rather than deferred; CLI-first through Phase 6; Graph Intelligence stays in v1; local-first is treated as a feature rather than a constraint; rich block editing informs but does not decide the [Editor Gate](18-EDITOR-GATE.md).
 
-**Still a founder decision.** If the wedge is wrong, the four decisions above change. Recorded as a candidate, not a fait accompli.
+**Strongest alternative considered:** general knowledge workers (Obsidian-adjacent). Set aside for v1 because it would make the editor the product, demote the agent gateway, and force direct feature competition with mature incumbents on their strongest axis — while leaving the actual thesis untested. It remains the natural **second** market, and remains a live alternative until ratification.
+
+**What ratification requires.** An explicit founder statement approving (or replacing) the wording above. Until then, no document may describe this wedge as approved, decided, or resolved, and the four architecture consequences above remain contingent.
 
 ---
 

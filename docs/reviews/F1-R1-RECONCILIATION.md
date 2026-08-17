@@ -9,6 +9,8 @@
 
 **Implementation is NOT authorized. No product code was written in F1 or F1-R1.**
 
+> **Amended pre-G2:** two governance corrections were applied after this delta was written — the v1 wedge is provisional (not decided), and Graph Intelligence is explicitly falsifiable. They **supersede** the corresponding rows in §2 and §4 below, which are left intact as the R1 audit trail. See [§10](#10-post-r1-governance-corrections-pre-g2).
+
 ---
 
 ## 1. What this document is
@@ -35,12 +37,12 @@ A precise delta against the F1 planning package, incorporating 20 validated revi
 | **R1-03** | No executable editor gate; decision made on architectural argument | **VALID (gap)** | F1 decided the editor without a prototype | New [Editor Gate](../18-EDITOR-GATE.md): common corpus, 24-item acceptance suite, weighted scoring model, ADR-producing | [18-EDITOR-GATE](../18-EDITOR-GATE.md), [P Phase 3E](../15-IMPLEMENTATION-PHASES.md#phase-3e--editor-bake-off-gate) | New gated phase before Phase 7 | ✅ Applied |
 | **R1-04** | Lossless rich-editor ↔ Markdown round-trip requires preserving CRDT history ⇒ the sidecar becomes canonical ⇒ Markdown becomes decorative | **OVERSTATED** | The claim conflated six separable concerns. CRDT operation history is collaboration machinery, not document meaning. Not established that it must be canonical | Retract the impossibility argument. Separate the six concerns; specify the proof the Editor Gate must produce. Candidate `note.md` + `note.fehrest.json` architecture presented as a **candidate to test**, not adopted | [D §7](../03-CANONICAL-DATA-MODEL.md#7-the-rich-editor--canonical-file-question-open), [ADR-0002](../09-TECHNOLOGY-DECISIONS.md#adr-0002--editor-architecture-open--prototype-gated), [18-EDITOR-GATE §4](../18-EDITOR-GATE.md#4-the-round-trip-proof-obligation) | Removes a false constraint on Candidate B | ✅ Applied |
 | **R1-05** | Graphify node IDs carry documented same-filename collisions (#550), Unicode collapse (#811), Turkish idempotency failure (#2614) — cited in present tense | **INCORRECT (evidence) / VALID (conclusion)** | CHANGELOG at pinned commit: #2614 fixed in **0.9.40 (2026-08-11)**; #811 fixed (NFKC + casefold + `re.UNICODE`); #1033 fixed; #811/#550/#1033/#1104 root cause resolved by unifying four copies into `graphify.ids` with contract + hypothesis property tests. `_disambiguate_colliding_node_ids` actively salts collisions apart in current code | Retract present-tense bug citations. Re-ground the invariant on **structure, not defects**: file IDs are spec'd `{parent_dir}_{stem}` — path-derived by construction — and upstream explicitly rejected extension-aware IDs because they would "rewrite every file and symbol id and force a full-rebuild migration". Add invariants **G-ID-1..4** | [E-4](../research/EVIDENCE_LOG.md#e-4--extractor-ids-are-name-derived-by-design-not-by-defect), [B §1](../01-ARCHITECTURE-CONSTITUTION.md#i-15--paths-are-locations-stable-ids-are-identities), [ADR-0004](../09-TECHNOLOGY-DECISIONS.md#adr-0004--object-identity-is-fehrest-allocated-and-opaque), [README](../../README.md) | Conclusion unchanged; **evidence is now stronger** | ✅ Applied |
-| **R1-06** | Plan risked conflating Graphify implementation cost with graph-intelligence product importance; [F-3](../17-FAILURE-CONDITIONS.md#f-3--the-graph-intelligence-capability-does-not-earn-its-cost) offered "drop the graph entirely" | **PARTIALLY_VALID** | Graph Intelligence is thesis-critical; Graphify is one candidate implementation | Split explicitly: `GRAPH_INTELLIGENCE_CAPABILITY = CORE`; `GRAPHIFY_PYTHON_RUNTIME = REPLACEABLE CANDIDATE`. F-3 no longer permits dropping the capability — only replacing the implementation | [A §4](../00-PRODUCT-THESIS.md#5-the-four-layer-architecture), [E §4](../04-DERIVED-DATA-MODEL.md#5-graph-intelligence-capability-vs-implementation), [I](../08-DONOR-MATRIX.md), [ADR-0003](../09-TECHNOLOGY-DECISIONS.md#adr-0003--graph-intelligence-runtime-integration-shape), [F-3](../17-FAILURE-CONDITIONS.md#f-3--the-graph-intelligence-capability-does-not-earn-its-cost) | Protects thesis from an implementation-cost cascade | ✅ Applied |
+| **R1-06** | Plan risked conflating Graphify implementation cost with graph-intelligence product importance; [F-3](../17-FAILURE-CONDITIONS.md#f-3--graph-intelligence-does-not-deliver-material-benefit-at-acceptable-cost) offered "drop the graph entirely" | **PARTIALLY_VALID** | Graph Intelligence is thesis-critical; Graphify is one candidate implementation | Split explicitly: `GRAPH_INTELLIGENCE_CAPABILITY = CORE`; `GRAPHIFY_PYTHON_RUNTIME = REPLACEABLE CANDIDATE`. F-3 no longer permits dropping the capability — only replacing the implementation | [A §4](../00-PRODUCT-THESIS.md#5-the-four-layer-architecture), [E §4](../04-DERIVED-DATA-MODEL.md#5-graph-intelligence-capability-vs-implementation), [I](../08-DONOR-MATRIX.md), [ADR-0003](../09-TECHNOLOGY-DECISIONS.md#adr-0003--graph-intelligence-runtime-integration-shape), [F-3](../17-FAILURE-CONDITIONS.md#f-3--graph-intelligence-does-not-deliver-material-benefit-at-acceptable-cost) | Protects thesis from an implementation-cost cascade | ⚠️ Applied, then **SUPERSEDED by [G-02](#g-02--graph-intelligence-is-explicitly-falsifiable)** |
 | **R1-07** | 100K files ≈ 90 min presented in budget tables as a system property | **OVERSTATED** | Single machine, single corpus (Graphify's own source, 776 files), Windows, cold cache. Linear extrapolation only | Label all figures `PRELIMINARY / SINGLE-ENVIRONMENT / SINGLE-CORPUS`. Remove extrapolations from budget tables; replace with `TBD — pending GI-BENCH`. Define **GI-BENCH** matrix (4 vault sizes × 5 corpus types × 10 operations × concurrency) as prerequisite to any runtime/packaging decision | [E-5](../research/EVIDENCE_LOG.md#e-5--graphify-measured-extraction-throughput-preliminary), [E-6](../research/EVIDENCE_LOG.md#e-6--graphify-startup-cost-preliminary), [O](../14-PERFORMANCE-BUDGETS.md), [K GI-BENCH](../10-BENCHMARK-PLAN.md#b-11--gi-bench--graph-intelligence-benchmark-matrix), [ADR-0003](../09-TECHNOLOGY-DECISIONS.md#adr-0003--graph-intelligence-runtime-integration-shape) | **ADR-0003 downgraded from decided to provisional-pending-GI-BENCH** | ✅ Applied |
 | **R1-08** | `AMBIGUOUS = 0%` ⇒ treat confidence as effectively two-level; memory trust vocabulary partly inherited from Graphify | **VALID** | One corpus proves nothing about ambiguity in general | Fehrest defines a **native evidence/trust model** with explicit states and transitions. Extractor labels **map into** it, never define it | [F §3.3](../05-MEMORY-MODEL.md#33-the-fehrest-evidence-and-trust-model), [E §4.2](../04-DERIVED-DATA-MODEL.md#52-the-wire-contract) | Trust model no longer donor-coupled | ✅ Applied |
 | **R1-09** | Yjs = DEFER (global) | **PARTIALLY_VALID** | If Candidate B wins the Editor Gate, Yjs arrives as part of the substrate | Reclassify `CONDITIONAL / EDITOR-DEPENDENT`. Collaboration must **not** be added to MVP to justify Yjs | [SRC-005](../research/FEHREST_SOURCE_REGISTRY.md#32-yjs--conditional--editor-dependent), [ADR-0012](../09-TECHNOLOGY-DECISIONS.md#adr-0012--crdt-adoption-is-editor-dependent), [I](../08-DONOR-MATRIX.md) | Tied to Editor Gate outcome | ✅ Applied |
 | **R1-10** | DuckDB/TimesFM/Data Formulator/Superset deferred | **VALID** | — | Preserve. Keep in registry as research history; do not expand slice 1 | none (confirmed) | None | ✅ Confirmed |
-| **R1-11** | "Who is v1 for" left vague ([Q-8](../16-OPEN-QUESTIONS.md#q-8--v1-user-wedge-resolved-candidate)) | **VALID (gap)** | Materially affects architecture | Adopt default wedge: power users, developers, researchers, AI-native knowledge workers running **multiple agents across providers**, needing portable durable project memory. Recorded as founder-decision candidate with the strongest alternative stated | [A §3](../00-PRODUCT-THESIS.md#4-the-v1-user-wedge), [Q-8](../16-OPEN-QUESTIONS.md#q-8--v1-user-wedge-resolved-candidate) | Confirms MCP-first, CLI-first ordering; keeps graph in v1 | ✅ Applied |
+| **R1-11** | "Who is v1 for" left vague ([Q-8](../16-OPEN-QUESTIONS.md#q-8--v1-target-wedge-provisionally-accepted-for-planning)) | **VALID (gap)** | Materially affects architecture | Adopt default wedge: power users, developers, researchers, AI-native knowledge workers running **multiple agents across providers**, needing portable durable project memory. Recorded as founder-decision candidate with the strongest alternative stated | [A §3](../00-PRODUCT-THESIS.md#4-the-v1-user-wedge), [Q-8](../16-OPEN-QUESTIONS.md#q-8--v1-target-wedge-provisionally-accepted-for-planning) | Confirms MCP-first, CLI-first ordering; keeps graph in v1 | ⚠️ Applied, then **SUPERSEDED by [G-01](#g-01--v1-target-wedge-is-provisional-not-decided)** |
 | **R1-12** | Event plane present but not architecturally foregrounded | **PARTIALLY_VALID** | Four-layer model was implicit | Make explicit: Knowledge → (Graph Intelligence ∥ Event Journal) → Memory → Context Compiler | [A §4](../00-PRODUCT-THESIS.md#5-the-four-layer-architecture), [D §5](../03-CANONICAL-DATA-MODEL.md#5-the-event-plane) | Presentation; no decision change | ✅ Applied |
 | **R1-13** | [I-14](../01-ARCHITECTURE-CONSTITUTION.md#i-14--model-visible-state-is-reconstructable-provenance-linked-scope-authorized-and-auditable) required reconstructable/auditable agent-visible state | **VALID (strengthen)** | Needed scope-authorization + explicit trust stratification | I-14 strengthened to require reconstructable **+ provenance-linked + scope-authorized + auditable**, with a **7-level trust stratification** that must never be collapsed | [I-14](../01-ARCHITECTURE-CONSTITUTION.md#i-14--model-visible-state-is-reconstructable-provenance-linked-scope-authorized-and-auditable), [G §4](../06-AGENT-MODEL.md#4-context-delivery-and-the-trust-stratification) | Strengthens GLM-5.3 posture | ✅ Applied |
 | **R1-14** | "Content is evidence, never authority" canonical | **VALID** | — | Retain; three-plane separation retained; prompt-only enforcement still rejected | none (confirmed) | None | ✅ Confirmed |
@@ -118,10 +120,10 @@ Fact 2 is the decisive one: **upstream itself states that changing the ID scheme
 | Decision | F1 | R1 |
 |---|---|---|
 | Repository identity | OPEN | ✅ **CLOSED** — `TheHalfMoon/Fehrest` |
-| v1 user wedge | OPEN | ✅ **RESOLVED (candidate)** — multi-agent power users |
+| v1 user wedge | OPEN | ⚠️ **SUPERSEDED by [G-01](#g-01--v1-target-wedge-is-provisional-not-decided)** — provisional planning assumption; founder ratification required |
 | Editor architecture | ❌ DECIDED (CodeMirror 6) | 🔄 **REOPENED** — prototype-gated |
 | CRDT / Yjs | DEFER | 🔄 **CONDITIONAL** — editor-dependent |
-| Graph Intelligence capability | implicit, at risk | ✅ **CORE** |
+| Graph Intelligence capability | implicit, at risk | ⚠️ **SUPERSEDED by [G-02](#g-02--graph-intelligence-is-explicitly-falsifiable)** — core current product hypothesis, explicitly falsifiable |
 | Graph Intelligence runtime | ADR-0003 decided (sidecar) | 🔄 **PROVISIONAL** — pending GI-BENCH |
 | Extractor IDs ≠ canonical identity | decided (weak evidence) | ✅ **DECIDED** — G-ID-1..4, structural evidence |
 | Derived state rebuildable | decided | ✅ **RETAINED** + canonical/derived split clarified |
@@ -194,7 +196,7 @@ Two are worth flagging for GPT-5.6 Sol as places where I applied judgement beyon
 | 10 | Derived state rebuildable | ✅ |
 | 11 | Canonical event/memory state not marked disposable | ✅ two-class split |
 | 12 | Agent Event Plane represented | ✅ four-layer model |
-| 13 | v1 target user resolved | ✅ wedge adopted as founder-decision candidate |
+| 13 | v1 target user resolved | ⚠️ **SUPERSEDED by [G-01](#g-01--v1-target-wedge-is-provisional-not-decided)** — provisional only; remains an open founder decision |
 | 14 | No product implementation exists | ✅ docs only |
 | 15 | No push or merge occurred | ✅ local commits only |
 
@@ -205,3 +207,59 @@ Two are worth flagging for GPT-5.6 Sol as places where I applied judgement beyon
 # `F1_R1_RECONCILED_READY_FOR_GPT_REVIEW`
 
 All 20 findings reconciled. Three factually incorrect claims retracted at source. Three decisions reopened with executable gates rather than argument. No implementation performed, nothing pushed, nothing merged.
+
+---
+
+## 10. Post-R1 governance corrections (pre-G2)
+
+Applied **after** the R1 delta above and **before** GPT-5.6 Sol review. Recorded as an amendment rather than by rewriting §2, so the R1 audit trail stays intact — consistent with Fehrest's own append-only correction principle ([R-5](../01-ARCHITECTURE-CONSTITUTION.md#2-derived-rules)).
+
+Two corrections. **No other architecture changes were made.**
+
+### G-01 — V1 target wedge is provisional, not decided
+
+**Supersedes:** the R1-11 row in §2, the "v1 user wedge — RESOLVED (candidate)" row in §4, and validation item 13 in §8.
+
+**Status now:**
+
+```
+V1 TARGET WEDGE:
+PROVISIONALLY_ACCEPTED_FOR_PLANNING
+FOUNDER_RATIFICATION_REQUIRED
+```
+
+**Current planning candidate, NOT founder-approved:**
+
+> "Power users, developers, researchers, and AI-native knowledge workers who regularly use multiple agents and need durable local project memory across tools, sessions, and model providers."
+
+**Why corrected.** R1 recorded this as "RESOLVED (candidate)," which reads as closer to settled than it is. The wedge drives four architecture consequences (MCP gateway in v1, CLI-first ordering, Graph Intelligence in v1, local-first as a feature), so recording it as resolved would let those consequences inherit an authority the decision does not have. **Q-8 remains OPEN.**
+
+**Constraint.** No document may describe this wedge as approved, decided, or resolved unless the founder explicitly authorizes the wording.
+
+**Files:** [A §4](../00-PRODUCT-THESIS.md#4-the-v1-user-wedge), [Q-8](../16-OPEN-QUESTIONS.md#q-8--v1-target-wedge-provisionally-accepted-for-planning), [VERDICT](../VERDICT.md), [README](../../README.md).
+
+### G-02 — Graph Intelligence is explicitly falsifiable
+
+**Supersedes:** the R1-06 row in §2 ("F-3 no longer permits dropping the capability — only replacing the implementation") and the "Graph Intelligence capability — CORE" row in §4.
+
+**Status now:**
+
+```
+GRAPH INTELLIGENCE:
+CORE CURRENT PRODUCT HYPOTHESIS
+EXPLICITLY FALSIFIABLE
+```
+
+**Failure condition added to [F-3](../17-FAILURE-CONDITIONS.md#f-3--graph-intelligence-does-not-deliver-material-benefit-at-acceptable-cost):**
+
+> If controlled continuation/retrieval benchmarks show that graph-assisted understanding does not provide a material benefit over simpler local retrieval approaches at acceptable cost, Fehrest MUST permit redesign or removal of Graph Intelligence from the core product hypothesis.
+
+**Why corrected.** R1 fixed a real problem — F1 let implementation cost threaten a core capability — but overcorrected into "may be REPLACED, never DROPPED." That made a product claim **unfalsifiable**, which is precisely what [17-FAILURE-CONDITIONS](../17-FAILURE-CONDITIONS.md) exists to prevent. A core capability may be load-bearing *and* testable; those are not in tension.
+
+**What is preserved from R1-06.** The capability/implementation distinction still holds, and still matters: a weak result from one implementation or one retrieval configuration is evidence about *that pairing*. F-3 is graduated accordingly, and removal requires evidence "across configurations and corpus types" — which guards equally against premature deletion and against indefinite deflection of a genuinely negative result.
+
+**Files:** [A §5](../00-PRODUCT-THESIS.md#5-the-four-layer-architecture), [E §5](../04-DERIVED-DATA-MODEL.md#5-graph-intelligence-capability-vs-implementation), [I §1](../08-DONOR-MATRIX.md#1-dispositions-as-reconciled-in-f1-r1), [ADR-0003](../09-TECHNOLOGY-DECISIONS.md#adr-0003--graph-intelligence-runtime-integration-shape), [B-3](../10-BENCHMARK-PLAN.md#b-3--retrieval-quality-by-stage), [B-11](../10-BENCHMARK-PLAN.md#b-11--gi-bench--graph-intelligence-benchmark-matrix), [O](../14-PERFORMANCE-BUDGETS.md), [P Phase 3](../15-IMPLEMENTATION-PHASES.md#phase-3--graph-sidecar), [F-3](../17-FAILURE-CONDITIONS.md#f-3--graph-intelligence-does-not-deliver-material-benefit-at-acceptable-cost), [registry §1.3](../research/FEHREST_SOURCE_REGISTRY.md#13-confirmed-from-f1), [README](../../README.md).
+
+### Scope confirmation
+
+These two corrections are **governance only**. No architecture decision, invariant, threat-model control, benchmark design, phase structure or donor disposition was altered beyond what G-01 and G-02 require. No product code exists. Nothing pushed, nothing merged.

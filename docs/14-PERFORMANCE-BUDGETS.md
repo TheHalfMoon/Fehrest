@@ -76,7 +76,7 @@ The *architectural consequences* below stand regardless of the exact numbers, be
 - D2 must **never gate startup or interactivity** — retrieval degrades to FTS-only while it is absent or building ([E §9](04-DERIVED-DATA-MODEL.md#9-failure-and-degradation)).
 - A long rebuild that restarts from zero on interruption is unacceptable, which is why durable progress is a requirement rather than an optimisation.
 
-Note the distinction: the graph *build* may be incomplete at any moment, but **Graph Intelligence is a core capability, not an optional feature** ([R1-06](reviews/F1-R1-RECONCILIATION.md)). Degrading gracefully while it builds is not the same as the product working without it.
+Note the distinction: the graph *build* may be incomplete at any moment, but **Graph Intelligence is a core current product hypothesis, not an optional feature** ([R1-06](reviews/F1-R1-RECONCILIATION.md)). Degrading gracefully while it builds is not the same as the product working without it. That hypothesis is nonetheless **explicitly falsifiable** — if measured benefit does not justify measured cost, [F-3](17-FAILURE-CONDITIONS.md#f-3--graph-intelligence-does-not-deliver-material-benefit-at-acceptable-cost) permits redesign or removal, and these budget rows go with it.
 
 ### 4.2 Incremental
 

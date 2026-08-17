@@ -52,15 +52,23 @@ The honest bar is also published there: the best reported memory system scores 7
 
 ## 4. The v1 user wedge
 
-**Resolved in F1-R1 ([R1-11](reviews/F1-R1-RECONCILIATION.md)) as a founder-decision candidate.** F1 left this vague, which was a real gap: it changes architecture.
+```
+V1 TARGET WEDGE:
+PROVISIONALLY_ACCEPTED_FOR_PLANNING
+FOUNDER_RATIFICATION_REQUIRED
+```
+
+**Status.** This is a **planning assumption**, not a founder decision. It is adopted so that architecture work has a coherent target, and it is **not approved**. The wording below has **not** been ratified by the founder and must not be described as founder-approved anywhere in this package.
+
+**Current planning candidate:**
 
 > **Fehrest v1 targets power users, developers, researchers and AI-native knowledge workers who regularly use multiple agents and need durable local project memory across tools, sessions and model providers.**
 
-This wedge is not the ceiling. It is the population for whom the unique thesis is *provable* — people who already feel the pain of memory dying with every session, and who already run several of: Claude, Codex, Gemini, GLM, Cursor, local models, MCP tools.
+This wedge is not the ceiling. It is the population for whom the unique thesis would be *provable* — people who already feel the pain of memory dying with every session, and who already run several of: Claude, Codex, Gemini, GLM, Cursor, local models, MCP tools.
 
 **Fehrest makes memory portable across all of them.** That is the wedge's defining requirement, and no incumbent serves it: Obsidian has no agent boundary, each vendor's memory is locked to that vendor, and RAG tools have no temporal or provenance model.
 
-**Architecture consequences — this is why the wedge matters:**
+**Architecture consequences — this is why the wedge matters, and why it needs ratifying:**
 
 | Decision | Because of the wedge |
 |---|---|
@@ -72,7 +80,7 @@ This wedge is not the ceiling. It is the population for whom the unique thesis i
 
 **Strongest alternative considered:** *general knowledge workers (an Obsidian-adjacent audience)*. Rejected for v1 because it would make the editor the product, demote the agent gateway, and put Fehrest in direct feature competition with mature incumbents on their strongest axis — while leaving the actual thesis (portable agent memory) untested. It remains the natural **second** market once the thesis is proven.
 
-If this wedge is wrong, the decisions that change are the four in the table above. Recorded in [Q-8](16-OPEN-QUESTIONS.md#q-8--v1-user-wedge-resolved-candidate).
+If this wedge is wrong — or is not ratified — the decisions that change are the four in the table above. **Founder ratification is required before any of them may be treated as settled.** Recorded in [Q-8](16-OPEN-QUESTIONS.md#q-8--v1-target-wedge-provisionally-accepted-for-planning).
 
 ## 5. The four-layer architecture
 
@@ -109,7 +117,19 @@ If this wedge is wrong, the decisions that change are the four in the table abov
 | **Memory** | What remains relevant and currently true? | Bitemporal + supersession |
 | **Context Compiler** | What should this agent see now? | Fehrest-native |
 
-**Graph Intelligence is a CORE capability; Graphify is a replaceable implementation of it** ([R1-06](reviews/F1-R1-RECONCILIATION.md)). Lexical search alone cannot answer "what is connected," and the thesis requires that answer. If Graphify proves unsuitable, it is **replaced** — not dropped ([ADR-0003](09-TECHNOLOGY-DECISIONS.md#adr-0003--graph-intelligence-runtime-integration-shape)).
+```
+GRAPH INTELLIGENCE:
+CORE CURRENT PRODUCT HYPOTHESIS
+EXPLICITLY FALSIFIABLE
+```
+
+**Graph Intelligence is a core *current product hypothesis*, and Graphify is a replaceable implementation of it** ([R1-06](reviews/F1-R1-RECONCILIATION.md)). The hypothesis is that lexical search alone cannot answer "what is connected," and that answering it materially improves agent continuation.
+
+**That hypothesis is testable and may fail.** If controlled continuation and retrieval benchmarks show graph-assisted understanding does not deliver a material benefit over simpler local retrieval at acceptable cost, Fehrest **must permit redesign or removal of Graph Intelligence from the core product hypothesis** ([F-3](17-FAILURE-CONDITIONS.md#f-3--graph-intelligence-does-not-deliver-material-benefit-at-acceptable-cost)).
+
+Two failure modes are distinguished, because they have different consequences:
+- **The implementation underperforms** → replace Graphify ([ADR-0003](09-TECHNOLOGY-DECISIONS.md#adr-0003--graph-intelligence-runtime-integration-shape)).
+- **The capability itself does not earn its cost** → redesign or remove it from the core hypothesis, and revise this thesis accordingly.
 
 The Event Journal is equally first-class. Knowledge without activity history cannot answer "why is this the current decision," and memory without events has no provenance to resolve conflicts against ([D §5](03-CANONICAL-DATA-MODEL.md#5-the-event-plane)).
 

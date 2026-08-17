@@ -79,11 +79,11 @@ Elimination regardless of score: silent data loss, content loss on crash, or a s
 **The capability/implementation split (R1-06).** Two separate things must not be conflated:
 
 ```
-GRAPH_INTELLIGENCE_CAPABILITY  = CORE          (thesis-critical; not droppable)
-GRAPHIFY_PYTHON_RUNTIME        = REPLACEABLE   (one candidate implementation)
+GRAPH INTELLIGENCE:       CORE CURRENT PRODUCT HYPOTHESIS — EXPLICITLY FALSIFIABLE
+GRAPHIFY_PYTHON_RUNTIME:  REPLACEABLE IMPLEMENTATION CANDIDATE
 ```
 
-Fehrest's thesis requires understanding relationships beyond lexical search. *That capability* is core. *Graphify* is the leading candidate implementation of it, not a permanent part of Fehrest's identity. Candidate implementations: upstream Graphify sidecar · adapted Graphify modules · bundled persistent worker · later native reimplementation · a different extractor if benchmarks prove it superior.
+Fehrest's thesis holds that understanding relationships beyond lexical search materially improves agent continuation. *That capability* is a core **current product hypothesis** — testable, and removable on evidence ([F-3](17-FAILURE-CONDITIONS.md#f-3--graph-intelligence-does-not-deliver-material-benefit-at-acceptable-cost)). *Graphify* is the leading candidate implementation of it, not a permanent part of Fehrest's identity. Candidate implementations: upstream Graphify sidecar · adapted Graphify modules · bundled persistent worker · later native reimplementation · a different extractor if benchmarks prove it superior.
 
 **Context.** Three integration shapes were considered: bundle Python in-process, invoke a CLI per operation, or run a managed long-lived process.
 
@@ -107,7 +107,7 @@ Fehrest's thesis requires understanding relationships beyond lexical search. *Th
 
 **Reverses if.** GI-BENCH shows throughput or incremental latency is the binding constraint rather than startup; **or** packaging proves untenable on a target platform; **or** [H-5](research/EVIDENCE_LOG.md#h-5--a-single-sidecar-process-is-sufficient-isolation-for-the-extraction-path) is falsified and per-parser isolation is required — in which case the answer is likely WASM-isolated parsers, not a rewrite.
 
-**Does not reverse on implementation cost alone.** Graph Intelligence is CORE ([R1-06](reviews/F1-R1-RECONCILIATION.md)). If Graphify proves unsuitable, it is **replaced**, not dropped.
+**Does not reverse on implementation cost alone.** A weak result from *this* implementation means replace *this* implementation. Whether the **capability** itself survives is a separate question, decided by [F-3](17-FAILURE-CONDITIONS.md#f-3--graph-intelligence-does-not-deliver-material-benefit-at-acceptable-cost) — which explicitly permits redesign or removal if graph-assisted understanding shows no material benefit over simpler local retrieval at acceptable cost.
 
 ---
 

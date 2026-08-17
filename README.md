@@ -78,7 +78,18 @@ Canonical Knowledge  "what exists?"
                       └─► Context Compiler  "what should this agent see?"
 ```
 
-**Graph Intelligence is a CORE capability. Graphify is a replaceable implementation of it.** No implementation cost may delete a core capability.
+```
+GRAPH INTELLIGENCE:  CORE CURRENT PRODUCT HYPOTHESIS — EXPLICITLY FALSIFIABLE
+GRAPHIFY RUNTIME:    REPLACEABLE IMPLEMENTATION CANDIDATE
+```
+
+Graph Intelligence is a **core current product hypothesis**, not an axiom. If controlled continuation/retrieval benchmarks show graph-assisted understanding gives no material benefit over simpler local retrieval at acceptable cost, Fehrest **must permit redesign or removal** of it from the core hypothesis ([F-3](docs/17-FAILURE-CONDITIONS.md#f-3--graph-intelligence-does-not-deliver-material-benefit-at-acceptable-cost)).
+
+```
+V1 TARGET WEDGE:  PROVISIONALLY_ACCEPTED_FOR_PLANNING — FOUNDER_RATIFICATION_REQUIRED
+```
+
+The v1 wedge ([A §4](docs/00-PRODUCT-THESIS.md#4-the-v1-user-wedge)) is a **planning assumption, not an approved decision**.
 
 ## The decisions most likely to be contested
 

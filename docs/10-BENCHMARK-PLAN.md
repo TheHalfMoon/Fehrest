@@ -66,7 +66,7 @@ C-TEMPORAL and C-PROJECT must be **hand-built with ground truth**, because no pu
 | Graph-only | External comparison |
 
 **Decides.** [ADR-0007](09-TECHNOLOGY-DECISIONS.md#adr-0007--retrieval-is-lexical-first-vectors-are-optional) and, jointly with [B-1](#b-1--ingestion-and-index-throughput), whether Graphify remains in the architecture at all.
-**Fails if.** Graph expansion adds no measurable recall over FTS + memory → drop compiler stage [4], and Graphify loses most of its justification ([failure condition F-3](17-FAILURE-CONDITIONS.md)). Or vectors beat lexical+graph materially → promote vectors to default-on ([ADR-0007](09-TECHNOLOGY-DECISIONS.md#adr-0007--retrieval-is-lexical-first-vectors-are-optional) reverses).
+**Fails if.** Graph expansion adds no material recall or answer-quality gain over FTS + memory → drop compiler stage [4], and — jointly with GI-BENCH's cost figures — trigger [F-3](17-FAILURE-CONDITIONS.md#f-3--graph-intelligence-does-not-deliver-material-benefit-at-acceptable-cost), which permits **redesign or removal of Graph Intelligence from the core product hypothesis**. Or vectors beat lexical+graph materially → promote vectors to default-on ([ADR-0007](09-TECHNOLOGY-DECISIONS.md#adr-0007--retrieval-is-lexical-first-vectors-are-optional) reverses).
 **Method note.** Ablation is mandatory. A single "our system scores X" number cannot attribute value to any component, and attribution is the entire point.
 
 ### B-4 — Temporal and supersession correctness
@@ -175,7 +175,9 @@ This asymmetry is the whole experiment. Agent B has exactly what a real successo
 - Whether [H-2](research/EVIDENCE_LOG.md#h-2--extraction-scales-linearly-in-file-count) (linearity) holds, and in which corpus types it fails.
 - Whether a different extractor should be evaluated ([R1-06](reviews/F1-R1-RECONCILIATION.md)).
 
-**Fails if.** Any cell exceeds 3× its linear projection → the extractor is superlinear in that regime; scope or partition the graph, or evaluate alternatives. **Does not permit dropping the capability** — Graph Intelligence is CORE ([F-3](17-FAILURE-CONDITIONS.md#f-3--the-graph-intelligence-capability-does-not-earn-its-cost)).
+**Fails if.** Any cell exceeds 3× its linear projection → the extractor is superlinear in that regime; scope or partition the graph, or evaluate alternatives.
+
+**Relationship to the capability question.** A cost result alone speaks to the *implementation*. GI-BENCH's cost figures combine with [B-3](#b-3--retrieval-quality-by-stage)'s benefit figures to answer [F-3](17-FAILURE-CONDITIONS.md#f-3--graph-intelligence-does-not-deliver-material-benefit-at-acceptable-cost): if the measured benefit does not justify the measured cost across configurations and corpus types, Fehrest **must permit redesign or removal of Graph Intelligence from the core product hypothesis**.
 
 **Gate.** No packaging, bundling or runtime decision may be finalised before GI-BENCH reports.
 

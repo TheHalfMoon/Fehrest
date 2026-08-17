@@ -65,7 +65,7 @@ Two rounds of change are recorded. **F1** changed four dispositions from the fou
 
 | Source | Disposition | Reason |
 |---|---|---|
-| **Graphify** | **ADAPT** — one implementation of a CORE capability | Identity conclusion unchanged, evidence re-grounded ([E-4](EVIDENCE_LOG.md#e-4--extractor-ids-are-name-derived-by-design-not-by-defect)). Runtime shape pending GI-BENCH |
+| **Graphify** | **ADAPT** — one implementation of a core, **explicitly falsifiable** product hypothesis | Identity conclusion unchanged, evidence re-grounded ([E-4](EVIDENCE_LOG.md#e-4--extractor-ids-are-name-derived-by-design-not-by-defect)). Runtime shape pending GI-BENCH. Capability itself removable on evidence ([F-3](../17-FAILURE-CONDITIONS.md#f-3--graph-intelligence-does-not-deliver-material-benefit-at-acceptable-cost)) |
 | **DuckDB** | **DEFER** | Data Intelligence outside MVP by the brief's own scope |
 
 ---

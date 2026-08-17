@@ -125,15 +125,24 @@ Two schema choices carry weight:
 > **CLARIFIED IN F1-R1 ([R1-06](reviews/F1-R1-RECONCILIATION.md)).** F1 framed this section as "the Graphify boundary," which risked binding a core capability to one donor's implementation cost.
 
 ```
-GRAPH_INTELLIGENCE_CAPABILITY  = CORE          (thesis-critical; not droppable)
-GRAPHIFY_PYTHON_RUNTIME        = REPLACEABLE   (one candidate implementation)
+GRAPH INTELLIGENCE:            CORE CURRENT PRODUCT HYPOTHESIS — EXPLICITLY FALSIFIABLE
+GRAPHIFY_PYTHON_RUNTIME:       REPLACEABLE IMPLEMENTATION CANDIDATE
 ```
 
-**The capability** — deterministic extraction of relationships between objects, with provenance to source locations — answers *"what is connected?"*, one of the four questions Fehrest exists to answer ([A §5](00-PRODUCT-THESIS.md#5-the-four-layer-architecture)). Lexical search cannot answer it. It is not optional to the thesis.
+**The capability** — deterministic extraction of relationships between objects, with provenance to source locations — answers *"what is connected?"*, one of the four questions Fehrest exists to answer ([A §5](00-PRODUCT-THESIS.md#5-the-four-layer-architecture)). The **hypothesis** is that lexical search cannot answer it and that answering it materially improves agent continuation.
 
 **The implementation** is a choice among: upstream Graphify as a managed worker · adapted Graphify modules · a bundled persistent worker · a later native reimplementation · a different extractor entirely if benchmarks favour one.
 
-**Consequence:** if Graphify proves too heavy, too slow or too risky, it is **replaced** — not dropped ([F-3](17-FAILURE-CONDITIONS.md#f-3--the-graph-intelligence-capability-does-not-earn-its-cost)). What *is* legitimately optional is whether the graph is installed on a given machine (D2 tiering below); a user without it gets degraded retrieval, and Fehrest ships that capability as a first-class part of the product.
+**Two distinct failure modes, with different consequences ([F-3](17-FAILURE-CONDITIONS.md#f-3--graph-intelligence-does-not-deliver-material-benefit-at-acceptable-cost)):**
+
+| Finding | Consequence |
+|---|---|
+| Graphify is too heavy, slow or risky | **Replace the implementation** |
+| The capability shows no material benefit over simpler local retrieval at acceptable cost, across configurations and corpus types | **Redesign or remove Graph Intelligence from the core product hypothesis** |
+
+The second row is what keeps the claim falsifiable. Nothing in the canonical data model depends on the graph existing, so removal touches no canonical record.
+
+Separately, whether the graph is *installed* on a given machine is a packaging question (D2 tiering below); a user without it gets degraded retrieval.
 
 ### 5.1 Ownership
 

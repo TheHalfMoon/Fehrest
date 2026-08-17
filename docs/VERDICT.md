@@ -11,7 +11,13 @@
 
 # `F1_R1_RECONCILED_READY_FOR_GPT_REVIEW`
 
-**Justification.** All 20 validated review findings are reconciled. Three factually incorrect F1 claims are retracted **at source** rather than annotated around: the repository-does-not-exist finding, the "BlockSuite is unmaintained" characterisation, and the citation of fixed upstream Graphify bugs as current defects. Three decisions F1 closed prematurely are reopened with **executable gates** rather than argument. Two decisions F1 left open are now closed on founder input.
+> **Two governance corrections applied pre-G2** (after the R1 delta, before GPT-5.6 Sol review):
+> 1. **V1 target wedge** is `PROVISIONALLY_ACCEPTED_FOR_PLANNING` / `FOUNDER_RATIFICATION_REQUIRED` — **not** a closed decision.
+> 2. **Graph Intelligence** is a `CORE CURRENT PRODUCT HYPOTHESIS` that is `EXPLICITLY FALSIFIABLE` — [F-3](17-FAILURE-CONDITIONS.md#f-3--graph-intelligence-does-not-deliver-material-benefit-at-acceptable-cost) now permits redesign **or removal** on benchmark evidence.
+>
+> No other architecture changes were made. See [reconciliation §10](reviews/F1-R1-RECONCILIATION.md#10-post-r1-governance-corrections-pre-g2).
+
+**Justification.** All 20 validated review findings are reconciled. Three factually incorrect F1 claims are retracted **at source** rather than annotated around: the repository-does-not-exist finding, the "BlockSuite is unmaintained" characterisation, and the citation of fixed upstream Graphify bugs as current defects. Three decisions F1 closed prematurely are reopened with **executable gates** rather than argument. One decision F1 left open (repository identity) is now closed; the v1 wedge is adopted only as a provisional planning assumption pending founder ratification.
 
 The verdict is not `F1_R1_BLOCKED_BY_UNRESOLVED_EVIDENCE`: every remaining unknown has a named benchmark and a phase, and none blocks review. It is not `F1_R1_REDESIGN_REQUIRED`: the corrections narrowed and re-grounded decisions, and the four-layer architecture, constitutional invariants, threat model, memory model and falsification experiment all survived unchanged.
 
@@ -65,7 +71,9 @@ Where I expect the plan to survive attack.
 | Was blocking | Now |
 |---|---|
 | ~~Q-1 repository identity~~ | ✅ **CLOSED** — `TheHalfMoon/Fehrest` ([R1-01](reviews/F1-R1-RECONCILIATION.md)) |
-| ~~Q-8 v1 target user~~ | ✅ **RESOLVED** — multi-agent power users ([R1-11](reviews/F1-R1-RECONCILIATION.md)) |
+| Q-8 v1 target wedge | ⚠️ **NOT closed.** `PROVISIONALLY_ACCEPTED_FOR_PLANNING` / `FOUNDER_RATIFICATION_REQUIRED` ([Q-8](16-OPEN-QUESTIONS.md#q-8--v1-target-wedge-provisionally-accepted-for-planning)) |
+
+> **Governance correction (pre-G2).** An earlier revision recorded Q-8 as RESOLVED. It is a **planning assumption only** and remains an open founder decision. The wedge wording is **not founder-approved**.
 
 **Still blocking Phase 0 exit:**
 
@@ -209,7 +217,7 @@ The most useful attacks would be on:
 2. **Whether the plain-agent baseline is the right bar.** I argue it is the only honest one.
 3. **Whether the [Editor Gate](18-EDITOR-GATE.md)'s weights are right** — fidelity 30%, maintenance 20%. Weights are fixed before evaluation precisely so they cannot be tuned to a preferred outcome; challenge them now if at all.
 4. **Whether P-6 (sidecar boundedness) is the right discriminator** for the round-trip question, now that F1's impossibility argument is withdrawn.
-5. **Whether promoting Graph Intelligence to CORE reduces falsifiability.** [F-3](17-FAILURE-CONDITIONS.md#f-3--the-graph-intelligence-capability-does-not-earn-its-cost) now forbids dropping the capability. That is deliberate, but a reviewer could reasonably call it unfalsifiable — the counter-argument is that the *implementation* remains fully falsifiable and replaceable.
+5. **Whether promoting Graph Intelligence to CORE reduces falsifiability.** [F-3](17-FAILURE-CONDITIONS.md#f-3--graph-intelligence-does-not-deliver-material-benefit-at-acceptable-cost) now forbids dropping the capability. That is deliberate, but a reviewer could reasonably call it unfalsifiable — the counter-argument is that the *implementation* remains fully falsifiable and replaceable.
 6. **Whether the Event Plane's T1/T2/T3 tiering is over-engineered** for a single-user product.
 7. **Whether bitemporality earns its complexity**, or valid-time-only would serve.
 
