@@ -1,0 +1,165 @@
+# I. Donor Matrix
+
+**Status:** PROPOSED — awaiting adversarial review
+**Date:** 2026-08-17
+
+Decision summary for every donor. Full metadata, pinned commits, licenses and provenance strategy live in [FEHREST_SOURCE_REGISTRY.md](research/FEHREST_SOURCE_REGISTRY.md); this document carries the *reasoning* and is the place to challenge a decision.
+
+---
+
+## 1. Dispositions that changed from the brief
+
+Read this section first. These are the disagreements.
+
+| Donor | Brief said | Matrix says | Deciding evidence |
+|---|---|---|---|
+| **BlockSuite** | `USE / PROTOTYPE`, Priority **S+** | **DEFER** | Mirror 13.4 months stale; npm unpublished 13.5 months at pre-1.0 `0.22.4`; 6 unmerged vulnerability branches; development moved inside AFFiNE ([E-10](research/EVIDENCE_LOG.md#e-10--blocksuite-is-a-stale-downstream-mirror-editor-gate)) |
+| **Yjs** | `USE / PROTOTYPE` | **DEFER** | Healthy (MIT, 13.6.32) but unnecessary: no collaborator in v1, and a CRDT introduces exactly the runtime-authoritative state [I-5](01-ARCHITECTURE-CONSTITUTION.md#i-5--canonical-artifacts-are-open-local-and-inspectable-amended) forbids ([E-11](research/EVIDENCE_LOG.md#e-11--yjs-and-codemirror-are-healthy-the-crdt-is-not-the-stale-part)) |
+| **AFFiNE** | `ADAPT` | **STUDY** | Split license (`packages/backend`, `packages/common/native` non-MIT); no releasable substrate boundary in a 446 MB monorepo |
+| **DuckDB** | `USE`, Priority **S** | **DEFER** | The brief itself places Data Intelligence outside MVP; a Priority-S disposition contradicts that scope |
+| **Graphify** | `USE + ADAPT` | **ADAPT** (sidecar-wrapped, IDs rejected) | Node IDs are name-derived with documented collisions and cannot be identities ([E-4](research/EVIDENCE_LOG.md#e-4--graphify-node-ids-are-name-derived-not-stable-identities)) |
+| **CodeMirror 6** | *absent* | **USE** | Admitted to replace BlockSuite. MIT, current ([E-11](research/EVIDENCE_LOG.md#e-11--yjs-and-codemirror-are-healthy-the-crdt-is-not-the-stale-part)) |
+
+Everything else in the brief's registry is confirmed, with reasoning tightened.
+
+---
+
+## 2. Code donors — USE
+
+| Donor | Layer | What we take | Why it is safe to depend on |
+|---|---|---|---|
+| **SQLite** | DERIVED | Derived store, FTS5 | Public domain, ubiquitous, crash-tested. Only holds derived state, so corruption costs a rebuild |
+| **SQLite FTS5** | DERIVED | BM25 lexical baseline | Ships with SQLite; zero extra dependency; the floor every other retrieval method must beat |
+| **CodeMirror 6** | UI | Markdown editing surface | MIT, current (`@codemirror/state` 6.7.1, 2026-07-05). Document model *is* the canonical bytes, so round-trip is the identity function ([ADR-0002](09-TECHNOLOGY-DECISIONS.md#adr-0002--v1-editing-is-markdown-native-blocksuite-is-deferred)) |
+| **Google Magika** | INGEST | Content-based type detection before parser dispatch | Apache-2.0, active. Security-relevant: extension-based dispatch is a parser-confusion vector ([T-12](02-THREAT-MODEL.md#t-12--malicious-attachment--parser-confusion)) |
+| **Model Context Protocol** | AGENT | Agent transport | A standard, not a runtime. **Not an authorization boundary** — authorization is enforced in Fehrest before any tool runs ([T-13](02-THREAT-MODEL.md#t-13--privilege-escalation-via-mcp-or-plugin)) |
+| **llama.cpp** | MEMORY/AGENT | Optional local inference | MIT, very active. Fehrest must pass its full core suite with this absent ([I-4](01-ARCHITECTURE-CONSTITUTION.md#i-4--core-functionality-requires-no-paid-api)) |
+
+---
+
+## 3. Code donors — ADAPT
+
+### Graphify — ADAPT via sidecar
+
+**Take:** deterministic tree-sitter extraction across 28 grammars; the `{nodes, edges, relation, confidence}` schema as a wire contract; `EXTRACTED`/`INFERRED` labelling; `source_file` + `source_location` provenance; incremental cache and watch-debounce semantics; `graph_diff` for incremental updates; `security.py`'s path-confinement and label-sanitisation as prior art.
+
+**Reject:** `ids.py` as an identity authority; the whole MCP surface; PR/repository tooling; LLM-assisted extraction paths; Neo4j/FalkorDB exporters; `graphify-out/` as an output location.
+
+**Why ADAPT and not USE:** three boundary changes are mandatory, and each is a real modification rather than configuration.
+1. **Identity.** Node IDs are name-derived slugs with documented same-filename collisions and Unicode instability ([E-4](research/EVIDENCE_LOG.md#e-4--graphify-node-ids-are-name-derived-not-stable-identities)). Fehrest allocates its own UUIDv7 identities and treats `graphify_node_id` as a rebuildable mapping.
+2. **Authority.** The sidecar is a compute service with no write authority ([R-7](01-ARCHITECTURE-CONSTITUTION.md#2-derived-rules)); core validates every response against schema before accepting it.
+3. **Surface.** Its agent-facing tools are never re-exported, or agents gain a second unaudited retrieval path around the compiler ([E-7](research/EVIDENCE_LOG.md#e-7--graphify-agent-facing-surface)).
+
+**Why worth the cost:** ~18.4 files/s, 97.2% `EXTRACTED` confidence, line-level provenance, **zero LLM credits** ([E-5](research/EVIDENCE_LOG.md#e-5--graphify-measured-extraction-throughput-and-confidence-distribution), [E-8](research/EVIDENCE_LOG.md#e-8--graphifys-self-reported-retrieval-benchmarks)). Reimplementing 60,202 lines and 28 grammars is not defensible against an active Apache-2.0 upstream.
+
+**Accepted costs:** 32 packages / 130 MB, ~200–300 MB installer delta with a runtime ([E-3](research/EVIDENCE_LOG.md#e-3--graphify-dependency-weight-and-installed-footprint)); 4,451 ms cold start, mitigated by a long-lived sidecar ([ADR-0003](09-TECHNOLOGY-DECISIONS.md#adr-0003--graphify-runs-as-a-managed-long-lived-sidecar)); a Python parser surface processing hostile input ([T-10](02-THREAT-MODEL.md#t-10--parser-vulnerabilities)).
+
+### DeepSeek Harness — ADAPT patterns only
+
+**Take:** append-only typed event log as source of truth with agent-visible history *derived*, never stored; one event type with two interchangeable backends and no parallel persisted type; non-truncating crash repair via a synthetic terminator no producer emits; header metadata outside the event vocabulary; merge-extensible event map; branded non-interchangeable identifiers; approval as a log-only asked/decided pair failing closed; oversized output replaced by a locator with "source is not access control" and "a name is not a path"; honest per-platform partial-enforcement reporting; package-owned runtime invariants.
+
+**Reject:** Cordis as a runtime framework; the TS agent loop; plugin runtime; model adapters; compaction engine; `apps/*`.
+
+**Why reject Cordis specifically:** making an external meta-framework load-bearing directly contradicts *"the user's knowledge must survive Fehrest itself."* A memory OS whose core cannot boot without a third-party plugin framework has a shorter lifespan than the knowledge it holds. Elegance is not a reason to take a dependency ([ADR-0005](09-TECHNOLOGY-DECISIONS.md#adr-0005--fehrest-adapts-harness-event-patterns-without-depending-on-the-harness-runtime)).
+
+**Gap inherited:** the donor's sandbox governs filesystem effects only and its Windows backend self-reports partial enforcement ([E-9](research/EVIDENCE_LOG.md#e-9--deepseek-harness-pinned-version-and-adoptable-patterns)). Fehrest gets **no network boundary** from it and must specify one ([T-11](02-THREAT-MODEL.md#t-11--sidecar-network-egress), [T-18](02-THREAT-MODEL.md#t-18--windows-confinement-is-weaker-than-posix)).
+
+### Docling / MarkItDown — ADAPT as optional capability + fallback
+
+Docling for high-fidelity extraction (MIT, very active), MarkItDown as the lightweight fallback. Docling must be an **optional install**: its ML dependency tree would otherwise violate the offline/no-model floor. Its weight is unmeasured — a registry gap ([registry §13](research/FEHREST_SOURCE_REGISTRY.md#13-known-registry-gaps)).
+
+### AWS Cedar — ADAPT the model, DEFER the engine
+
+Adopt `principal + action + resource + context` as the decision shape ([G §2](06-AGENT-MODEL.md#2-capabilities)). Embedding the engine is separable and premature: v1's policy space is small enough that a hand-written evaluator is auditable, and an auditable 200-line evaluator is better security than a correctly-used large dependency.
+
+---
+
+## 4. DEFER
+
+| Donor | Why deferred | Reconsider when |
+|---|---|---|
+| **BlockSuite** | Stale unreleased mirror; round-trip gate unclearable against a maintained upstream | Independent releases resume for two quarters, **or** [H-4](research/EVIDENCE_LOG.md#h-4--a-markdown-native-canonical-format-is-sufficient-for-v1-knowledge-work) is falsified and no maintained alternative exists |
+| **Yjs** | No collaborator in v1 | Real-time multi-writer collaboration enters scope. Do not add a second CRDT alongside it |
+| **sqlite-vec** | Release line is `v0.1.10-alpha.*` | [B-3](10-BENCHMARK-PLAN.md) shows material vector gain **and** a stable release exists |
+| **USearch / LanceDB / FAISS** | No vector requirement proven | Same gate as above |
+| **Tantivy** | FTS5 has not failed | FTS5 misses a measured budget in [O](14-PERFORMANCE-BUDGETS.md) |
+| **DuckDB** | Data Intelligence out of MVP | Dataset/analytics objects enter scope |
+| **Wasmtime / WASI** | No plugin system in v1 | Third-party plugins are designed; the seam must stay viable |
+| **JSON Canvas** | Canvas is not MVP | Canvas ships (Phase 6). Format decision already made — MIT, active |
+| **PaddleOCR / whisper.cpp** | Optional media ingestion | Users demonstrate need |
+| **TimesFM / Data Formulator** | Forecasting and BI far out of scope | Post-v1 at the earliest |
+| **Cytoscape.js** | Graph explorer cut from MVP | Graph UI is scheduled |
+| **Automerge** | Sync deferred | Sync ADR; never alongside Yjs without proof |
+
+---
+
+## 5. STUDY — mechanisms, not vibes
+
+Each entry names the **specific mechanism** studied. "Inspiration" is not a disposition.
+
+| Donor | Mechanism studied | Explicitly not taken |
+|---|---|---|
+| **Obsidian** | Vault semantics; files usable without the app; backlink computation; wikilink resolution; keyboard-first palette | Its plugin API; its proprietary sync |
+| **Cordis** | Plugin composition, reversible effects, scoped services, effect-scoped disposal | Cordis itself as a dependency |
+| **Graphiti** | Temporal graph memory; changing facts; temporal retrieval | Mandatory external graph service |
+| **Letta** | Memory-block lifecycle; consolidation | Agent-framework coupling |
+| **Mem0** | User/session/agent scope separation | Its retrieval quality — recall@10 **0.048** on LOCOMO makes it a floor, not a goal ([E-8](research/EVIDENCE_LOG.md#e-8--graphifys-self-reported-retrieval-benchmarks)) |
+| **Microsoft GraphRAG** | Hierarchical communities; local vs global queries; claims | LLM-heavy indexing — deterministic extraction meets the need at zero cost |
+| **MemGPT** | Tiered memory; paging | LLM-managed paging as a requirement |
+| **A-MEM** | Zettelkasten-style memory linking and evolution | LLM-only link generation |
+| **AgeMem** | The six-operation API (`add`/`update`/`delete`/`retrieve`/`summary`/`filter`) | **The mechanism** — a three-stage RL-trained policy cannot be the promotion decider under `AI OFF` ([E-15](research/EVIDENCE_LOG.md#e-15--agemem-is-a-learned-policy-not-a-transplantable-algorithm)) |
+| **HippoRAG** | Associative graph retrieval; multi-hop recall | LLM-built graph |
+| **RAPTOR** | Hierarchical recursive summarisation | Mandatory LLM summarisation at index time ([R-1](01-ARCHITECTURE-CONSTITUTION.md#2-derived-rules)) |
+| **Peritext** | Why rich-text marks resist CRDT representation | — (supports [ADR-0002](09-TECHNOLOGY-DECISIONS.md#adr-0002--v1-editing-is-markdown-native-blocksuite-is-deferred)) |
+| **Local-first Software** | Seven ideals as a design test; network as optimisation | Its assumption that CRDTs are the natural substrate |
+| **W3C PROV** | Entity/Activity/Agent; `wasDerivedFrom`, `wasAttributedTo` | Becoming an RDF system |
+| **Bitemporal DB literature** | Valid vs recorded time; as-of resolution | Dialect-specific syntax |
+| **Linear** | Keyboard-first interaction; instant command surfaces | Cloning the product |
+| **Logseq / SiYuan** | Block-level identity in plain text and its file-format cost | Outliner-only storage model |
+| **Airtable / Teable / Baserow / NocoDB** | One dataset, many views | Building a database product in v1 |
+| **AFFiNE** | Workspace UX; document/canvas/database unification | Any code; forking it |
+| **Excalidraw / tldraw / draw.io** | Canvas interaction, gestures, export, shape libraries | A second canvas runtime |
+| **Superset / Data Formulator** | Semantic metrics; transformation lineage | Their service architectures |
+
+---
+
+## 6. BENCHMARK
+
+| Donor | Role | Gate it decides |
+|---|---|---|
+| **LongMemEval-V2** | Primary memory benchmark | Whether the memory model represents the five measured abilities ([E-14](research/EVIDENCE_LOG.md#e-14--longmemeval-v2-exists-and-defines-the-right-target)) |
+| **LongMemEval (v1)** | Secondary | Temporal reasoning, knowledge updates, abstention |
+| **AgentDojo** | Security benchmark | Whether [I-13](01-ARCHITECTURE-CONSTITUTION.md#i-13--imported-and-retrieved-content-is-evidence-never-authority) holds under adversarial content |
+| **BM25 / dense / hybrid / graph-only** | Retrieval baselines | Whether each retrieval stage earns inclusion ([B-3](10-BENCHMARK-PLAN.md)) |
+| **Mem0** | Memory baseline | Floor |
+| **Raw history stuffing** | Compression baseline | Whether compilation beats stuffing ([B-7](10-BENCHMARK-PLAN.md)) |
+| **Competent agent, plain file tools, no memory** | **The bar that matters** | Whether Fehrest deserves to exist — 69.3% in LME-V2's reporting |
+
+---
+
+## 7. REJECT
+
+Only two outright rejections. Most disagreements are `DEFER`, because deferral is reversible and rejection should be reserved for things that are wrong in principle.
+
+| Donor | Rejected as | Reason |
+|---|---|---|
+| **Cordis** *(as a dependency)* | Runtime framework | Contradicts "knowledge must survive Fehrest itself." Retained as `STUDY` |
+| **Any mandatory hosted service, hosted auth, opaque telemetry** | — | Violates [I-2](01-ARCHITECTURE-CONSTITUTION.md#i-2--core-functionality-requires-no-network), [I-3](01-ARCHITECTURE-CONSTITUTION.md#i-3--core-functionality-requires-no-fehrest-hosted-service), [I-4](01-ARCHITECTURE-CONSTITUTION.md#i-4--core-functionality-requires-no-paid-api) |
+
+Also rejected as *architectural positions* rather than donors: forking AFFiNE and renaming it; embedding any single commercial model provider; making any vector store, graph database, or local model mandatory.
+
+---
+
+## 8. Aggregate dependency risk
+
+| Risk | Exposure | Mitigation |
+|---|---|---|
+| Graphify pre-1.0 on a moving branch (`v8`) | Graph capability | Pinned commit; schema contract test; graph is D2-optional so its loss degrades rather than breaks |
+| Python sidecar tree (32 packages) | Security, packaging | `pip-audit`; independent update channel; read-only, no-network, no-credential confinement |
+| 28 tree-sitter grammars | Parser attack surface | Sidecar confinement; fuzzing; per-file caps and non-fatal failure |
+| CodeMirror carries no rich-block features | Product capability | Stated v1 cost; sidecar covers annotations; gated on [H-4](research/EVIDENCE_LOG.md#h-4--a-markdown-native-canonical-format-is-sufficient-for-v1-knowledge-work) |
+| No third-party replication of any retrieval claim | Every comparative number | Re-run all baselines locally before they become thresholds ([K](10-BENCHMARK-PLAN.md)) |
+
+**Structural mitigation:** every heavy donor sits behind a boundary whose failure is *degradation*, not breakage. Graphify absent → FTS-only retrieval. Vectors absent → default. Local model absent → `AI OFF`. Docling absent → MarkItDown. Sidecar dead → graph features hidden.
+
+The only donors whose absence breaks Fehrest are SQLite and CodeMirror, and both are small, permissive, and replaceable behind a thin interface. That is the intended shape of the dependency graph.
