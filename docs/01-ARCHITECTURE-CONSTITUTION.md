@@ -99,17 +99,59 @@ Content that enters Fehrest from any source other than a direct user instruction
 
 **Honest limitation:** this invariant is enforceable for *capability and policy* — those are structural. It is **not** fully enforceable for model *behaviour*: a sufficiently persuasive document may still influence what a model says. The boundary Fehrest guarantees is that influence cannot escalate privilege. Stated plainly because claiming otherwise would be false. See [C §4](02-THREAT-MODEL.md).
 
-### I-14 — Agent-visible state is reconstructable and auditable
-Anything ever shown to an agent can be reconstructed exactly from canonical state, with its provenance, at any later time.
+### I-14 — Model-visible state is reconstructable, provenance-linked, scope-authorized and auditable
 
-**Enforced by:** context packages are content-addressed and their inputs recorded as events; the package is *derivable* from the event log rather than stored as an opaque blob ([E-9](research/EVIDENCE_LOG.md#e-9--deepseek-harness-pinned-version-and-adoptable-patterns) — derived, not stored).
-**Test:** `test_context_package_replay` — for every historical `context/compiled` event, recompile from canonical state and compare digests. Any mismatch is a defect.
+**Strengthened in F1-R1 ([R1-13](reviews/F1-R1-RECONCILIATION.md)).** Anything ever shown to an agent must satisfy **all four** properties:
+
+1. **Reconstructable** — recomputable exactly from canonical state at any later time.
+2. **Provenance-linked** — every item cites the canonical evidence it came from.
+3. **Scope-authorized** — every item was inside the session's grant at compile time.
+4. **Auditable** — the fact that it was shown, to whom, and when, is itself recorded.
+
+This is materially stricter than storing chat history: a stored transcript satisfies (4) alone.
+
+**Trust stratification — the seven levels that must never be collapsed.** Model-visible text is not homogeneous. Fehrest labels each item with its plane and trust level, and no mechanism may flatten them into undifferentiated prose:
+
+| # | Level | Authority | Writable by |
+|---|---|---|---|
+| 1 | System / owner instruction | **Authoritative** | Fehrest core only |
+| 2 | Trusted Fehrest policy | **Authoritative** | Fehrest core only |
+| 3 | User instruction | **Authoritative** | The user, via the UI |
+| 4 | Retrieved knowledge (vault) | Evidence | Anyone with vault write access |
+| 5 | Imported external content | **Evidence — assume hostile** | Any source |
+| 6 | Tool output | **Evidence — assume hostile** | Tools, including remote ones |
+| 7 | Agent inference | Evidence, marked `inferred` | The agent |
+
+Levels 1–3 may direct behaviour. **Levels 4–7 never may**, however authoritative their text sounds. This is the structural form of [I-13](#i-13--imported-and-retrieved-content-is-evidence-never-authority).
+
+**Enforced by:** context packages are content-addressed with their inputs recorded as events, and are *derivable* from the event log rather than stored as opaque blobs ([E-9](research/EVIDENCE_LOG.md#e-9--deepseek-harness-pinned-version-and-adoptable-patterns)); every emitted item carries its trust level and provenance; scope is asserted at emission ([H §4](07-CONTEXT-COMPILER-SPEC.md#4-pipeline)).
+**Test:** `test_context_package_replay` — recompile every historical `context/compiled` event and compare digests. Plus `test_trust_levels_never_collapsed` — assert every emitted item carries a trust level, and that no serialisation path erases it. Plus `test_provenance_completeness` — unsourced items exactly 0.
 
 ### I-15 — Paths are locations; stable IDs are identities
 An object's identity is an opaque, allocated identifier that never changes. A path is a mutable attribute. Renaming or moving a file preserves identity, links, memories and history.
 
 **Enforced by:** identity is allocated at first observation and stored in the file's frontmatter plus the derived index; all cross-references use IDs.
-**Test:** `test_identity_survives_rename` — rename, move across directories, and change case; all backlinks, memories and events must remain attached. Plus `test_graphify_ids_are_not_identities` — assert no canonical record uses a Graphify node ID as a primary key, since those IDs are name-derived and collision-prone ([E-4](research/EVIDENCE_LOG.md#e-4--graphify-node-ids-are-name-derived-not-stable-identities)).
+**Test:** `test_identity_survives_rename` — rename, move across directories, and change case; all backlinks, memories and events must remain attached. Full operation matrix in [D §3.2](03-CANONICAL-DATA-MODEL.md#32-identity-across-filesystem-operations).
+
+#### Extractor identity sub-invariants (G-ID-1 … G-ID-4)
+
+Added in F1-R1 ([R1-05](reviews/F1-R1-RECONCILIATION.md)). These generalise to **any** extractor — code, document, or future — not to one donor.
+
+> **G-ID-1** — No extractor-generated identifier may be a canonical Fehrest object ID.
+>
+> **G-ID-2** — Every derived graph node must map to a Fehrest-owned stable identity where such an identity exists.
+>
+> **G-ID-3** — A graph rebuild or extractor upgrade may change extractor IDs **without** changing canonical Fehrest identity.
+>
+> **G-ID-4** — Derived node records must preserve sufficient source mapping to trace back to canonical evidence.
+
+**Why these are structural, not defensive.** Extractor IDs are typically derived from names or paths (Graphify's file nodes are spec'd `{parent_dir}_{stem}`), and extractor ID *schemes* change between versions — upstream Graphify explicitly rejected an alternative scheme because it "would rewrite every file and symbol id and force a full-rebuild migration." An identifier whose scheme is expected to change cannot anchor durable references. This holds even when the extractor has **no** open defects ([E-4](research/EVIDENCE_LOG.md#e-4--extractor-ids-are-name-derived-by-design-not-by-defect)).
+
+**Required derived-node fields:** `fehrest_object_id` · `extractor_id` · `extractor_version` · `source_uri` · `source_revision` · `source_location` · `relationship_confidence`.
+
+`extractor_version` is what makes G-ID-3 checkable: a node whose `extractor_version` differs from the current extractor is known-stale and rebuildable without touching canonical identity.
+
+**Test:** `test_extractor_ids_are_not_identities` — assert no canonical record uses an extractor ID as a key. `test_extractor_upgrade_preserves_identity` — change `extractor_version`, rebuild, assert every `fehrest_object_id` and every memory attachment is unchanged. `test_derived_node_traces_to_canonical` — every derived node resolves to canonical evidence via `source_uri` + `source_location`.
 
 ---
 
@@ -154,7 +196,7 @@ Stated so reviewers do not read absences as oversights:
 - **It does not forbid servers or cloud.** It forbids them being *authorities* (I-8) or *requirements* (I-3).
 - **It does not forbid LLMs.** It forbids them being *mandatory* (I-4) and forbids them on index paths (R-1).
 - **It does not promise agents cannot be manipulated by content.** It promises manipulation cannot escalate privilege (I-13, with its stated limitation).
-- **It does not require CRDTs.** Local-first is achieved by local canonical files; CRDTs are a collaboration mechanism and are deferred ([SRC-005](research/FEHREST_SOURCE_REGISTRY.md#32-yjs--defer)).
+- **It does not require CRDTs.** Local-first is achieved by local canonical files; CRDTs are a collaboration mechanism and are deferred ([SRC-005](research/FEHREST_SOURCE_REGISTRY.md#32-yjs--conditional--editor-dependent)).
 
 ## 5. Amendment procedure
 

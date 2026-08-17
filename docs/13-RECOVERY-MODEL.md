@@ -78,7 +78,7 @@ Steps 1–7 are blocking: canonical integrity must be established before the vau
 
 ### 3.8 Interrupted rebuild
 **Detection.** A rebuild-progress marker exists without a completion marker.
-**Recovery.** Resume from recorded progress. Rebuild is chunked and progress is durable, so a 90-minute 100K-file graph build ([E-5](research/EVIDENCE_LOG.md#e-5--graphify-measured-extraction-throughput-and-confidence-distribution)) never restarts from zero. Partial indexes are usable and marked incomplete rather than hidden.
+**Recovery.** Resume from recorded progress. Rebuild is chunked and progress is durable, so a 90-minute 100K-file graph build ([E-5](research/EVIDENCE_LOG.md#e-5--graphify-measured-extraction-throughput-preliminary)) never restarts from zero. Partial indexes are usable and marked incomplete rather than hidden.
 
 ### 3.9 Missing or corrupt `vault.json`
 **Detection.** Absent or unparseable.
@@ -87,7 +87,7 @@ Steps 1–7 are blocking: canonical integrity must be established before the vau
 ### 3.10 Concurrent editor (external modification)
 **Detection.** Content hash differs from the indexed hash. Hash, never mtime — mtime is unreliable across sync tools and restores, and trusting it enables the provenance race in [T-9](02-THREAT-MODEL.md#t-9--filesystem-race-conditions).
 **Recovery.** External modification is **normal and expected** — it is the point of an open vault. Re-index the file, re-anchor sidecar annotations, mark unresolvable anchors orphaned and show them to the user rather than dropping them, emit `object/updated` with `actor: external`.
-**Conflict case.** If Fehrest has unsaved in-app changes to the same file, do not merge and do not overwrite: present both versions and let the user choose. Without a CRDT ([ADR-0012](09-TECHNOLOGY-DECISIONS.md#adr-0012--no-crdt-in-v1)) there is no principled automatic merge, and pretending otherwise silently destroys one side.
+**Conflict case.** If Fehrest has unsaved in-app changes to the same file, do not merge and do not overwrite: present both versions and let the user choose. Without a CRDT ([ADR-0012](09-TECHNOLOGY-DECISIONS.md#adr-0012--crdt-adoption-is-editor-dependent)) there is no principled automatic merge, and pretending otherwise silently destroys one side.
 
 ### 3.11 Git operations on the vault
 **Detection.** Many files change at once; hashes diverge en masse.
@@ -101,7 +101,7 @@ Steps 1–7 are blocking: canonical integrity must be established before the vau
 ### 3.13 Sidecar crash or failure to start
 **Detection.** Process exit, IPC timeout, or health-check failure.
 **Recovery.** Supervisor restarts with exponential backoff. After N consecutive failures, disable graph features, notify the user, and continue. Extraction jobs are idempotent and resumable, so a crash mid-extraction loses only the in-flight file.
-**Impact.** Reduced retrieval recall. **The application remains fully usable** — this is the tiering rule in [E §2](04-DERIVED-DATA-MODEL.md#2-tiering) being load-bearing.
+**Impact.** Reduced retrieval recall. **The application remains fully usable** — this is the tiering rule in [E §2](04-DERIVED-DATA-MODEL.md#3-tiering) being load-bearing.
 
 ### 3.14 Plugin failure
 Not applicable to v1 — no plugin system. When plugins arrive, the required properties are: a plugin crash cannot take down core, cannot corrupt canonical state, and cannot escalate capability. The isolation seam is preserved ([SRC-043](research/FEHREST_SOURCE_REGISTRY.md#7-agent-protocol-authorization-isolation)).

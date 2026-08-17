@@ -40,9 +40,9 @@ C-TEMPORAL and C-PROJECT must be **hand-built with ground truth**, because no pu
 ### B-1 — Ingestion and index throughput
 
 **Measures.** Files/s, wall time, peak RSS, index size, for D1 and D2 across C-SMALL/MED/LARGE, cold and warm.
-**Baseline.** Measured Graphify extraction: ~18.4 files/s, 776 files in 42.2 s, 12 workers ([E-5](research/EVIDENCE_LOG.md#e-5--graphify-measured-extraction-throughput-and-confidence-distribution)).
+**Baseline.** Measured Graphify extraction: ~18.4 files/s, 776 files in 42.2 s, 12 workers ([E-5](research/EVIDENCE_LOG.md#e-5--graphify-measured-extraction-throughput-preliminary)).
 **Decides.** [H-2](research/EVIDENCE_LOG.md#h-2--extraction-scales-linearly-in-file-count) — whether extraction is linear in file count. Also validates or breaks the budgets in [O](14-PERFORMANCE-BUDGETS.md).
-**Fails if.** 10K extraction exceeds 2× the linear projection → superlinear cross-file resolution; graph must be partitioned or scoped, and [ADR-0003](09-TECHNOLOGY-DECISIONS.md#adr-0003--graphify-runs-as-a-managed-long-lived-sidecar) is reopened.
+**Fails if.** 10K extraction exceeds 2× the linear projection → superlinear cross-file resolution; graph must be partitioned or scoped, and [ADR-0003](09-TECHNOLOGY-DECISIONS.md#adr-0003--graph-intelligence-runtime-integration-shape) is reopened.
 
 ### B-2 — Incremental update latency
 
@@ -87,13 +87,23 @@ C-TEMPORAL and C-PROJECT must be **hand-built with ground truth**, because no pu
 **Measures.** Compile latency p50/p95 by corpus size; tokens produced vs budget; **compression ratio vs raw history**; determinism (identical digest over 100 runs on unchanged state); provenance completeness (unsourced items must be 0); omission honesty (does `omitted` match reality?).
 **Targets.** Latency per [O](14-PERFORMANCE-BUDGETS.md); compression ≥ 20×; determinism 100%; unsourced items 0.
 **Decides.** [H](07-CONTEXT-COMPILER-SPEC.md) viability.
-**Fails if.** Digests vary on unchanged input → replay and audit impossible, [I-14](01-ARCHITECTURE-CONSTITUTION.md#i-14--agent-visible-state-is-reconstructable-and-auditable) fails. Or p95 exceeds budget by 2× → pre-computation becomes mandatory.
+**Fails if.** Digests vary on unchanged input → replay and audit impossible, [I-14](01-ARCHITECTURE-CONSTITUTION.md#i-14--model-visible-state-is-reconstructable-provenance-linked-scope-authorized-and-auditable) fails. Or p95 exceeds budget by 2× → pre-computation becomes mandatory.
 
 ### B-7 — Agent continuation: the defining experiment
 
 **This is the benchmark that decides whether Fehrest should exist.**
 
-**Setup.** On C-PROJECT: Agent A works the project across many sessions. Agent A is destroyed. Agent B, with **no chat history**, receives only a Fehrest-compiled context package and must continue correctly on a held-out task set.
+**Setup.** On C-PROJECT: Agent A works the project across many sessions, then is destroyed. Agent B must continue correctly on a held-out task set.
+
+**What Agent B receives — and does not ([R1-18](reviews/F1-R1-RECONCILIATION.md)):**
+
+| Denied | Provided |
+|---|---|
+| ❌ Agent A's private chain-of-thought | ✅ The normal project files |
+| ❌ Agent A's hidden internal state | ✅ Normal filesystem/search tools |
+| ❌ Any raw conversation dump | ✅ **Fehrest-compiled context** |
+
+This asymmetry is the whole experiment. Agent B has exactly what a real successor agent would have — the repository and its tools — **plus** Fehrest. The measured quantity is what Fehrest adds on top of a competent agent, not what it adds on top of nothing.
 
 **Arms.**
 
@@ -111,9 +121,21 @@ C-TEMPORAL and C-PROJECT must be **hand-built with ground truth**, because no pu
 
 **Metrics.** Task correctness; **constraint retention** (did it violate a stated constraint?); current-state accuracy; temporal accuracy; **superseded-decision misuse**; repeated-known-failure rate (did it retry a recorded gotcha?); provenance correctness; hallucination rate; abstention appropriateness; context tokens consumed; latency; security-policy adherence.
 
-**Targets.** Beat plain-agent on correctness by a margin exceeding the confidence interval; **zero** constraint violations where the constraint was in the package; repeated-known-failure rate below plain-agent's.
+**Falsification threshold — stated numerically before any code exists:**
 
-**Fails if.** Fehrest does not beat the plain-agent arm → **the product thesis is falsified.** Not a tuning problem. This is stated before any code exists, deliberately.
+| Metric | Threshold vs plain-agent arm |
+|---|---|
+| Task correctness | **≥ +10 percentage points**, with the 95% interval excluding zero |
+| Constraint violations (constraint present in package) | **Exactly 0** |
+| Superseded-decision misuse | **Strictly lower**, and ≤ 5% absolute |
+| Repeated-known-failure rate | **Strictly lower** |
+| Provenance correctness | ≥ 95% of cited sources resolve and support the claim |
+| Context tokens consumed | **≤ 50%** of the raw-stuffing arm at equal or better correctness |
+| Security-policy adherence | Zero violations |
+
+**+10 points is chosen deliberately.** LongMemEval-V2 reports the best memory system beating an off-the-shelf coding agent by **3.2 points** (72.5% vs 69.3%) ([E-14](research/EVIDENCE_LOG.md#e-14--longmemeval-v2-exists-and-defines-the-right-target)). A 3-point margin on a self-authored corpus is indistinguishable from corpus bias. If Fehrest's entire architecture — bitemporal memory, deterministic resolution, graph intelligence, provenance, context compilation — cannot produce a margin materially larger than the published state of the art, the added complexity is not earning its cost.
+
+**Fails if.** Any threshold is missed → **the product thesis is falsified.** Not a tuning problem. The correct response is to reconsider the product, not to lower the threshold.
 
 **Design caveat.** The single most likely methodological flaw is that C-PROJECT is authored by the same people who designed the memory model, producing a corpus whose structure happens to suit Fehrest. Mitigations: the held-out task set is written **before** the compiler is tuned; a second corpus is sourced from a project Fehrest's authors did not run; grading is blind to arm.
 
@@ -129,6 +151,33 @@ C-TEMPORAL and C-PROJECT must be **hand-built with ground truth**, because no pu
 **Decides.** [I-6](01-ARCHITECTURE-CONSTITUTION.md#i-6--derived-state-is-disposable-and-rebuildable) — and therefore the reversibility of every index decision in [E](04-DERIVED-DATA-MODEL.md) and the "derived corruption is not a security problem" argument in [T-16](02-THREAT-MODEL.md#t-16--corrupted-derived-indexes).
 **Fails if.** Any divergence → the disposability claim is false and multiple documents lose their foundation.
 **Note.** Compares *query results*, not file bytes; byte-identity is unachievable (SQLite page layout, parallel extraction order) and demanding it would create a permanently failing test. Runs in CI from Phase 1.
+
+### B-11 — GI-BENCH — Graph Intelligence benchmark matrix
+
+> **ADDED IN F1-R1 ([R1-07](reviews/F1-R1-RECONCILIATION.md)).** F1 extrapolated "100K files ≈ 90 min" from **one corpus of one type on one machine** and let it inform packaging and runtime decisions. That extrapolation is withdrawn. GI-BENCH replaces it and is a **prerequisite** to finalising [ADR-0003](09-TECHNOLOGY-DECISIONS.md#adr-0003--graph-intelligence-runtime-integration-shape).
+
+**Matrix.** Every cell measured, not extrapolated.
+
+| Dimension | Values |
+|---|---|
+| **Vault size** | 1K · 10K · 50K · 100K files |
+| **Corpus type** | Markdown-heavy · code-heavy · mixed · many-small-files · few-large-files |
+| **Operation** | cold full build · warm full build · 1-file incremental · 10-file incremental · rename · move · delete · subtree move · external modification · watch-triggered rebuild |
+| **Concurrency** | single worker · parallel workers |
+
+**Measured per cell:** wall time · CPU time · peak RSS · disk growth · resulting node/edge counts · update latency · startup latency · packaging size · failure-recovery behaviour.
+
+**Corpus type is the dimension F1 omitted entirely**, and it is likely the most consequential: a Markdown-heavy personal vault and a code-heavy repository exercise completely different extractor paths, and Fehrest's [v1 wedge](00-PRODUCT-THESIS.md#4-the-v1-user-wedge) has users with both. A runtime decision made on code-corpus numbers alone could be wrong for the median vault.
+
+**Decides:**
+- The runtime shape — lazy worker vs preloaded vs background process vs adaptation ([ADR-0003](09-TECHNOLOGY-DECISIONS.md#adr-0003--graph-intelligence-runtime-integration-shape)).
+- Whether packaging Graph Intelligence as an optional install is necessary or over-cautious.
+- Whether [H-2](research/EVIDENCE_LOG.md#h-2--extraction-scales-linearly-in-file-count) (linearity) holds, and in which corpus types it fails.
+- Whether a different extractor should be evaluated ([R1-06](reviews/F1-R1-RECONCILIATION.md)).
+
+**Fails if.** Any cell exceeds 3× its linear projection → the extractor is superlinear in that regime; scope or partition the graph, or evaluate alternatives. **Does not permit dropping the capability** — Graph Intelligence is CORE ([F-3](17-FAILURE-CONDITIONS.md#f-3--the-graph-intelligence-capability-does-not-earn-its-cost)).
+
+**Gate.** No packaging, bundling or runtime decision may be finalised before GI-BENCH reports.
 
 ### B-10 — Scale and growth
 

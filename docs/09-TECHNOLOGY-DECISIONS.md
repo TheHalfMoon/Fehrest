@@ -5,14 +5,14 @@
 
 Each ADR states context, decision, alternatives rejected with reasons, consequences, and **the finding that would reverse it**. An ADR without a reversal condition is dogma.
 
-Statuses: `PROPOSED` (awaiting review) · `OPEN` (decision deliberately not yet made) · `ACCEPTED` (post-review only).
+Statuses: `PROPOSED` (awaiting review) · `OPEN` (decision deliberately not yet made) · `PROVISIONAL` (direction set, pending named evidence) · `CONDITIONAL` (resolved by another decision) · `ACCEPTED` (post-review only).
 
 | # | Decision | Status |
 |---|---|---|
 | [0001](#adr-0001--canonical-state-is-open-files-plus-an-append-only-event-log) | Canonical state is open files + append-only event log | PROPOSED |
-| [0002](#adr-0002--v1-editing-is-markdown-native-blocksuite-is-deferred) | v1 editing is Markdown-native; BlockSuite deferred | PROPOSED |
-| [0003](#adr-0003--graphify-runs-as-a-managed-long-lived-sidecar) | Graphify runs as a managed long-lived sidecar | PROPOSED |
-| [0004](#adr-0004--object-identity-is-fehrest-allocated-and-opaque) | Object identity is Fehrest-allocated UUIDv7 | PROPOSED |
+| [0002](#adr-0002--editor-architecture-open--prototype-gated) | Editor architecture | 🔄 **OPEN / PROTOTYPE-GATED** (reopened in R1) |
+| [0003](#adr-0003--graph-intelligence-runtime-integration-shape) | Graph Intelligence runtime integration shape | 🔄 **PROVISIONAL** — pending GI-BENCH |
+| [0004](#adr-0004--object-identity-is-fehrest-allocated-and-opaque) | Object identity is Fehrest-allocated UUIDv7 | PROPOSED (evidence re-grounded in R1) |
 | [0005](#adr-0005--fehrest-adapts-harness-event-patterns-without-depending-on-the-harness-runtime) | Adapt harness event patterns, not the runtime | PROPOSED |
 | [0006](#adr-0006--sqlite-is-the-derived-store-and-only-the-derived-store) | SQLite is the derived store, and only that | PROPOSED |
 | [0007](#adr-0007--retrieval-is-lexical-first-vectors-are-optional) | Retrieval is lexical-first; vectors optional | PROPOSED |
@@ -20,7 +20,8 @@ Statuses: `PROPOSED` (awaiting review) · `OPEN` (decision deliberately not yet 
 | [0009](#adr-0009--agents-address-objects-by-id-never-by-path) | Agents address objects by ID, never by path | PROPOSED |
 | [0010](#adr-0010--core-implementation-language) | Core implementation language | **OPEN** |
 | [0011](#adr-0011--desktop-shell) | Desktop shell | **OPEN** |
-| [0012](#adr-0012--no-crdt-in-v1) | No CRDT in v1 | PROPOSED |
+| [0012](#adr-0012--crdt-adoption-is-editor-dependent) | CRDT adoption is editor-dependent | 🔄 **CONDITIONAL** (reclassified in R1) |
+| [0013](#adr-0013--storage-layout-provisional) | Physical storage layout | 🔄 **PROVISIONAL** — semantic categories first |
 
 ---
 
@@ -32,7 +33,7 @@ Statuses: `PROPOSED` (awaiting review) · `OPEN` (decision deliberately not yet 
 
 **Rejected alternatives.**
 - *Database-canonical with file export* — inverts [I-1](01-ARCHITECTURE-CONSTITUTION.md#i-1--user-knowledge-exists-locally-by-default); the vault becomes a database with a directory of stale copies beside it.
-- *Files-only, no event log* — history cannot be recomputed from files, so audit, replay and provenance ([I-14](01-ARCHITECTURE-CONSTITUTION.md#i-14--agent-visible-state-is-reconstructable-and-auditable)) become impossible.
+- *Files-only, no event log* — history cannot be recomputed from files, so audit, replay and provenance ([I-14](01-ARCHITECTURE-CONSTITUTION.md#i-14--model-visible-state-is-reconstructable-provenance-linked-scope-authorized-and-auditable)) become impossible.
 - *Git as the event log* — attractive but wrong: git records file states, not typed semantic events with actors and scopes, and requiring git makes it a hard dependency of a system that must work without one.
 
 **Consequences.** Two write paths (files and journal) must be kept consistent under crash. JSONL is verbose. Full text search requires derived indexing. All accepted; recovery specified in [N](13-RECOVERY-MODEL.md).
@@ -41,49 +42,72 @@ Statuses: `PROPOSED` (awaiting review) · `OPEN` (decision deliberately not yet 
 
 ---
 
-## ADR-0002 — v1 editing is Markdown-native; BlockSuite is deferred
+## ADR-0002 — Editor architecture: OPEN / PROTOTYPE-GATED
 
-**Context.** The brief designates BlockSuite the primary editing substrate at Priority S+ and names the rich-state↔Markdown round-trip a major architecture gate.
+**Status: REOPENED in F1-R1 ([R1-02](reviews/F1-R1-RECONCILIATION.md), [R1-03](reviews/F1-R1-RECONCILIATION.md), [R1-04](reviews/F1-R1-RECONCILIATION.md)).** The F1 decision — *"v1 editing is Markdown-native on CodeMirror 6; BlockSuite is deferred"* — is **withdrawn**. It was reached on incomplete evidence and an unproven impossibility argument.
 
-**Decision.** v1 editing is **Markdown-native on CodeMirror 6**. The canonical bytes are the document model. Block identity, annotations and agent provenance live in documented sidecars ([D §4.4](03-CANONICAL-DATA-MODEL.md#44-the-sidecar-format)). BlockSuite and Yjs are deferred.
+**Why the F1 decision was withdrawn.**
 
-**Reasoning — two independent lines converging.**
+*Incomplete evidence.* F1 established that the standalone `toeverything/blocksuite` mirror is stale (last sync 2025-07-07; `@blocksuite/store` unpublished since 2025-07-01 at `0.22.4`) and concluded the editor was unmaintained. It missed that the implementation is actively developed inside `toeverything/AFFiNE` under `blocksuite/`, with editor feature work, a mobile fix, toolchain upgrades and a **security** dependency bump landing through 2026-08-10 ([E-10.1](research/EVIDENCE_LOG.md#e-101--the-evidence-f1-missed-the-affine-subtree-is-active)). The distribution path is stale; the editor is not. That distinction changes the decision.
 
-*Structural.* A rich block CRDT holds per-block identity, overlapping marks, anchored comments and operation history. CommonMark expresses none of these. A lossless mapping therefore requires a sidecar carrying CRDT history — and at that point **the sidecar is the document**, Markdown becomes a lossy projection, and [I-5](01-ARCHITECTURE-CONSTITUTION.md#i-5--canonical-artifacts-are-open-local-and-inspectable-amended) inverts. The gate cannot be passed; it can only be dissolved by not adopting a document model richer than the canonical format ([D §7](03-CANONICAL-DATA-MODEL.md#7-why-a-rich-block-crdt-cannot-be-canonical-in-v1)).
+*Unproven impossibility.* F1 argued that lossless rich-editor↔Markdown round-trip requires preserving CRDT operation history, therefore any sidecar becomes the real canonical document, therefore the gate is unpassable. This conflated six separable concerns and treated collaboration machinery as document meaning. It was never demonstrated ([D §7](03-CANONICAL-DATA-MODEL.md#7-the-rich-editor--canonical-file-question-open)).
 
-*Empirical.* BlockSuite's repository is a downstream mirror whose sync stopped 2025-07-07; `@blocksuite/store` has not published since 2025-07-01 at pre-1.0 `0.22.4`; six dependency-vulnerability branches are open and unmerged; development happens inside the 446 MB AFFiNE monorepo under a split license ([E-10](research/EVIDENCE_LOG.md#e-10--blocksuite-is-a-stale-downstream-mirror-editor-gate)). Even a solvable gate could not be cleared *against a maintained upstream*.
+**Decision.** The editor is chosen by an **executable bake-off**, specified in [18-EDITOR-GATE](18-EDITOR-GATE.md) and executed at [Phase 3E](15-IMPLEMENTATION-PHASES.md#phase-3e--editor-bake-off-gate).
 
-**Rejected alternatives.**
-- *Adopt BlockSuite anyway* — puts an unmaintained, unreleased, pre-1.0 component with unpatched transitive vulnerabilities on the critical path of a product whose thesis is longevity.
-- *Fork BlockSuite* — permanent ownership of a large editor codebase by a small team; per-file license provenance required.
-- *ProseMirror / Lexical / Tiptap* — all sound, but all rich-document models, so all reintroduce the structural problem. If a rich model is ever needed, these are the candidates to re-evaluate ahead of BlockSuite.
-- *Build a block editor* — the most expensive thing in the plan, for a feature set not yet validated.
+| Candidate | Substrate |
+|---|---|
+| **A** | CodeMirror 6 — Markdown-native; canonical bytes are the document model |
+| **B** | **Maintained AFFiNE `blocksuite/` subtree at a pinned commit** — never the stale standalone package |
+| **C** | ProseMirror / Tiptap / Milkdown — **only** if A and B both leave a documented gap |
 
-**Consequences.** No block transclusion, no concurrent rich-text editing, no database blocks, no inline comments beyond sidecar annotations in v1. This is a **real product cost, stated plainly.** In exchange: round-trip is the identity function, canonical files are genuinely canonical, the dependency is MIT and current, and the most expensive subsystem in the plan is not built.
+Scoring: canonical/open-file fidelity 30% · maintenance burden 20% · rich editing 15% · performance 10% · install size 10% · security surface 5% · agent editability 5% · future canvas 5%. Weights fixed before evaluation.
 
-**Reverses if.** [H-4](research/EVIDENCE_LOG.md#h-4--a-markdown-native-canonical-format-is-sufficient-for-v1-knowledge-work) is falsified — dogfooding shows Markdown-plus-sidecars genuinely cannot support required knowledge work. Then re-evaluate ProseMirror/Lexical *before* BlockSuite, and accept a documented sidecar-canonical model with an explicit [I-5](01-ARCHITECTURE-CONSTITUTION.md#i-5--canonical-artifacts-are-open-local-and-inspectable-amended) amendment. Deliberately the cheapest hypothesis in the plan to test.
+Elimination regardless of score: silent data loss, content loss on crash, or a sidecar that must carry document content.
+
+**What is NOT reopened.** The constitutional requirement stands: whatever wins, canonical artifacts must remain open, specified, locally readable and losslessly exportable ([I-5](01-ARCHITECTURE-CONSTITUTION.md#i-5--canonical-artifacts-are-open-local-and-inspectable-amended)), and derived state must remain rebuildable ([I-6](01-ARCHITECTURE-CONSTITUTION.md#i-6--derived-state-is-disposable-and-rebuildable)). A candidate that cannot satisfy those is eliminated, however capable.
+
+**Consequences of reopening.** No editor may be assumed by downstream design. [Phase 7](15-IMPLEMENTATION-PHASES.md#phase-7--desktop-application) scope is gate-dependent. [ADR-0012](#adr-0012--crdt-adoption-is-editor-dependent) (CRDT/Yjs) becomes editor-dependent. [ADR-0011](#adr-0011--desktop-shell) is partly editor-dependent. Phases 0–3 are unaffected — they are CLI-only and touch no editor.
+
+**Closes when.** Phase 3E produces a successor ADR with per-candidate measurements. An inconclusive result is a legitimate outcome and must be reported as such rather than resolved by aggregate score.
 
 ---
 
-## ADR-0003 — Graphify runs as a managed long-lived sidecar
+## ADR-0003 — Graph Intelligence runtime: integration shape
 
-**Context.** The brief offers three options: bundle Python locally, ship a managed sidecar, or adapt deterministic portions natively later.
+**Status: PROVISIONAL — pending [GI-BENCH](10-BENCHMARK-PLAN.md#b-11--gi-bench--graph-intelligence-benchmark-matrix) ([R1-06](reviews/F1-R1-RECONCILIATION.md), [R1-07](reviews/F1-R1-RECONCILIATION.md)).**
 
-**Decision.** **Option B — a managed long-lived sidecar process**, started lazily, read-only and path-confined to the vault, no credentials, network features disabled, supervised with restart-and-backoff, idle shutdown, resource caps.
+**The capability/implementation split (R1-06).** Two separate things must not be conflated:
 
-**Reasoning from measurement.** Cold `import graphify.extract` = **4,451 ms**; warm = **276 ms**; bare interpreter ≈100 ms ([E-6](research/EVIDENCE_LOG.md#e-6--graphify-startup-cost-cold-vs-warm)). Per-operation invocation costs ~376 ms of pure overhead even warm — impossible for per-file work — and the 4.45 s cold path would make first use appear broken. A long-lived process pays this **once per session**.
+```
+GRAPH_INTELLIGENCE_CAPABILITY  = CORE          (thesis-critical; not droppable)
+GRAPHIFY_PYTHON_RUNTIME        = REPLACEABLE   (one candidate implementation)
+```
 
-Extraction itself runs at ~18.4 files/s with 12 workers ([E-5](research/EVIDENCE_LOG.md#e-5--graphify-measured-extraction-throughput-and-confidence-distribution)), so throughput is adequate; only startup was pathological, and a sidecar removes startup entirely.
+Fehrest's thesis requires understanding relationships beyond lexical search. *That capability* is core. *Graphify* is the leading candidate implementation of it, not a permanent part of Fehrest's identity. Candidate implementations: upstream Graphify sidecar · adapted Graphify modules · bundled persistent worker · later native reimplementation · a different extractor if benchmarks prove it superior.
+
+**Context.** Three integration shapes were considered: bundle Python in-process, invoke a CLI per operation, or run a managed long-lived process.
+
+**Provisional decision.** A **managed long-lived worker**, started lazily, read-only and path-confined to the vault, no credentials, network features disabled, supervised with restart-and-backoff, idle shutdown, resource caps.
+
+**Reasoning from PRELIMINARY measurement.** Cold `import graphify.extract` ≈ **4,451 ms**; warm ≈ **276 ms**; bare interpreter ≈100 ms ([E-6](research/EVIDENCE_LOG.md#e-6--graphify-startup-cost-preliminary)). Per-operation invocation costs ~376 ms of pure overhead even warm, and the cold path would make first use appear broken. A long-lived process pays this once per session.
+
+**Why this is provisional and not decided.** These figures are single-machine, single-corpus, Windows, cold-cache ([R1-07](reviews/F1-R1-RECONCILIATION.md)). The cold/warm gap is large enough (~16×) that measurement noise is an implausible explanation, so the *direction* is solid. But the choice among lazy worker, preloaded worker, background process and adaptation depends on incremental-update latency, memory under concurrency, and behaviour across corpus *types* — none of which has been measured. **[GI-BENCH](10-BENCHMARK-PLAN.md#b-11--gi-bench--graph-intelligence-benchmark-matrix) must run before this ADR is finalised.**
+
+**Explicitly not decided here:** whether to port Graphify to a native language. F1 argued against on the grounds that startup, not throughput, was the binding constraint. That reasoning holds for the data available, but the data is one corpus. **Do not port Graphify** ([R1-06](reviews/F1-R1-RECONCILIATION.md)); revisit only if GI-BENCH shows throughput or packaging is genuinely binding.
 
 **Rejected alternatives.**
 - *In-process Python (embedded interpreter)* — couples Fehrest's process to a 130 MB / 32-package dependency tree and puts hostile-input parsers inside the TCB ([T-10](02-THREAT-MODEL.md#t-10--parser-vulnerabilities)).
-- *Per-operation CLI invocation* — refuted by measurement above.
-- *Port to Rust now* — the measured problem is startup, which the sidecar solves; porting addresses throughput, which is not the binding constraint. 60,202 lines and 28 grammars is a disproportionate cost for an unmeasured gain. Premature per the brief's own instruction.
-- *Require a user-installed Graphify* — an install failure would silently disable a core feature.
+- *Per-operation CLI invocation* — refuted by the startup measurement.
+- *Port to a native language now* — premature. Explicitly forbidden until GI-BENCH evidence justifies it.
+- *Require a user-installed Graphify* — an install failure would silently disable a core capability.
 
-**Consequences.** ~200–300 MB installer delta with a bundled runtime ([E-3](research/EVIDENCE_LOG.md#e-3--graphify-dependency-weight-and-installed-footprint)) — mitigated by making the graph an **optional capability install**. A second process to supervise, and IPC to design. An independent sidecar update channel is required, since the app and sidecar cannot share a release cadence given upstream CVE tracking.
+**Consequences.** ~200–300 MB installer delta with a bundled runtime ([E-3](research/EVIDENCE_LOG.md#e-3--graphify-dependency-weight-and-installed-footprint)) — mitigated by making Graph Intelligence an **optional capability install**. A second process to supervise, and IPC to design. An independent update channel is required, since the app and worker cannot share a release cadence given upstream CVE tracking.
 
-**Reverses if.** [H-2](research/EVIDENCE_LOG.md#h-2--extraction-scales-linearly-in-file-count) is falsified and throughput becomes the constraint; **or** packaging proves untenable on a target platform; **or** [H-5](research/EVIDENCE_LOG.md#h-5--a-single-sidecar-process-is-sufficient-isolation-for-the-extraction-path) is falsified and per-parser isolation is required — in which case the answer is likely WASM-isolated parsers, not a Rust port.
+**Finalised when.** GI-BENCH reports across 4 vault sizes × 5 corpus types × 10 operations × concurrency levels.
+
+**Reverses if.** GI-BENCH shows throughput or incremental latency is the binding constraint rather than startup; **or** packaging proves untenable on a target platform; **or** [H-5](research/EVIDENCE_LOG.md#h-5--a-single-sidecar-process-is-sufficient-isolation-for-the-extraction-path) is falsified and per-parser isolation is required — in which case the answer is likely WASM-isolated parsers, not a rewrite.
+
+**Does not reverse on implementation cost alone.** Graph Intelligence is CORE ([R1-06](reviews/F1-R1-RECONCILIATION.md)). If Graphify proves unsuitable, it is **replaced**, not dropped.
 
 ---
 
@@ -93,7 +117,15 @@ Extraction itself runs at ~18.4 files/s with 12 workers ([E-5](research/EVIDENCE
 
 **Decision.** Identity is a Fehrest-allocated **UUIDv7**, stored in the file's own frontmatter, immutable for the object's life. Graphify node IDs appear only in a rebuildable mapping table and never as a key in canonical state.
 
-**Reasoning.** Graphify IDs are name-derived normalised slugs — NFKC + casefold + non-word collapse — with a documented history of same-filename collisions (#550), Unicode collapse (#811), producer disagreement (#1033) and idempotency failure on Turkish identifiers (#2614), whose stated failure mode is splitting one entity into "disconnected ghost nodes" ([E-4](research/EVIDENCE_LOG.md#e-4--graphify-node-ids-are-name-derived-not-stable-identities)). Adopting them as identity would violate [I-15](01-ARCHITECTURE-CONSTITUTION.md#i-15--paths-are-locations-stable-ids-are-identities) by construction.
+**Reasoning — re-grounded in F1-R1 ([R1-05](reviews/F1-R1-RECONCILIATION.md)).** F1 justified this by citing upstream bugs. **Those bugs are fixed** (#2614 in 0.9.40; #811, #1033 and the #550 root cause all resolved, now guarded by contract and property tests), and citing them was wrong. The conclusion stands on structural grounds instead, which is a stronger position because upstream fixes cannot erode it:
+
+1. **Path-derived.** File node IDs follow the spec `{parent_dir}_{stem}` — a function of location. Rename or move changes the ID.
+2. **Scheme-versioned.** Upstream explicitly rejected an alternative ID scheme because it "would rewrite every file and symbol id and force a full-rebuild migration." An identifier whose scheme is expected to change across versions cannot anchor durable references.
+3. **Rebuild-sensitive.** Incremental updates can retain stale IDs until a forced rebuild.
+
+None of these is a defect; all follow from what an extractor ID is for — addressing nodes within one build of one graph. That is simply not durable object identity. Adopting such an ID would violate [I-15](01-ARCHITECTURE-CONSTITUTION.md#i-15--paths-are-locations-stable-ids-are-identities) by construction ([E-4](research/EVIDENCE_LOG.md#e-4--extractor-ids-are-name-derived-by-design-not-by-defect)).
+
+**Generalised.** This applies to **any** extractor, not to Graphify specifically — formalised as [G-ID-1…G-ID-4](01-ARCHITECTURE-CONSTITUTION.md#i-15--paths-are-locations-stable-ids-are-identities).
 
 **Rejected alternatives.** Path as identity (breaks on rename — the exact failure [I-15](01-ARCHITECTURE-CONSTITUTION.md#i-15--paths-are-locations-stable-ids-are-identities) forbids); content hash (changes on every edit); UUIDv4 (no time locality for index/log scans); ULID (equivalent properties, less standardised — tie broken by RFC 9562 status); Graphify node id (above).
 
@@ -154,7 +186,7 @@ RRF is chosen for fusion because it is deterministic, rank-only, and needs no sc
 
 **Decision.** Every memory carries valid time (`valid_from`/`valid_until`) and recorded time (`recorded_at`). Current state is resolved by a deterministic total ordering with explicit abstention and explicit contradiction ([F §4](05-MEMORY-MODEL.md#4-bitemporality)).
 
-**Reasoning.** Single-axis temporality cannot answer "what did we believe last month," which is exactly the question asked when auditing a wrong agent decision — a core Fehrest promise ([I-14](01-ARCHITECTURE-CONSTITUTION.md#i-14--agent-visible-state-is-reconstructable-and-auditable)). Dynamic state tracking is one of LongMemEval-V2's five measured abilities ([E-14](research/EVIDENCE_LOG.md#e-14--longmemeval-v2-exists-and-defines-the-right-target)). And the failure it prevents — surfacing two conflicting values and letting a model guess — is the failure the product exists to fix.
+**Reasoning.** Single-axis temporality cannot answer "what did we believe last month," which is exactly the question asked when auditing a wrong agent decision — a core Fehrest promise ([I-14](01-ARCHITECTURE-CONSTITUTION.md#i-14--model-visible-state-is-reconstructable-provenance-linked-scope-authorized-and-auditable)). Dynamic state tracking is one of LongMemEval-V2's five measured abilities ([E-14](research/EVIDENCE_LOG.md#e-14--longmemeval-v2-exists-and-defines-the-right-target)). And the failure it prevents — surfacing two conflicting values and letting a model guess — is the failure the product exists to fix.
 
 `recorded_at` is system-assigned, which is what makes backdating impossible ([T-5](02-THREAT-MODEL.md#t-5--memory-supersession-abuse)).
 
@@ -214,16 +246,49 @@ Adopts the donor's two rules verbatim: a location is not an authorization token,
 
 ---
 
-## ADR-0012 — No CRDT in v1
+## ADR-0012 — CRDT adoption is editor-dependent
 
-**Decision.** No CRDT runtime in v1. Yjs and Automerge are deferred.
+**Status: CONDITIONAL — resolved by the Editor Gate ([R1-09](reviews/F1-R1-RECONCILIATION.md)).** F1 classified Yjs as a flat `DEFER`. That was too coarse: whether a CRDT enters v1 is not an independent choice, it is a **consequence of [ADR-0002](#adr-0002--editor-architecture-open--prototype-gated)**.
 
-**Reasoning.** A CRDT solves concurrent multi-writer editing. v1 has one writer on one machine, so it solves no v1 problem. It introduces the precise class of state [I-5](01-ARCHITECTURE-CONSTITUTION.md#i-5--canonical-artifacts-are-open-local-and-inspectable-amended) forbids: document state authoritative in the runtime but inexpressible in the open file. And the operation history that gives a CRDT its value is exactly what Markdown cannot hold ([D §7](03-CANONICAL-DATA-MODEL.md#7-why-a-rich-block-crdt-cannot-be-canonical-in-v1)).
+**Decision.**
 
-Note this is **deferral on necessity, not on health** — Yjs is MIT and actively released ([E-11](research/EVIDENCE_LOG.md#e-11--yjs-and-codemirror-are-healthy-the-crdt-is-not-the-stale-part)) — which makes it a weak, easily reversed decision rather than a rejection.
+| Editor Gate outcome | CRDT status |
+|---|---|
+| **Candidate B wins** (maintained AFFiNE BlockSuite subtree) | Yjs arrives **as part of the substrate**. Not a separate adoption decision. The gate's ADR must then specify which CRDT state is canonical, which is collaboration-specific, and which is transient ([18-EDITOR-GATE §4](18-EDITOR-GATE.md#4-the-round-trip-proof-obligation)) |
+| **Candidate A or C wins** (Markdown-native / other) | Yjs stays **deferred** until collaboration or sync independently justifies it |
 
-**Rejected.** Yjs now "to be ready later" (pays full cost for zero v1 benefit and constrains the canonical format immediately); Automerge (same, plus a second ecosystem); both (explicitly forbidden absent a proven need neither satisfies alone).
+**Hard constraint, independent of outcome: collaboration must NOT be added to the MVP in order to justify a CRDT** ([R1-09](reviews/F1-R1-RECONCILIATION.md)). If a CRDT arrives, it arrives because the winning editor uses it for local document state — not because Fehrest acquired a collaboration requirement it did not have.
 
-**Consequences.** No real-time collaboration, no offline multi-device merge beyond file-level conflict handling. External concurrent modification is handled by hash-based detection and explicit conflict surfacing ([N](13-RECOVERY-MODEL.md)) — genuinely weaker than a CRDT for that case, and accepted.
+**Health vs necessity.** Yjs is MIT and actively released — `yjs@13.6.32`, published 2026-08-04 ([E-11](research/EVIDENCE_LOG.md#e-11--yjs-and-codemirror-are-healthy-the-crdt-is-not-the-stale-part)). There is **no maintenance objection**. The only question is necessity, which the Editor Gate answers.
 
-**Reverses if.** Collaboration enters scope → adopt Yjs (single CRDT only) with a dedicated ADR on how CRDT state relates to canonical files, since that is where the deferred difficulty actually lives, not in adding the library.
+**Still rejected regardless of outcome.** Two CRDT runtimes simultaneously. Automerge alongside Yjs requires a dedicated ADR proving a need neither satisfies alone.
+
+**Consequences while conditional.** No design may assume a CRDT is present, and none may assume it is absent. Where the two differ — chiefly external-concurrent-modification handling ([N §3.10](13-RECOVERY-MODEL.md#310-concurrent-editor-external-modification)) — the plan specifies the no-CRDT behaviour as the floor, since that is the weaker case and must work anyway.
+
+---
+
+## ADR-0013 — Storage layout: provisional
+
+**Status: PROVISIONAL ([R1-17](reviews/F1-R1-RECONCILIATION.md)).** F1 presented a concrete `.fehrest/` hierarchy without an ADR justifying it. A physical layout committed before storage and recovery prototypes exist is a guess wearing a specification's clothes.
+
+**Decision.** Fix the **semantic storage categories** now; defer the physical layout to a successor ADR after the Phase 1–2 storage and recovery prototypes.
+
+**Semantic categories** (these are stable and may be designed against):
+
+| Category | Class | Rebuildable? |
+|---|---|---|
+| Canonical identity | canonical | No |
+| Canonical events | canonical | No |
+| Canonical explicit memory | canonical | No |
+| Canonical content + attachments | canonical | No |
+| Schema / version state | canonical | No |
+| Derived search index | derived | Yes |
+| Derived graph | derived | Yes |
+| Derived vectors | derived | Yes |
+| Cache (extracted text, thumbnails, summaries) | derived | Yes |
+
+**The load-bearing constraint, independent of layout ([R1-16](reviews/F1-R1-RECONCILIATION.md)):** canonical and derived state must be **separable by directory**, so that derived state can be deleted wholesale without touching canonical state. The layout in [D §2](03-CANONICAL-DATA-MODEL.md#2-storage-categories-provisional-layout) satisfies this and is a **worked illustration, not a commitment**.
+
+**Explicitly warned against:** reading "`.fehrest/` is disposable." It is not. It contains canonical event and memory state. Only the derived subtree is disposable.
+
+**Finalised when.** Phase 1–2 prototypes report on write patterns, crash behaviour, backup ergonomics, and how sync tools and `git` interact with the directory.

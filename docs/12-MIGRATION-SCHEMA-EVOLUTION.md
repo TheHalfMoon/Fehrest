@@ -147,7 +147,7 @@ Named now so the mechanism is designed against real cases rather than hypothetic
 | Embedding model change | Derived only | Rebuild; no migration |
 | Sidecar format extension | Minor | Richer annotations |
 | **Canonical event log → binary format** | **Major** | If JSONL misses durability/size budgets ([ADR-0001](09-TECHNOLOGY-DECISIONS.md#adr-0001--canonical-state-is-open-files-plus-an-append-only-event-log) reversal) |
-| **Sidecar becomes canonical for rich documents** | **Major** | If [H-4](research/EVIDENCE_LOG.md#h-4--a-markdown-native-canonical-format-is-sufficient-for-v1-knowledge-work) is falsified ([ADR-0002](09-TECHNOLOGY-DECISIONS.md#adr-0002--v1-editing-is-markdown-native-blocksuite-is-deferred) reversal) |
+| **Sidecar becomes canonical for rich documents** | **Major** | If [H-4](research/EVIDENCE_LOG.md#h-4--a-markdown-native-canonical-format-is-sufficient-for-v1-knowledge-work) is falsified ([ADR-0002](09-TECHNOLOGY-DECISIONS.md#adr-0002--editor-architecture-open--prototype-gated) reversal) |
 | Identity scheme change | Major | Only if [ADR-0004](09-TECHNOLOGY-DECISIONS.md#adr-0004--object-identity-is-fehrest-allocated-and-opaque) reverses |
 
 The two major ones correspond exactly to the two ADRs most likely to reverse. That is intentional: the migration mechanism must be strong enough to survive the plan's own most probable changes of mind, or those reversals become impossible in practice and the ADRs' "reverses if" clauses are fiction.

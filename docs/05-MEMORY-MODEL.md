@@ -92,18 +92,55 @@ Forcing these onto Objects would put `valid_from`/`valid_until`/`supersedes`/`co
 
 The three types that most strongly steer future agent behaviour — `preference`, `decision`, `constraint` — require human confirmation, because those are exactly the targets of memory poisoning ([T-2](02-THREAT-MODEL.md#t-2--memory-poisoning)).
 
-### 3.3 Epistemic status
+### 3.3 The Fehrest evidence and trust model
 
-Four values, event-sourced per [I-12](01-ARCHITECTURE-CONSTITUTION.md#i-12--inference-is-never-silently-promoted-to-fact-amended):
+> **DEFINED NATIVELY IN F1-R1 ([R1-08](reviews/F1-R1-RECONCILIATION.md)).** F1's four-value `epistemic_status` was serviceable but partly shaped by an extractor's vocabulary. **Extractor confidence labels must map into Fehrest's model, never define it** — a label distribution observed on one corpus (`AMBIGUOUS` at 0.0%) says nothing about ambiguity in general.
 
-| Status | Meaning | Reachable by |
+**Eight states**, event-sourced per [I-12](01-ARCHITECTURE-CONSTITUTION.md#i-12--inference-is-never-silently-promoted-to-fact-amended):
+
+| State | Meaning | Reachable by |
 |---|---|---|
-| `observed` | Directly recorded from a primary source Fehrest itself read | Deterministic extraction only |
-| `asserted` | An identified actor claims it | Any actor, including agents |
-| `inferred` | Derived by a mechanism from other memories | Rules or models |
-| `unverified` | Recorded but unsupported by resolvable evidence | Imports, degraded cases |
+| `EXTRACTED` | Deterministically derived from a primary source Fehrest itself parsed | Deterministic extraction only |
+| `ASSERTED` | An identified actor claims it | Any actor, including agents |
+| `INFERRED` | Derived by a mechanism from other memories | Rules or models |
+| `USER_CONFIRMED` | A human explicitly affirmed it | The user only |
+| `AGENT_CONFIRMED` | An agent affirmed it from independent evidence | Agents, with a second evidence link |
+| `CONFLICTED` | Contradicts another active memory; resolution failed | Contradiction detection |
+| `SUPERSEDED` | Replaced by a later memory; retained | Supersession |
+| `UNRESOLVED` | Recorded but its evidence does not currently resolve | Imports, broken anchors, degraded cases |
 
-**Agent-written memories enter as `asserted`, never `observed`.** Only Fehrest's own deterministic extraction may produce `observed`. Promotion to a higher-confidence status requires new primary evidence or explicit human confirmation, and every transition emits an event — there is no code path that mutates status silently.
+**Permitted transitions** — anything not listed is forbidden, and every transition emits an event:
+
+```
+ASSERTED   → USER_CONFIRMED     (human affirmation)
+ASSERTED   → AGENT_CONFIRMED    (independent corroborating evidence)
+ASSERTED   → CONFLICTED         (contradiction detected)
+INFERRED   → ASSERTED           (an actor adopts the inference as a claim)
+INFERRED   → CONFLICTED
+EXTRACTED  → CONFLICTED         (source changed or contradicts)
+EXTRACTED  → UNRESOLVED         (source deleted or anchor broken)
+CONFLICTED → USER_CONFIRMED     (human resolves in this memory's favour)
+CONFLICTED → SUPERSEDED         (resolved against it)
+any        → SUPERSEDED         (a later memory replaces it)
+any        → UNRESOLVED         (evidence stops resolving)
+```
+
+**Three rules that make this a boundary rather than a label:**
+
+1. **No upward transition without new evidence or a human.** `ASSERTED → USER_CONFIRMED` requires a human event; `→ AGENT_CONFIRMED` requires a *second, independent* evidence link. An agent cannot confirm its own assertion.
+2. **`EXTRACTED` is not reachable by any agent.** Only Fehrest's own deterministic parsing produces it. An agent asserting "I read this in the file" produces `ASSERTED`, not `EXTRACTED` — the distinction between *Fehrest parsed it* and *something told us it parsed it* is exactly the boundary [T-2](02-THREAT-MODEL.md#t-2--memory-poisoning) attacks.
+3. **`CONFLICTED` is a first-class resting state, not an error.** A memory may sit conflicted indefinitely. Forcing resolution is how a memory system starts inventing answers.
+
+**Mapping extractor labels in** — one-way, at ingestion:
+
+| Extractor label | Fehrest state |
+|---|---|
+| `EXTRACTED` | `EXTRACTED` |
+| `INFERRED` | `INFERRED` |
+| `AMBIGUOUS` | `UNRESOLVED` |
+| *(unrecognised label)* | `UNRESOLVED` |
+
+The last row matters: an unknown label from a future or different extractor degrades to `UNRESOLVED` rather than being trusted or dropped. This is what lets the extractor be replaced ([ADR-0003](09-TECHNOLOGY-DECISIONS.md#adr-0003--graph-intelligence-runtime-integration-shape)) without touching the trust model.
 
 ---
 
@@ -133,7 +170,7 @@ Now three genuinely different questions have three deterministic answers:
 | "What did it use in March 2026?" | valid at 2026-03-01 | **React** |
 | "What did we believe in May 2026?" | recorded ≤ 2026-05-01, valid at then | **React** — correctly reports the past belief |
 
-The third row is why *both* axes are needed. Valid time alone cannot answer "what did the system think last month," which is exactly the question asked when auditing why an agent made a wrong decision. That audit capability is a core Fehrest promise ([I-14](01-ARCHITECTURE-CONSTITUTION.md#i-14--agent-visible-state-is-reconstructable-and-auditable)), so single-axis temporality is insufficient.
+The third row is why *both* axes are needed. Valid time alone cannot answer "what did the system think last month," which is exactly the question asked when auditing why an agent made a wrong decision. That audit capability is a core Fehrest promise ([I-14](01-ARCHITECTURE-CONSTITUTION.md#i-14--model-visible-state-is-reconstructable-provenance-linked-scope-authorized-and-auditable)), so single-axis temporality is insufficient.
 
 ### 4.2 Deterministic resolution
 
@@ -163,7 +200,7 @@ resolve(subject, predicate, scope, as_of_valid=now, as_of_recorded=now):
 
 Four properties this ordering guarantees, and all four are testable:
 
-1. **Total and deterministic** given the same inputs — required by [I-14](01-ARCHITECTURE-CONSTITUTION.md#i-14--agent-visible-state-is-reconstructable-and-auditable).
+1. **Total and deterministic** given the same inputs — required by [I-14](01-ARCHITECTURE-CONSTITUTION.md#i-14--model-visible-state-is-reconstructable-provenance-linked-scope-authorized-and-auditable).
 2. **No LLM in the resolution path** — required by [I-4](01-ARCHITECTURE-CONSTITUTION.md#i-4--core-functionality-requires-no-paid-api) and [R-1](01-ARCHITECTURE-CONSTITUTION.md#2-derived-rules).
 3. **Explicit abstention.** `NO_ANSWER` is a first-class result. Abstention is a measured axis in LongMemEval and a system that guesses instead of abstaining is worse than useless for a memory OS.
 4. **Contradiction is surfaced, not resolved.** Silently choosing between two equally-supported conflicting memories is how a memory system becomes untrustworthy. The compiler passes contradictions through to the agent explicitly ([H](07-CONTEXT-COMPILER-SPEC.md)).

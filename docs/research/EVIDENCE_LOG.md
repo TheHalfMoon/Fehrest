@@ -20,28 +20,51 @@ Labels used throughout the planning package:
 
 ## E-0 — Canonical repository state
 
+> **CORRECTED IN F1-R1 ([R1-01](../reviews/F1-R1-RECONCILIATION.md)).** The F1 version of this entry concluded that `TheHalfMoon/Fehrest` did not exist. That conclusion was a **category error** — it treated "not visible to this token" as "does not exist" — and is retracted.
+
 **Command:**
 ```bash
 gh api repos/TheHalfMoon/Fehrest
-gh api users/TheHalfMoon/repos
-gh api repos/wepld/Fehrest
-gh api repos/wepld/Fehrest/commits
+gh api user --jq .login
+gh api "users/TheHalfMoon/repos?type=all&per_page=100"
 ```
 
-**Output (abridged):**
-- `TheHalfMoon/Fehrest` → `HTTP 404 Not Found`.
-- `TheHalfMoon` exists as a **User** account (`name: "Abdulaziz M. Shehri"`, `public_repos: 8`). Its repositories are: `commandF`, `Hikma`, `Kodac`, `MedScale`, `MESC`, `ProtocolWISE`, `wepld`, `Winds`. **None is named `Fehrest`.**
-- `wepld/Fehrest` exists: public, `created_at: 2026-08-02T01:41:07Z`, `size: 0`, `default_branch: main`, no license, not a fork.
-- `wepld/Fehrest/commits` → `HTTP 409 "Git Repository is empty."`; `branches` → `[]`; `contents` → `HTTP 404 "This repository is empty."`
-- Local working directory `C:\Users\Shehr\OneDrive\Desktop\Fehrest` was **empty** and **not a git repository** at session start.
+**Output:**
+```
+repos/TheHalfMoon/Fehrest  → HTTP 404 Not Found
+authenticated principal    → wepld
+users/TheHalfMoon/repos    → public entries only; no Fehrest listed
+```
 
-**FACT:** The repository named in the task prompt does not exist. The only Fehrest repository reachable by the authenticated account (`wepld`) is empty — zero commits, zero branches, zero bytes.
+**FACT:** The 404 is reproducible.
 
-**FACT:** There is no pre-existing Fehrest source code, schema, architecture document, or planning artifact of any kind.
+**FACT:** The authenticated principal in this environment is **`wepld`**, a different account from **`TheHalfMoon`**.
 
-**INFERENCE:** Fehrest is greenfield. No migration path, backward-compatibility constraint, or legacy invariant exists. There is correspondingly **no repository HEAD to report** — see [Q-1](../16-OPEN-QUESTIONS.md) for the founder decision on which remote is canonical.
+**FACT:** `users/<user>/repos` returns only repositories visible to the caller. For an unaffiliated token this is the public set. **Absence from that listing is not evidence of non-existence.**
 
-**Consequence for review:** Any reviewer statement of the form "the current implementation does X" is unsupportable. There is no implementation.
+**INFERENCE — the correction:** A 404 from an unaffiliated token against a private repository is **indistinguishable** from a 404 against a nonexistent one. GitHub returns 404 rather than 403 for private repositories precisely to avoid disclosing their existence. The F1 entry read an authorization signal as an existence signal.
+
+**CANONICAL TRUTH (founder-asserted, authoritative over this environment):**
+
+| Property | Value |
+|---|---|
+| Canonical repository | **`TheHalfMoon/Fehrest`** |
+| Visibility | private |
+| Default branch | `main` |
+| Size | 0 |
+| Implementation | none |
+
+**ENVIRONMENT ACCESS LIMITATION:** This session cannot read `TheHalfMoon/Fehrest`. That is a limitation of the credential available here, recorded as such. It is not evidence about the repository.
+
+**FACT:** `wepld/Fehrest` exists (public, created 2026-08-02, empty — `HTTP 409 "Git Repository is empty"`, zero branches). It is **NOT canonical for this project**, is not a fallback, and receives no planning work.
+
+**FACT:** The local working directory `C:\Users\Shehr\OneDrive\Desktop\Fehrest` was empty and not a git repository at F1 session start. A local repository was initialised there to hold the planning package. As of F1-R1 its `origin` is set to `https://github.com/TheHalfMoon/Fehrest.git`. **Nothing has been pushed to any remote.**
+
+**FACT:** There is no pre-existing Fehrest source code, schema, or planning artifact other than this package.
+
+**INFERENCE:** Fehrest is greenfield — no migration path, backward-compatibility constraint, or legacy invariant exists. There is **no upstream repository HEAD to report**, because the canonical repository is empty (size 0).
+
+**Consequence for review:** Any reviewer statement of the form "the current implementation does X" is unsupportable. There is no implementation. Repository *identity* is CLOSED; only license, publication strategy and release timing remain open ([Q-1](../16-OPEN-QUESTIONS.md#q-1--repository-identity-closed)).
 
 ---
 
@@ -102,7 +125,7 @@ Stages communicate through "plain Python dicts and NetworkX graphs — no shared
 
 **FACT (upstream security posture, `ARCHITECTURE.md` + `SECURITY.md`):** external input passes `graphify/security.py`: `validate_url()` (http/https only, blocks `file://` redirects), `safe_fetch()` (size cap, timeout), `validate_graph_path()` (must resolve inside `graphify-out/`), `sanitize_label()` (strips control chars, caps 256 chars, HTML-escapes).
 
-**INFERENCE:** Graphify already implements path-confinement and label sanitisation of the same class Fehrest requires. This is reusable prior art, not a gap to invent. It is **not** sufficient on its own — see [E-4](#e-4--graphify-node-ids-are-name-derived-not-stable-identities).
+**INFERENCE:** Graphify already implements path-confinement and label sanitisation of the same class Fehrest requires. This is reusable prior art, not a gap to invent. It is **not** sufficient on its own — see [E-4](#e-4--extractor-ids-are-name-derived-by-design-not-by-defect).
 
 ---
 
@@ -137,28 +160,56 @@ du -sh gfenv/Lib/site-packages
 
 ---
 
-## E-4 — Graphify node IDs are name-derived, not stable identities
+## E-4 — Extractor IDs are name-derived **by design**, not by defect
 
-**Source:** `graphify/ids.py` at pinned commit (68 lines, read in full).
+> **CORRECTED IN F1-R1 ([R1-05](../reviews/F1-R1-RECONCILIATION.md)).** The F1 version cited upstream issues #550, #811, #1033 and #2614 as if they were live defects. **They are fixed.** Those citations are retracted. The architectural conclusion is unchanged and now rests on structural evidence that no upstream fix can invalidate.
 
-**FACT:** `ids.py` is the "single source of truth for node-ID normalization." The recipe is: NFKC-normalise → casefold → NFKC again → replace runs of non-word chars with `_` → collapse repeated `_` → strip leading/trailing `_`. `make_id(*parts)` joins name parts with `_` and normalises.
+**Source:** `graphify/ids.py`, `graphify/extract.py`, `graphify/build.py` and `CHANGELOG.md` at pinned commit `0738af37`.
 
-**FACT:** IDs are therefore **derived from human-readable names**, not allocated. The module docstring names three independent producers that must agree (AST extractor, LLM subagents, graph builder) and lists a recurring bug class from their divergence:
-- `#811` Unicode collapse
-- `#550` **same-filename collisions**
-- `#1033` AST-vs-LLM file-node mismatch
-- `#1104`
-- `#2614` Turkish identifiers (`İslemYap`) broke idempotency because casefold introduced a combining mark
+### The retracted claims
 
-**FACT:** The docstring states the failure mode explicitly: producers that disagree cause the graph to "split a single entity into disconnected ghost nodes."
+| Issue | F1 implied | Verified status at pinned commit |
+|---|---|---|
+| #2614 Turkish `İ` idempotency | current defect | **FIXED in 0.9.40 (2026-08-11)** — "`normalize_id()` is now idempotent for Turkish `İ` and similar codepoints by casefolding before the non-word filter" |
+| #811 Unicode collapse | current defect | **FIXED** — NFKC applied before ID generation; `.casefold()` replaced `.lower()`; `[^\w]+` with `re.UNICODE` preserves CJK/Cyrillic/Arabic/accented Latin |
+| #1033 AST-vs-semantic mismatch | current defect | **FIXED** at the relative-path remap chokepoint |
+| #550 same-filename collisions | current defect | **ROOT CAUSE FIXED** — four hand-synced copies of the recipe unified into one `graphify.ids` module, "guarded by contract + hypothesis property tests" |
 
-**INFERENCE — load-bearing:** Graphify node IDs **cannot** serve as Fehrest object identities. They are unstable under rename, unstable under Unicode representation changes, and admit documented collisions across identically named files. Fehrest's invariant *"Paths are locations; stable IDs are identities"* is violated by construction if Graphify IDs are adopted as identity.
+**FACT:** `_disambiguate_colliding_node_ids` exists in current code (`graphify/extract.py`, `graphify/build.py`) and actively salts colliding IDs apart.
 
-**RECOMMENDATION:** Fehrest allocates its own opaque identities and stores `graphify_node_id` only as a **derived, non-authoritative, rebuildable mapping column**. See [ADR-0004](../09-TECHNOLOGY-DECISIONS.md#adr-0004--object-identity-is-fehrest-allocated-and-opaque).
+**Assessment:** Graphify's identity layer is **actively maintained and hardened**, with property-based tests specifically guarding the normalisation contract. Describing it as bug-ridden was wrong.
+
+### The structural facts that survive
+
+**FACT:** `ids.py` normalises: NFKC → casefold → NFKC → replace non-word runs with `_` → collapse `_` → strip. IDs are **derived from names**, not allocated.
+
+**FACT:** File-level node IDs follow the documented spec **`{parent_dir}_{stem}`** (`graphify/extract.py:182`). The identifier is therefore a **function of the file's path**.
+
+**FACT — the decisive one:** The CHANGELOG records that an extension-aware ID scheme was considered and rejected because it *"would rewrite every file and symbol id and force a full-rebuild migration in lockstep with the skill/validation id spec."*
+
+**FACT:** Incremental updates can carry stale derived edges across an upstream fix: after the #1814 fix, "because `graphify update` only re-extracts changed files, an unchanged wrapper keeps that edge until it is next edited or a `--force` full rebuild runs."
+
+### Conclusion
+
+**INFERENCE — load-bearing, and now defect-independent:** Extractor IDs cannot be Fehrest identities, for three structural reasons:
+
+1. **Path-derived.** `{parent_dir}_{stem}` changes when a file is renamed or moved. Identity that changes on `mv` is not identity.
+2. **Scheme-versioned.** Upstream states plainly that changing the scheme rewrites every ID. An identifier whose scheme is expected to change across versions cannot anchor durable references.
+3. **Rebuild-sensitive.** Incremental derived state can hold stale IDs until a forced rebuild.
+
+None of these is a bug. All three follow from what an extractor ID is *for* — addressing nodes within one build of one graph. That is a legitimate design, and it is simply not the same thing as durable object identity.
+
+**This argument is strictly stronger than F1's**, because upstream fixing every open issue would leave it untouched.
+
+**RECOMMENDATION:** Fehrest allocates its own opaque identities; `extractor_id` is a derived, non-authoritative, rebuildable mapping column. Formalised as invariants **G-ID-1…G-ID-4** ([B §1](../01-ARCHITECTURE-CONSTITUTION.md#i-15--paths-are-locations-stable-ids-are-identities)) and [ADR-0004](../09-TECHNOLOGY-DECISIONS.md#adr-0004--object-identity-is-fehrest-allocated-and-opaque).
+
+**Generalisation:** this applies to **any** extractor, not to Graphify specifically — which is what makes it an invariant rather than a donor caveat ([R1-06](../reviews/F1-R1-RECONCILIATION.md)).
 
 ---
 
-## E-5 — Graphify: measured extraction throughput and confidence distribution
+## E-5 — Graphify: measured extraction throughput (PRELIMINARY)
+
+> **RECLASSIFIED IN F1-R1 ([R1-07](../reviews/F1-R1-RECONCILIATION.md)):** `PRELIMINARY / SINGLE-ENVIRONMENT / SINGLE-CORPUS`. One machine, one corpus (Graphify's own Python source), Windows, cold cache. The linear extrapolation below is **not a verified system property** and must not drive runtime or packaging decisions. [GI-BENCH](../10-BENCHMARK-PLAN.md#b-11--gi-bench--graph-intelligence-benchmark-matrix) supersedes it.
 
 **Command:** (run against Graphify's own source tree as the corpus)
 ```python
@@ -185,15 +236,15 @@ relations: [('calls', 9383), ('contains', 8965), ('rationale_for', 3288),
 
 **INFERENCE:** The advertised three-level confidence model is, on this corpus, a **two-level model**. Fehrest must not build UI or trust logic that depends on `AMBIGUOUS` being populated. Treat the vocabulary as open but expect binary behaviour.
 
-**INFERENCE — extrapolated ingestion budget** (linear in file count, same hardware, cold):
+**HYPOTHESIS — naive linear extrapolation. NOT A BUDGET. NOT A SYSTEM PROPERTY.**
 
-| Vault size | Projected full extraction |
+| Vault size | Naive linear projection |
 |---|---|
 | 1,000 files | ≈55 s |
 | 10,000 files | ≈9 min |
 | 100,000 files | ≈90 min |
 
-Linearity is an assumption; cross-file resolution passes may be superlinear. Flagged as [HYPOTHESIS H-2](#h-2--extraction-scales-linearly-in-file-count) and scheduled for measurement in [Phase 2](../15-IMPLEMENTATION-PHASES.md).
+**These numbers must not be cited as Fehrest performance characteristics** ([R1-07](../reviews/F1-R1-RECONCILIATION.md)). They assume linearity in file count on one corpus of one type on one machine. Cross-file symbol resolution is plausibly superlinear, and corpus composition (code-heavy vs Markdown-heavy, many-small vs few-large) is entirely unmodelled. Tracked as [HYPOTHESIS H-2](#h-2--extraction-scales-linearly-in-file-count); measured by [GI-BENCH](../10-BENCHMARK-PLAN.md#b-11--gi-bench--graph-intelligence-benchmark-matrix).
 
 **INFERENCE — load-bearing:** A full graph rebuild of a large vault is a **tens-of-minutes background job**, not an interactive operation. Therefore: incremental extraction is mandatory, not an optimisation; graph availability must never gate application startup; and rebuild must be resumable and cancellable.
 
@@ -201,7 +252,9 @@ Linearity is an assumption; cross-file resolution passes may be superlinear. Fla
 
 ---
 
-## E-6 — Graphify: startup cost (cold vs warm)
+## E-6 — Graphify: startup cost (PRELIMINARY)
+
+> **RECLASSIFIED IN F1-R1 ([R1-07](../reviews/F1-R1-RECONCILIATION.md)):** `PRELIMINARY / SINGLE-ENVIRONMENT`. Windows 11, one machine, cold filesystem cache. Directionally strong (a ~16× cold/warm gap is unlikely to be measurement noise) but not cross-platform verified. [GI-BENCH](../10-BENCHMARK-PLAN.md#b-11--gi-bench--graph-intelligence-benchmark-matrix) must confirm before [ADR-0003](../09-TECHNOLOGY-DECISIONS.md#adr-0003--graph-intelligence-runtime-integration-shape) is finalised.
 
 **Command:**
 ```bash
@@ -222,7 +275,7 @@ import graphify.extract: 4451 ms, 276 ms, 276 ms
 - **A long-lived sidecar process amortises this to once per application session.**
 - No evidence yet justifies a Rust port. The cost being amortised is *startup*, which a sidecar removes entirely; porting 60,202 lines would address throughput, which has not yet been shown to be the binding constraint.
 
-**RECOMMENDATION:** Managed long-lived sidecar. See [ADR-0003](../09-TECHNOLOGY-DECISIONS.md#adr-0003--graphify-runs-as-a-managed-long-lived-sidecar).
+**RECOMMENDATION:** Managed long-lived sidecar. See [ADR-0003](../09-TECHNOLOGY-DECISIONS.md#adr-0003--graph-intelligence-runtime-integration-shape).
 
 ---
 
@@ -310,7 +363,9 @@ DATE: 2026-08-17T19:03:17+08:00
 
 ---
 
-## E-10 — BlockSuite is a stale downstream mirror (editor gate)
+## E-10 — BlockSuite *distribution* is stale; the *implementation* is not (editor gate)
+
+> **CORRECTED IN F1-R1 ([R1-02](../reviews/F1-R1-RECONCILIATION.md)).** F1 reported the staleness of the standalone mirror and **missed** that the editor is actively developed inside the AFFiNE monorepo. The conclusion drawn from the partial evidence — "therefore CodeMirror 6" — is retracted, and the editor decision is reopened as a prototype gate ([18-EDITOR-GATE](../18-EDITOR-GATE.md)). See §E-10.1 for the added evidence.
 
 **Commands:**
 ```bash
@@ -362,11 +417,42 @@ AFFiNE/blocksuite/ contains: affine, docs, docs-site, framework,
 
 **FACT (AFFiNE licensing):** AFFiNE's `LICENSE` is a split license. Content under `packages/backend` and `packages/common/native` is governed by a separate license file; "Content outside of the above mentioned directories... is available under the 'MIT' license as defined in `LICENSE-MIT`." The `toeverything/blocksuite` mirror itself reports **MPL-2.0**.
 
-**INFERENCE — load-bearing, changes the prompt's plan:** BlockSuite is not an independently maintained, independently released editing substrate. Adopting it as Fehrest's "Priority S+ primary editing substrate" would place on Fehrest's critical path a component that is: 13 months stale as a mirror, pre-1.0, unreleased on npm for 13.5 months, carrying unmerged dependency-vulnerability branches, and whose real development happens inside a 446 MB application monorepo under a split license.
+**INFERENCE:** The standalone **distribution path** is not viable. Depending on `@blocksuite/*` from npm would mean depending on packages unpublished for 13.5 months at pre-1.0.
 
-**INFERENCE:** The consequence is not merely "risky dependency." It is that **the architecture gate the prompt asks me to clear cannot be cleared against a maintained upstream.** Proving loss-aware round-trip against a frozen mirror proves something about a snapshot, not about a substrate Fehrest could rely on.
+---
 
-**RECOMMENDATION:** Reclassify BlockSuite from `USE / PROTOTYPE (S+)` to **DEFER**, and dissolve the round-trip gate by construction rather than solving it. See [ADR-0002](../09-TECHNOLOGY-DECISIONS.md#adr-0002--v1-editing-is-markdown-native-blocksuite-is-deferred) and the full argument in [Derived vs Canonical](../03-CANONICAL-DATA-MODEL.md#7-why-a-rich-block-crdt-cannot-be-canonical-in-v1).
+### E-10.1 — The evidence F1 missed: the AFFiNE subtree is active
+
+**Command:**
+```bash
+gh api "repos/toeverything/AFFiNE/commits?path=blocksuite&per_page=10"
+```
+
+**Output:**
+```
+2026-08-10  6375f5ab  chore: bump typescript 7 (#15465)
+2026-08-10  0c7b20dc  chore: migrate oxlint & oxfmt (#15464)
+2026-08-10  ee899a26  feat(server): improve context management (#15448)
+2026-08-05  921e83bb  chore: bump @atlaskit/pragmatic-drag-and-drop-auto-scroll (#15412)
+2026-07-31  6170a907  feat(editor): add permanent global toggle for code block line numbers (#15376)
+2026-07-31  fb647b60  chore: bump up js-yaml version to v5 [SECURITY] (#15385)
+2026-07-28  b6fc0a21  fix(mobile): mobile keyboard padding (#15365)
+2026-07-28  e7ec8a10  feat(editor): improve select perf (#15353)
+```
+
+**FACT:** The `blocksuite/` subtree inside `toeverything/AFFiNE` received commits through **2026-08-10** — one week before this measurement — including editor feature work (#15376, #15353), a mobile fix (#15365), toolchain upgrades (#15465, #15464) and a **security** dependency bump (#15385).
+
+**INFERENCE — the correction:** The editor implementation is **actively maintained**. F1's characterisation of BlockSuite as an unmaintained component was wrong; what is unmaintained is the standalone *mirror and npm distribution*. These are different claims with different consequences.
+
+**INFERENCE:** Two F1 sub-arguments weaken materially:
+- *"Unpatched transitive vulnerabilities"* — security bumps land in the maintained tree (#15385). The unmerged renovate branches sit on the abandoned mirror, not on the code that would be vendored.
+- *"The gate cannot be cleared against a maintained upstream"* — **false.** It can be cleared against `AFFiNE/blocksuite/…` at a pinned commit.
+
+**FACT (unchanged, and still a real cost):** AFFiNE's license is split — MIT applies outside `packages/backend` and `packages/common/native`. Vendoring requires per-file license provenance. The monorepo is 446 MB, so extraction and coupling are genuine engineering problems.
+
+**RECOMMENDATION — REPLACES the F1 recommendation:** Reclassify the editor decision from *decided* to **OPEN / PROTOTYPE-GATED**. Evaluate Candidate A (CodeMirror 6) against Candidate B (**maintained AFFiNE `blocksuite/` subtree at a pinned commit — never the stale standalone package**) via an executable bake-off. See [18-EDITOR-GATE](../18-EDITOR-GATE.md) and [ADR-0002](../09-TECHNOLOGY-DECISIONS.md#adr-0002--editor-architecture-open--prototype-gated).
+
+**Method note for reviewers:** the F1 error was querying repository health at the *repository* level when development had moved to a *subtree of a different repository*. Repository-level staleness signals are unreliable whenever a project vendors its own packages. Generalised into the registry's current-vs-historical risk fields ([R1-20](../reviews/F1-R1-RECONCILIATION.md)).
 
 ---
 
@@ -392,7 +478,7 @@ codemirror/dev: archived: true  (meta-repo only; @codemirror/* packages ship ind
 
 **FACT:** CodeMirror 6 is MIT and current (`@codemirror/state` 6.7.1, 2026-07-05). The archived `codemirror/dev` repository is the historical meta-repo; the runtime packages are published separately and remain maintained.
 
-**INFERENCE:** The staleness identified in [E-10](#e-10--blocksuite-is-a-stale-downstream-mirror-editor-gate) is specific to the **block-editor layer**, not to the CRDT layer or to text-editor substrates generally. Deferring BlockSuite therefore does not require deferring Yjs on maintenance grounds — it is deferred on *necessity* grounds (single-user MVP needs no CRDT), which is a weaker and more reversible reason.
+**INFERENCE:** The staleness identified in [E-10](#e-10--blocksuite-distribution-is-stale-the-implementation-is-not-editor-gate) is specific to the **block-editor layer**, not to the CRDT layer or to text-editor substrates generally. Deferring BlockSuite therefore does not require deferring Yjs on maintenance grounds — it is deferred on *necessity* grounds (single-user MVP needs no CRDT), which is a weaker and more reversible reason.
 
 ---
 
@@ -484,7 +570,7 @@ tantivy: MIT, pushed 2026-08-17, 15716 stars
 Motivated by [E-8](#e-8--graphifys-self-reported-retrieval-benchmarks) caveat 2 (graph tied dense RAG on the only prose benchmark reported). **Status:** unproven. **Falsified if** Benchmark B-3 shows dense or hybrid retrieval beating lexical+graph by more than the measurement interval on Fehrest's own corpus.
 
 ### H-2 — Extraction scales linearly in file count
-Extrapolated in [E-5](#e-5--graphify-measured-extraction-throughput-and-confidence-distribution). Cross-file symbol resolution may be superlinear. **Status:** unproven beyond 776 files. **Falsified if** 10K-file extraction exceeds 2× the linear projection.
+Extrapolated in [E-5](#e-5--graphify-measured-extraction-throughput-preliminary). Cross-file symbol resolution may be superlinear. **Status:** unproven beyond 776 files. **Falsified if** 10K-file extraction exceeds 2× the linear projection.
 
 ### H-3 — Deterministic promotion rules capture most durable memory value
 **Status:** unproven. **Falsified if** rule-only promotion recall on a labelled corpus falls below 60% of model-assisted promotion.
@@ -493,7 +579,7 @@ Extrapolated in [E-5](#e-5--graphify-measured-extraction-throughput-and-confiden
 **Status:** unproven, and deliberately the cheapest hypothesis to test. **Falsified if** first-week dogfooding shows users routinely needing block-level transclusion or inline comments that Markdown plus a documented sidecar cannot express.
 
 ### H-5 — A single sidecar process is sufficient isolation for the extraction path
-The sidecar spawns 12 worker processes ([E-5](#e-5--graphify-measured-extraction-throughput-and-confidence-distribution)) and parses untrusted files. **Status:** unproven. **Falsified if** parser fuzzing yields memory-unsafe crashes reachable from vault content.
+The sidecar spawns 12 worker processes ([E-5](#e-5--graphify-measured-extraction-throughput-preliminary)) and parses untrusted files. **Status:** unproven. **Falsified if** parser fuzzing yields memory-unsafe crashes reachable from vault content.
 
 ---
 

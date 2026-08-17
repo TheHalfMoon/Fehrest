@@ -9,7 +9,7 @@ Measurable target envelopes, not adjectives. Every budget states what happens wh
 
 ## 1. Basis and honesty about it
 
-Budgets are anchored on measurements from [E-3](research/EVIDENCE_LOG.md#e-3--graphify-dependency-weight-and-installed-footprint), [E-5](research/EVIDENCE_LOG.md#e-5--graphify-measured-extraction-throughput-and-confidence-distribution) and [E-6](research/EVIDENCE_LOG.md#e-6--graphify-startup-cost-cold-vs-warm) — the only real numbers available before implementation:
+Budgets are anchored on measurements from [E-3](research/EVIDENCE_LOG.md#e-3--graphify-dependency-weight-and-installed-footprint), [E-5](research/EVIDENCE_LOG.md#e-5--graphify-measured-extraction-throughput-preliminary) and [E-6](research/EVIDENCE_LOG.md#e-6--graphify-startup-cost-preliminary) — the only real numbers available before implementation:
 
 | Measured | Value |
 |---|---|
@@ -20,10 +20,13 @@ Budgets are anchored on measurements from [E-3](research/EVIDENCE_LOG.md#e-3--gr
 | Bare CPython start | ≈98–119 ms |
 | Sidecar install footprint | 32 packages, **130 MB** |
 
-**Everything else in this document is projection.** Two caveats that a reviewer should hold against every number below:
+> **All Graphify figures are `PRELIMINARY / SINGLE-ENVIRONMENT / SINGLE-CORPUS` ([R1-07](reviews/F1-R1-RECONCILIATION.md)).** They were measured on one machine against one corpus — Graphify's own Python source. They indicate *order of magnitude and architectural shape*, nothing more.
+
+**Everything else in this document is projection.** Three caveats a reviewer should hold against every number below:
 
 1. All measurements are single-machine, Windows 11, cold cache ([E-15 environment](research/EVIDENCE_LOG.md#measurement-environment)). Cross-platform re-measurement is required at [Phase 0](15-IMPLEMENTATION-PHASES.md).
-2. Extrapolation assumes linearity in file count, which is [H-2](research/EVIDENCE_LOG.md#h-2--extraction-scales-linearly-in-file-count) — **unproven beyond 776 files.** Cross-file symbol resolution is a plausible superlinear term. [B-1](10-BENCHMARK-PLAN.md) decides this, and if it fails these budgets are void, not merely optimistic.
+2. Extrapolation assumes linearity in file count — [H-2](research/EVIDENCE_LOG.md#h-2--extraction-scales-linearly-in-file-count), **unproven beyond 776 files.** Cross-file symbol resolution is a plausible superlinear term.
+3. **Corpus type is entirely unmodelled.** One code-heavy corpus tells us nothing about a Markdown-heavy vault, a many-small-files vault, or a few-large-files vault. This is the gap [GI-BENCH](10-BENCHMARK-PLAN.md#b-11--gi-bench--graph-intelligence-benchmark-matrix) exists to close, and it is likely the largest source of error in this document.
 
 Reference hardware for all budgets: 4-core / 16 GB / NVMe, on each of Windows, macOS and Linux.
 
@@ -51,7 +54,7 @@ Reference hardware for all budgets: 4-core / 16 GB / NVMe, on each of Windows, m
 | First search available | < 1 s | < 2 s | < 5 s | Blocking defect |
 | Graph available after start | background | background | background | **Must never block** |
 
-**Hard rule: the 4,451 ms Graphify cold import may never appear on the startup path** ([E-6](research/EVIDENCE_LOG.md#e-6--graphify-startup-cost-cold-vs-warm)). The sidecar starts lazily on first graph need. A build in which app startup pays sidecar import cost is a release blocker, not a performance regression.
+**Hard rule: the 4,451 ms Graphify cold import may never appear on the startup path** ([E-6](research/EVIDENCE_LOG.md#e-6--graphify-startup-cost-preliminary)). The sidecar starts lazily on first graph need. A build in which app startup pays sidecar import cost is a release blocker, not a performance regression.
 
 ---
 
@@ -62,14 +65,18 @@ Reference hardware for all budgets: 4-core / 16 GB / NVMe, on each of Windows, m
 | Tier | S | M | L |
 |---|---|---|---|
 | **D1** (object, links, FTS, memory) | < 10 s | < 60 s | < 10 min |
-| **D2** (graph) | ~1 min | **~9 min** | **~90 min** |
+| **D2** (graph) | **TBD — GI-BENCH** | **TBD — GI-BENCH** | **TBD — GI-BENCH** |
 | **D3** (embeddings, optional) | ~10 min | ~2 h | impractical without GPU |
 
-The D2 figures derive directly from 18.4 files/s. They are the numbers that shape the architecture:
+> **D2 budgets withdrawn in F1-R1 ([R1-07](reviews/F1-R1-RECONCILIATION.md)).** F1 published ~1 min / ~9 min / ~90 min as budgets. Those were a **naive linear extrapolation from one corpus of one type on one machine** and must not be treated as system properties. Real budgets are set from [GI-BENCH](10-BENCHMARK-PLAN.md#b-11--gi-bench--graph-intelligence-benchmark-matrix), which measures 4 vault sizes × 5 corpus types × 10 operations × concurrency. Corpus type in particular was entirely unmodelled and is likely to dominate.
+
+The *architectural consequences* below stand regardless of the exact numbers, because they follow from the graph build being **minutes-to-hours rather than milliseconds** — which the preliminary measurement establishes even if its magnitude is wrong:
 
 - D2 must be a **background, resumable, cancellable** job with visible progress ([N §3.8](13-RECOVERY-MODEL.md#38-interrupted-rebuild)).
-- D2 must be **genuinely optional** — retrieval degrades to FTS-only without it ([E §8](04-DERIVED-DATA-MODEL.md#8-failure-and-degradation)).
-- A 90-minute rebuild that restarts from zero on interruption is unacceptable, which is why durable progress is a requirement rather than an optimisation.
+- D2 must **never gate startup or interactivity** — retrieval degrades to FTS-only while it is absent or building ([E §9](04-DERIVED-DATA-MODEL.md#9-failure-and-degradation)).
+- A long rebuild that restarts from zero on interruption is unacceptable, which is why durable progress is a requirement rather than an optimisation.
+
+Note the distinction: the graph *build* may be incomplete at any moment, but **Graph Intelligence is a core capability, not an optional feature** ([R1-06](reviews/F1-R1-RECONCILIATION.md)). Degrading gracefully while it builds is not the same as the product working without it.
 
 ### 4.2 Incremental
 
@@ -109,7 +116,7 @@ Latency is a first-class metric because LongMemEval-V2 treats accuracy and query
 
 **Quality budgets:** compression ≥ 20× versus raw history at equal or better correctness; unsourced items **exactly 0**; determinism **100%** across repeated runs on unchanged state.
 
-Determinism at 100% is a correctness requirement, not a performance target — anything less breaks replay and [I-14](01-ARCHITECTURE-CONSTITUTION.md#i-14--agent-visible-state-is-reconstructable-and-auditable).
+Determinism at 100% is a correctness requirement, not a performance target — anything less breaks replay and [I-14](01-ARCHITECTURE-CONSTITUTION.md#i-14--model-visible-state-is-reconstructable-provenance-linked-scope-authorized-and-auditable).
 
 ---
 
@@ -123,7 +130,7 @@ Determinism at 100% is a correctness requirement, not a performance target — a
 | Sidecar RSS, extracting | < 1 GB | < 2 GB | < 3 GB |
 | **Total during full index** | < 1.5 GB | < 3 GB | < 4.5 GB |
 
-The sidecar spawns 12 worker processes during extraction ([E-5](research/EVIDENCE_LOG.md#e-5--graphify-measured-extraction-throughput-and-confidence-distribution)). Worker count must be **configurable and capped by available memory**, not fixed at core count: 12 workers on a 8 GB machine is a swap-thrash scenario that would make a large vault unindexable.
+The sidecar spawns 12 worker processes during extraction ([E-5](research/EVIDENCE_LOG.md#e-5--graphify-measured-extraction-throughput-preliminary)). Worker count must be **configurable and capped by available memory**, not fixed at core count: 12 workers on a 8 GB machine is a swap-thrash scenario that would make a large vault unindexable.
 
 ---
 
@@ -185,7 +192,7 @@ A budget that is missed and then quietly raised is worse than no budget. Any bud
 | Finding | Consequence |
 |---|---|
 | D1 incremental exceeds 1 s p95 at M | Indexing architecture redesign |
-| D2 full index exceeds 3× projection at M ([H-2](research/EVIDENCE_LOG.md#h-2--extraction-scales-linearly-in-file-count) falsified) | Graph must be scoped/partitioned, or [ADR-0003](09-TECHNOLOGY-DECISIONS.md#adr-0003--graphify-runs-as-a-managed-long-lived-sidecar) reopens toward a native port |
+| D2 full index exceeds 3× projection at M ([H-2](research/EVIDENCE_LOG.md#h-2--extraction-scales-linearly-in-file-count) falsified) | Graph must be scoped/partitioned, or [ADR-0003](09-TECHNOLOGY-DECISIONS.md#adr-0003--graph-intelligence-runtime-integration-shape) reopens toward a native port |
 | Context compilation exceeds 2× budget at M | Pre-computation and caching become mandatory, threatening determinism |
 | Memory footprint exceeds 2× at M | Streaming/paged processing required throughout |
 | Derived state exceeds canonical size | Index design is wrong |

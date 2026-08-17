@@ -7,18 +7,27 @@ Decision summary for every donor. Full metadata, pinned commits, licenses and pr
 
 ---
 
-## 1. Dispositions that changed from the brief
+## 1. Dispositions, as reconciled in F1-R1
 
-Read this section first. These are the disagreements.
+Read this section first. **Four dispositions changed in F1-R1 itself**, correcting F1 errors — those are marked ⚠️.
 
-| Donor | Brief said | Matrix says | Deciding evidence |
-|---|---|---|---|
-| **BlockSuite** | `USE / PROTOTYPE`, Priority **S+** | **DEFER** | Mirror 13.4 months stale; npm unpublished 13.5 months at pre-1.0 `0.22.4`; 6 unmerged vulnerability branches; development moved inside AFFiNE ([E-10](research/EVIDENCE_LOG.md#e-10--blocksuite-is-a-stale-downstream-mirror-editor-gate)) |
-| **Yjs** | `USE / PROTOTYPE` | **DEFER** | Healthy (MIT, 13.6.32) but unnecessary: no collaborator in v1, and a CRDT introduces exactly the runtime-authoritative state [I-5](01-ARCHITECTURE-CONSTITUTION.md#i-5--canonical-artifacts-are-open-local-and-inspectable-amended) forbids ([E-11](research/EVIDENCE_LOG.md#e-11--yjs-and-codemirror-are-healthy-the-crdt-is-not-the-stale-part)) |
-| **AFFiNE** | `ADAPT` | **STUDY** | Split license (`packages/backend`, `packages/common/native` non-MIT); no releasable substrate boundary in a 446 MB monorepo |
-| **DuckDB** | `USE`, Priority **S** | **DEFER** | The brief itself places Data Intelligence outside MVP; a Priority-S disposition contradicts that scope |
-| **Graphify** | `USE + ADAPT` | **ADAPT** (sidecar-wrapped, IDs rejected) | Node IDs are name-derived with documented collisions and cannot be identities ([E-4](research/EVIDENCE_LOG.md#e-4--graphify-node-ids-are-name-derived-not-stable-identities)) |
-| **CodeMirror 6** | *absent* | **USE** | Admitted to replace BlockSuite. MIT, current ([E-11](research/EVIDENCE_LOG.md#e-11--yjs-and-codemirror-are-healthy-the-crdt-is-not-the-stale-part)) |
+| Donor | Brief said | F1 said | **R1 says** | Deciding evidence |
+|---|---|---|---|---|
+| ⚠️ **BlockSuite** | `USE`, Priority **S+** | ❌ DEFER (as "unmaintained") | **CANDIDATE B in the [Editor Gate](18-EDITOR-GATE.md)** | The *standalone mirror* is stale, but `AFFiNE/blocksuite/…` is actively developed through 2026-08-10 with editor feature and security commits ([E-10.1](research/EVIDENCE_LOG.md#e-101--the-evidence-f1-missed-the-affine-subtree-is-active)) |
+| ⚠️ **CodeMirror 6** | *absent* | ❌ USE (decided) | **CANDIDATE A in the Editor Gate** | Strong candidate, but must win on measurement, not argument ([R1-03](reviews/F1-R1-RECONCILIATION.md)) |
+| ⚠️ **Yjs** | `USE / PROTOTYPE` | DEFER (flat) | **CONDITIONAL / EDITOR-DEPENDENT** | Healthy (MIT, 13.6.32). If Candidate B wins, Yjs arrives with the substrate ([R1-09](reviews/F1-R1-RECONCILIATION.md)) |
+| ⚠️ **AFFiNE** | `ADAPT` | STUDY | **STUDY + SOURCE OF CANDIDATE B** | Split license and 446 MB monorepo are real costs — but it is where the maintained editor lives |
+| **Graphify** | `USE + ADAPT` | ADAPT | **ADAPT — one implementation of a CORE capability** | Extractor IDs are path-derived and scheme-versioned *by design* ([E-4](research/EVIDENCE_LOG.md#e-4--extractor-ids-are-name-derived-by-design-not-by-defect)); runtime shape pending GI-BENCH |
+| **DuckDB** | `USE`, Priority **S** | DEFER | **DEFER** (confirmed) | Data Intelligence is outside MVP by the brief's own scope |
+
+**The capability/implementation distinction that governs this whole matrix ([R1-06](reviews/F1-R1-RECONCILIATION.md)):**
+
+```
+GRAPH_INTELLIGENCE_CAPABILITY  = CORE          (never dropped)
+GRAPHIFY_PYTHON_RUNTIME        = REPLACEABLE   (one candidate)
+```
+
+No donor's implementation cost may delete a core capability. Donors are replaceable; capabilities are not.
 
 Everything else in the brief's registry is confirmed, with reasoning tightened.
 
@@ -30,7 +39,7 @@ Everything else in the brief's registry is confirmed, with reasoning tightened.
 |---|---|---|---|
 | **SQLite** | DERIVED | Derived store, FTS5 | Public domain, ubiquitous, crash-tested. Only holds derived state, so corruption costs a rebuild |
 | **SQLite FTS5** | DERIVED | BM25 lexical baseline | Ships with SQLite; zero extra dependency; the floor every other retrieval method must beat |
-| **CodeMirror 6** | UI | Markdown editing surface | MIT, current (`@codemirror/state` 6.7.1, 2026-07-05). Document model *is* the canonical bytes, so round-trip is the identity function ([ADR-0002](09-TECHNOLOGY-DECISIONS.md#adr-0002--v1-editing-is-markdown-native-blocksuite-is-deferred)) |
+| ~~CodeMirror 6~~ | UI | — | **Moved to the [Editor Gate](18-EDITOR-GATE.md) as Candidate A.** Not a settled `USE` — it must win a bake-off against the maintained AFFiNE BlockSuite subtree ([R1-02](reviews/F1-R1-RECONCILIATION.md)) |
 | **Google Magika** | INGEST | Content-based type detection before parser dispatch | Apache-2.0, active. Security-relevant: extension-based dispatch is a parser-confusion vector ([T-12](02-THREAT-MODEL.md#t-12--malicious-attachment--parser-confusion)) |
 | **Model Context Protocol** | AGENT | Agent transport | A standard, not a runtime. **Not an authorization boundary** — authorization is enforced in Fehrest before any tool runs ([T-13](02-THREAT-MODEL.md#t-13--privilege-escalation-via-mcp-or-plugin)) |
 | **llama.cpp** | MEMORY/AGENT | Optional local inference | MIT, very active. Fehrest must pass its full core suite with this absent ([I-4](01-ARCHITECTURE-CONSTITUTION.md#i-4--core-functionality-requires-no-paid-api)) |
@@ -46,13 +55,13 @@ Everything else in the brief's registry is confirmed, with reasoning tightened.
 **Reject:** `ids.py` as an identity authority; the whole MCP surface; PR/repository tooling; LLM-assisted extraction paths; Neo4j/FalkorDB exporters; `graphify-out/` as an output location.
 
 **Why ADAPT and not USE:** three boundary changes are mandatory, and each is a real modification rather than configuration.
-1. **Identity.** Node IDs are name-derived slugs with documented same-filename collisions and Unicode instability ([E-4](research/EVIDENCE_LOG.md#e-4--graphify-node-ids-are-name-derived-not-stable-identities)). Fehrest allocates its own UUIDv7 identities and treats `graphify_node_id` as a rebuildable mapping.
+1. **Identity.** Node IDs are path-derived **by design** (`{parent_dir}_{stem}`) and their scheme changes across versions — upstream itself rejected an alternative because it "would rewrite every file and symbol id" ([E-4](research/EVIDENCE_LOG.md#e-4--extractor-ids-are-name-derived-by-design-not-by-defect)). *(The historical collision and Unicode bugs F1 cited are **fixed** — #2614 in 0.9.40, #811/#1033/#550 root cause resolved — and are no longer part of this argument, per [R1-05](reviews/F1-R1-RECONCILIATION.md).)* Fehrest allocates its own UUIDv7 identities and treats `extractor_id` as a rebuildable mapping.
 2. **Authority.** The sidecar is a compute service with no write authority ([R-7](01-ARCHITECTURE-CONSTITUTION.md#2-derived-rules)); core validates every response against schema before accepting it.
 3. **Surface.** Its agent-facing tools are never re-exported, or agents gain a second unaudited retrieval path around the compiler ([E-7](research/EVIDENCE_LOG.md#e-7--graphify-agent-facing-surface)).
 
-**Why worth the cost:** ~18.4 files/s, 97.2% `EXTRACTED` confidence, line-level provenance, **zero LLM credits** ([E-5](research/EVIDENCE_LOG.md#e-5--graphify-measured-extraction-throughput-and-confidence-distribution), [E-8](research/EVIDENCE_LOG.md#e-8--graphifys-self-reported-retrieval-benchmarks)). Reimplementing 60,202 lines and 28 grammars is not defensible against an active Apache-2.0 upstream.
+**Why worth the cost:** ~18.4 files/s, 97.2% `EXTRACTED` confidence, line-level provenance, **zero LLM credits** ([E-5](research/EVIDENCE_LOG.md#e-5--graphify-measured-extraction-throughput-preliminary), [E-8](research/EVIDENCE_LOG.md#e-8--graphifys-self-reported-retrieval-benchmarks)). Reimplementing 60,202 lines and 28 grammars is not defensible against an active Apache-2.0 upstream.
 
-**Accepted costs:** 32 packages / 130 MB, ~200–300 MB installer delta with a runtime ([E-3](research/EVIDENCE_LOG.md#e-3--graphify-dependency-weight-and-installed-footprint)); 4,451 ms cold start, mitigated by a long-lived sidecar ([ADR-0003](09-TECHNOLOGY-DECISIONS.md#adr-0003--graphify-runs-as-a-managed-long-lived-sidecar)); a Python parser surface processing hostile input ([T-10](02-THREAT-MODEL.md#t-10--parser-vulnerabilities)).
+**Accepted costs:** 32 packages / 130 MB, ~200–300 MB installer delta with a runtime ([E-3](research/EVIDENCE_LOG.md#e-3--graphify-dependency-weight-and-installed-footprint)); 4,451 ms cold start, mitigated by a long-lived sidecar ([ADR-0003](09-TECHNOLOGY-DECISIONS.md#adr-0003--graph-intelligence-runtime-integration-shape)); a Python parser surface processing hostile input ([T-10](02-THREAT-MODEL.md#t-10--parser-vulnerabilities)).
 
 ### DeepSeek Harness — ADAPT patterns only
 
@@ -78,8 +87,8 @@ Adopt `principal + action + resource + context` as the decision shape ([G §2](0
 
 | Donor | Why deferred | Reconsider when |
 |---|---|---|
-| **BlockSuite** | Stale unreleased mirror; round-trip gate unclearable against a maintained upstream | Independent releases resume for two quarters, **or** [H-4](research/EVIDENCE_LOG.md#h-4--a-markdown-native-canonical-format-is-sufficient-for-v1-knowledge-work) is falsified and no maintained alternative exists |
-| **Yjs** | No collaborator in v1 | Real-time multi-writer collaboration enters scope. Do not add a second CRDT alongside it |
+| ~~BlockSuite~~ | **No longer deferred.** Moved to the [Editor Gate](18-EDITOR-GATE.md) as **Candidate B** — the maintained `AFFiNE/blocksuite/…` subtree, never the stale standalone package ([R1-02](reviews/F1-R1-RECONCILIATION.md)) | — |
+| ~~Yjs~~ | **No longer flatly deferred.** Reclassified **CONDITIONAL / EDITOR-DEPENDENT** ([R1-09](reviews/F1-R1-RECONCILIATION.md)): arrives with Candidate B if it wins; stays deferred otherwise. **Collaboration must not be added to justify it** | Editor Gate closes |
 | **sqlite-vec** | Release line is `v0.1.10-alpha.*` | [B-3](10-BENCHMARK-PLAN.md) shows material vector gain **and** a stable release exists |
 | **USearch / LanceDB / FAISS** | No vector requirement proven | Same gate as above |
 | **Tantivy** | FTS5 has not failed | FTS5 misses a measured budget in [O](14-PERFORMANCE-BUDGETS.md) |
@@ -110,7 +119,7 @@ Each entry names the **specific mechanism** studied. "Inspiration" is not a disp
 | **AgeMem** | The six-operation API (`add`/`update`/`delete`/`retrieve`/`summary`/`filter`) | **The mechanism** — a three-stage RL-trained policy cannot be the promotion decider under `AI OFF` ([E-15](research/EVIDENCE_LOG.md#e-15--agemem-is-a-learned-policy-not-a-transplantable-algorithm)) |
 | **HippoRAG** | Associative graph retrieval; multi-hop recall | LLM-built graph |
 | **RAPTOR** | Hierarchical recursive summarisation | Mandatory LLM summarisation at index time ([R-1](01-ARCHITECTURE-CONSTITUTION.md#2-derived-rules)) |
-| **Peritext** | Why rich-text marks resist CRDT representation | — (supports [ADR-0002](09-TECHNOLOGY-DECISIONS.md#adr-0002--v1-editing-is-markdown-native-blocksuite-is-deferred)) |
+| **Peritext** | Why rich-text marks resist CRDT representation | — (supports [ADR-0002](09-TECHNOLOGY-DECISIONS.md#adr-0002--editor-architecture-open--prototype-gated)) |
 | **Local-first Software** | Seven ideals as a design test; network as optimisation | Its assumption that CRDTs are the natural substrate |
 | **W3C PROV** | Entity/Activity/Agent; `wasDerivedFrom`, `wasAttributedTo` | Becoming an RDF system |
 | **Bitemporal DB literature** | Valid vs recorded time; as-of resolution | Dialect-specific syntax |

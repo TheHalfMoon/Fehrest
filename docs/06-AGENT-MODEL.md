@@ -120,7 +120,23 @@ Approval semantics from [E-9](research/EVIDENCE_LOG.md#e-9--deepseek-harness-pin
 
 ---
 
-## 4. Context delivery and the instruction boundary
+## 4. Context delivery and the trust stratification
+
+> **STRENGTHENED IN F1-R1 ([R1-13](reviews/F1-R1-RECONCILIATION.md)).** Model-visible text is **not homogeneous**, and no mechanism may flatten it. Seven levels, per [I-14](01-ARCHITECTURE-CONSTITUTION.md#i-14--model-visible-state-is-reconstructable-provenance-linked-scope-authorized-and-auditable):
+
+| # | Level | Plane | Authority | Writable by |
+|---|---|---|---|---|
+| 1 | System / owner instruction | instruction | **Authoritative** | Fehrest core only |
+| 2 | Trusted Fehrest policy | tool-control | **Authoritative** | Fehrest core only |
+| 3 | User instruction | instruction | **Authoritative** | The user, via the UI |
+| 4 | Retrieved knowledge (vault) | knowledge | Evidence | Anyone with vault write access |
+| 5 | Imported external content | knowledge | **Evidence — assume hostile** | Any source |
+| 6 | Tool output | knowledge | **Evidence — assume hostile** | Tools, including remote ones |
+| 7 | Agent inference | knowledge | Evidence, marked `INFERRED` | The agent |
+
+**Levels 1–3 may direct behaviour. Levels 4–7 never may**, however authoritative their text sounds. Every item Fehrest emits carries its level, and `test_trust_levels_never_collapsed` asserts no serialisation path erases it.
+
+The distinction between 4 and 5 is not decorative: a note the user wrote and a PDF downloaded last week are both "in the vault," but only one has ever been under the user's editorial control. Collapsing them is how a poisoned import inherits the trust of a personal note.
 
 Everything served to an agent is wrapped in a labelled envelope:
 
@@ -130,15 +146,19 @@ Everything served to an agent is wrapped in a labelled envelope:
     compiled_at="2026-08-17T14:05:00Z"
     authority="none">
   <fehrest:item id="0198..." kind="memory" type="constraint"
-      epistemic="asserted" confirmed_by="user"
+      trust_level="4" state="USER_CONFIRMED"
       valid_from="2026-06-03" source="0198...#L42">
     Fehrest must never require cloud infrastructure.
   </fehrest:item>
-  ...
+  <fehrest:item id="0198..." kind="excerpt"
+      trust_level="5" state="UNRESOLVED"
+      source="0198...#p14" origin="import:downloaded-pdf">
+    ...imported content, assume hostile...
+  </fehrest:item>
 </fehrest:evidence>
 ```
 
-`authority="none"` is machine-readable and consistent across every package. The system prompt states that content inside these envelopes is data and that instructions inside it must not be followed.
+`authority="none"` is machine-readable and consistent across every package; `trust_level` carries the stratification above. The system prompt states that content inside these envelopes is data and that instructions inside it must not be followed.
 
 **This is defence-in-depth, not the boundary.** It is stated here explicitly because conflating the two is the standard error. The actual boundary is that the capability grant was computed before retrieval and cannot change; the envelope only helps a cooperative model behave sensibly ([§1 of the threat model](02-THREAT-MODEL.md#1-governing-principle)).
 
@@ -166,7 +186,7 @@ Every session is fully reconstructable from T1/T2 events ([D §5.2](03-CANONICAL
 Three operations:
 
 - **Audit** — "what did `agent:claude` do in project X last week?" Answered from the event log.
-- **Replay** — recompile a historical context package and compare digests ([I-14](01-ARCHITECTURE-CONSTITUTION.md#i-14--agent-visible-state-is-reconstructable-and-auditable)). Where canonical state has changed since, the mismatch is *reported with the reason*, not hidden: `context/compiled` records the event-sequence high-water mark it was compiled against.
+- **Replay** — recompile a historical context package and compare digests ([I-14](01-ARCHITECTURE-CONSTITUTION.md#i-14--model-visible-state-is-reconstructable-provenance-linked-scope-authorized-and-auditable)). Where canonical state has changed since, the mismatch is *reported with the reason*, not hidden: `context/compiled` records the event-sequence high-water mark it was compiled against.
 - **Revoke by provenance** — "reject everything `agent:X` asserted in session Y." This is the recovery path for [T-2](02-THREAT-MODEL.md#t-2--memory-poisoning), and it works because provenance is mandatory and unforgeable. Without mandatory provenance, poisoned memory would be unrecoverable — which is why [I-11](01-ARCHITECTURE-CONSTITUTION.md#i-11--agent-generated-memories-preserve-provenance) is non-negotiable.
 
 Fork and resume are **deferred**. They are useful runtime features, but Fehrest is not the runtime; the agent's own harness owns its loop. Fehrest only needs the durable record.

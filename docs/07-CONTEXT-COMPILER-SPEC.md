@@ -16,9 +16,9 @@ Four properties are non-negotiable:
 | Property | Meaning | Why |
 |---|---|---|
 | **Bounded** | Never exceeds the budget | An unbounded compiler is just history-stuffing with extra steps |
-| **Provenance-linked** | Every item cites its source | [I-11](01-ARCHITECTURE-CONSTITUTION.md#i-11--agent-generated-memories-preserve-provenance), [I-14](01-ARCHITECTURE-CONSTITUTION.md#i-14--agent-visible-state-is-reconstructable-and-auditable) |
+| **Provenance-linked** | Every item cites its source | [I-11](01-ARCHITECTURE-CONSTITUTION.md#i-11--agent-generated-memories-preserve-provenance), [I-14](01-ARCHITECTURE-CONSTITUTION.md#i-14--model-visible-state-is-reconstructable-provenance-linked-scope-authorized-and-auditable) |
 | **Deterministic** | Same inputs → same output | Auditability; without it replay is impossible |
-| **Reproducible** | Recomputable later from canonical state | [I-14](01-ARCHITECTURE-CONSTITUTION.md#i-14--agent-visible-state-is-reconstructable-and-auditable) |
+| **Reproducible** | Recomputable later from canonical state | [I-14](01-ARCHITECTURE-CONSTITUTION.md#i-14--model-visible-state-is-reconstructable-provenance-linked-scope-authorized-and-auditable) |
 
 **The compiler is a deterministic retrieval-and-assembly pipeline, not an LLM summarisation call.** LLM summarisation is an optional final compression stage (§6) that can be omitted entirely without changing what the package *contains*. This is the difference between a system whose output can be audited and one whose output must be trusted.
 
@@ -84,7 +84,7 @@ fehrest context <scope> [--question Q] [--budget N] [--as-of T] [--format json|m
 
 ### 3.1 Design choices that matter
 
-**`canonical_high_water_mark`** records the event sequence number the package was compiled against. It is what makes a failed reproduction *explainable* — "canonical state advanced from 14827 to 15022" — rather than mysterious. Without it, [I-14](01-ARCHITECTURE-CONSTITUTION.md#i-14--agent-visible-state-is-reconstructable-and-auditable) verification produces unattributable mismatches.
+**`canonical_high_water_mark`** records the event sequence number the package was compiled against. It is what makes a failed reproduction *explainable* — "canonical state advanced from 14827 to 15022" — rather than mysterious. Without it, [I-14](01-ARCHITECTURE-CONSTITUTION.md#i-14--model-visible-state-is-reconstructable-provenance-linked-scope-authorized-and-auditable) verification produces unattributable mismatches.
 
 **`omitted` is mandatory and never empty when truncation occurred.** A compiler that silently drops content produces confidently wrong agents. The agent must be able to know that 118 recent events existed and 12 were shown. Hiding truncation is the single most dangerous thing a context compiler can do, because the agent cannot detect the absence.
 
@@ -124,7 +124,7 @@ Ten deterministic stages. Every stage is individually testable and none requires
 
 **[3] Lexical** — FTS5/BM25 is the baseline, not a fallback. It requires no model, no embedding, and is the floor everything else must beat ([E-8](research/EVIDENCE_LOG.md#e-8--graphifys-self-reported-retrieval-benchmarks)).
 
-**[4] Graph expansion** — bounded by hop count (default 2), fan-out per node, and total node budget. Unbounded expansion on a hub node ("god node") pulls in the whole vault; the caps are mandatory, not tuning. Scope is enforced *during* traversal ([T-6](02-THREAT-MODEL.md#t-6--unauthorized-cross-project-retrieval)). Degrades to a no-op if the graph is absent ([E §8](04-DERIVED-DATA-MODEL.md#8-failure-and-degradation)).
+**[4] Graph expansion** — bounded by hop count (default 2), fan-out per node, and total node budget. Unbounded expansion on a hub node ("god node") pulls in the whole vault; the caps are mandatory, not tuning. Scope is enforced *during* traversal ([T-6](02-THREAT-MODEL.md#t-6--unauthorized-cross-project-retrieval)). Degrades to a no-op if the graph is absent ([E §8](04-DERIVED-DATA-MODEL.md#9-failure-and-degradation)).
 
 **[5] Vectors** — optional; skipped entirely when D3 is off, with no behavioural change other than recall.
 
@@ -258,7 +258,7 @@ The agent now knows the constraint, the decision, the evidence that produced it,
 | Finding | Consequence |
 |---|---|
 | Compiled context does not beat a competent agent with plain file tools ([B-7](10-BENCHMARK-PLAN.md)) | **The product thesis fails.** Not a tuning problem |
-| Determinism cannot be achieved (unstable digests on unchanged input) | Replay and audit are impossible; [I-14](01-ARCHITECTURE-CONSTITUTION.md#i-14--agent-visible-state-is-reconstructable-and-auditable) fails |
+| Determinism cannot be achieved (unstable digests on unchanged input) | Replay and audit are impossible; [I-14](01-ARCHITECTURE-CONSTITUTION.md#i-14--model-visible-state-is-reconstructable-provenance-linked-scope-authorized-and-auditable) fails |
 | p95 latency exceeds budget by > 2× at 10K files | Compiler unusable interactively; pre-computation or caching becomes mandatory |
 | Graph expansion contributes no measurable gain over FTS + memory | Drop stage [4]; the Graphify dependency loses most of its justification |
 | Agents systematically ignore the `authority="none"` envelope | Envelope was never a boundary (already stated); confirms structural controls must carry the full load |

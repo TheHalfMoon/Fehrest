@@ -90,7 +90,7 @@ The sidecar target is where [H-5](research/EVIDENCE_LOG.md#h-5--a-single-sidecar
 | Projected epistemic status always equals event-derived status | [I-12](01-ARCHITECTURE-CONSTITUTION.md#i-12--inference-is-never-silently-promoted-to-fact-amended) |
 | Subagent capability sets are subsets of parents, over random delegation trees | [T-14](02-THREAT-MODEL.md#t-14--agent-privilege-confusion-subagent--delegation) |
 | Scope filtering admits no out-of-scope object, over random scope assignments | [T-6](02-THREAT-MODEL.md#t-6--unauthorized-cross-project-retrieval) |
-| Compiler output is byte-identical for identical inputs | [I-14](01-ARCHITECTURE-CONSTITUTION.md#i-14--agent-visible-state-is-reconstructable-and-auditable) |
+| Compiler output is byte-identical for identical inputs | [I-14](01-ARCHITECTURE-CONSTITUTION.md#i-14--model-visible-state-is-reconstructable-provenance-linked-scope-authorized-and-auditable) |
 | Rebuild produces equal query results | [I-6](01-ARCHITECTURE-CONSTITUTION.md#i-6--derived-state-is-disposable-and-rebuildable) |
 | Hash chain verification detects every single-record mutation | [T-4](02-THREAT-MODEL.md#t-4--event-log-tampering) |
 

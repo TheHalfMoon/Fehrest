@@ -37,7 +37,29 @@ Links, tags, backlinks, tasks, and relationships are **not** primitives — they
 
 ---
 
-## 2. Vault layout
+## 2. Storage categories (provisional layout)
+
+> **PROVISIONAL — [R1-17](reviews/F1-R1-RECONCILIATION.md).** The hierarchy below is a **worked illustration**, not a commitment. The *semantic categories* are stable and may be designed against; the *physical layout* is deferred to a successor ADR after the Phase 1–2 storage and recovery prototypes ([ADR-0013](09-TECHNOLOGY-DECISIONS.md#adr-0013--storage-layout-provisional)).
+
+**Semantic categories — stable:**
+
+| Category | Class | Rebuildable? |
+|---|---|---|
+| Canonical identity | canonical | No |
+| Canonical events | canonical | No |
+| Canonical explicit memory | canonical | No |
+| Canonical content + attachments | canonical | No |
+| Schema / version state | canonical | No |
+| Derived search index | derived | Yes |
+| Derived graph | derived | Yes |
+| Derived vectors | derived | Yes |
+| Cache (extracted text, thumbnails, summaries) | derived | Yes |
+
+**The one binding layout constraint ([R1-16](reviews/F1-R1-RECONCILIATION.md)):** canonical and derived state must be **separable by directory**, so derived state can be deleted wholesale without touching canonical state.
+
+> ⚠️ **`.fehrest/` is NOT disposable.** It contains canonical event and memory state. Only its **derived subtree** is disposable. Reading "delete `.fehrest/`" as a recovery step would destroy irreplaceable history. See [E §1](04-DERIVED-DATA-MODEL.md#1-two-classes-of-state-inside-fehrest).
+
+**Illustrative layout:**
 
 ```
 <vault>/
@@ -95,7 +117,46 @@ updated: 2026-08-17T14:22:03Z
 - A file whose frontmatter is stripped by another tool loses identity. Recovery is by content-similarity re-association, presented to the user as a decision, never silently guessed. Specified in [N](13-RECOVERY-MODEL.md).
 - Duplicate IDs (from a copied file) are detected at ingest; the later-observed file is re-identified and the event recorded.
 
-**Graphify node IDs are never identities.** They are name-derived normalised slugs with documented collision history ([E-4](research/EVIDENCE_LOG.md#e-4--graphify-node-ids-are-name-derived-not-stable-identities)). They appear only as a derived mapping column, rebuildable on demand. This is enforced by `test_graphify_ids_are_not_identities`.
+**Extractor IDs are never identities.** Extractor-generated identifiers — Graphify's included — are name- or path-derived and their schemes change across versions ([E-4](research/EVIDENCE_LOG.md#e-4--extractor-ids-are-name-derived-by-design-not-by-defect)). They appear only as a derived mapping column, rebuildable on demand. Enforced by invariants [G-ID-1…G-ID-4](01-ARCHITECTURE-CONSTITUTION.md#i-15--paths-are-locations-stable-ids-are-identities) and `test_extractor_ids_are_not_identities`.
+
+### 3.2 Identity across filesystem operations
+
+**Added in F1-R1 ([R1-15](reviews/F1-R1-RECONCILIATION.md)).** F1 covered rename and move. The harder cases are copy, duplicate, conflict and restore — where the system must distinguish *the same object in a new place* from *a new object that looks identical*.
+
+**The discriminator is the pair `(embedded id, content hash)` compared against the index**, evaluated at the moment a file is observed:
+
+| Observation | Interpretation | Action |
+|---|---|---|
+| Known id, new path, old path gone | **Moved** | Update path. Identity, links, memories, history all preserved |
+| Known id, new path, **old path still present** | **Copied / duplicated** | Original keeps the id. Copy is re-identified with a fresh id, `object/duplicated` recorded with `derived_from` |
+| Known id, same path, different content hash | **Edited** | Update hash, re-index, `object/updated` |
+| Unknown id, content matches a known object | **Restored / re-imported** | Offer re-association to the user. **Never silently merge** |
+| No id at all | **New or externally stripped** | Allocate lazily; if content strongly matches a known object, offer re-association |
+| Two live files, same id | **Conflict** | Both retained. Neither is silently discarded. Surface for resolution; `object/id-conflict` recorded |
+| Id absent after `git checkout` to a pre-Fehrest commit | **History rewind** | Re-identify on next write; report the association |
+
+**Operation matrix:**
+
+| Operation | Identity | Notes |
+|---|---|---|
+| Rename | **Preserved** | Path is an attribute |
+| Move across directories | **Preserved** | Same |
+| Folder restructuring | **Preserved** | Bulk path update via reconciliation scan |
+| Case-only rename | **Preserved** | Case-insensitive filesystems need explicit handling |
+| `git checkout` (branch switch) | **Preserved** where frontmatter survives | Bulk external modification ([N §3.11](13-RECOVERY-MODEL.md#311-git-operations-on-the-vault)) |
+| `git checkout` to pre-Fehrest commit | **Lost, then re-associated** | Reported, never silently guessed |
+| Copy | **New identity for the copy** | Original unaffected |
+| Duplicate in place | **New identity** | `derived_from` recorded |
+| Merge conflict (both sides edited) | **Preserved, conflict surfaced** | No automatic merge without a CRDT ([ADR-0012](09-TECHNOLOGY-DECISIONS.md#adr-0012--crdt-adoption-is-editor-dependent)) |
+| Restored backup | **Preserved**; rollback checks apply | [T-15](02-THREAT-MODEL.md#t-15--rollback-and-replay-abuse) |
+| External editor save | **Preserved** if frontmatter untouched | Hash-detected re-index |
+| Import from outside the vault | **New identity**, `import/ingested` with source provenance | Never inherits a foreign id |
+| Export | Identity travels in frontmatter | What makes the vault portable |
+
+**Two rules that make this tractable:**
+
+1. **Path hashing does not solve identity** and is not used. Two files with identical content are not the same object; one file at two paths over time is. Only an embedded allocated id distinguishes these.
+2. **Ambiguity is surfaced, never guessed.** Copy-vs-move and restore-vs-new are genuinely ambiguous from the filesystem alone. Silently guessing wrong merges two objects' histories — an unrecoverable corruption of exactly the provenance Fehrest exists to protect.
 
 ---
 
@@ -222,7 +283,7 @@ user/message
 
 **Compaction rule:** compaction is itself an event (`log/compacted`) recording what was summarised and the digest of what was removed. Compaction never deletes a T1 event and never breaks the hash chain — it writes a new segment and marks the old one superseded, retaining its digest. So the log remains verifiable after compaction, which naive truncation would destroy.
 
-**Why `context/compiled` stores inputs and a digest rather than the package body:** storing every package body means storing the vault repeatedly. Storing inputs plus a digest satisfies [I-14](01-ARCHITECTURE-CONSTITUTION.md#i-14--agent-visible-state-is-reconstructable-and-auditable) by *recomputation*, and the digest proves the recomputation matches. This is the harness's derive-don't-store principle applied to context.
+**Why `context/compiled` stores inputs and a digest rather than the package body:** storing every package body means storing the vault repeatedly. Storing inputs plus a digest satisfies [I-14](01-ARCHITECTURE-CONSTITUTION.md#i-14--model-visible-state-is-reconstructable-provenance-linked-scope-authorized-and-auditable) by *recomputation*, and the digest proves the recomputation matches. This is the harness's derive-don't-store principle applied to context.
 
 **The honest cost:** recomputation requires that canonical state has not changed. When it has, the package is not reproducible byte-for-byte and Fehrest must say so rather than pretend. `context/compiled` therefore records the canonical high-water mark (event sequence number) it was compiled against, so a failed reproduction is explainable rather than mysterious.
 
@@ -267,51 +328,72 @@ The projection *of* memory — the current-state resolution — is derived and r
 
 ---
 
-## 7. Why a rich block CRDT cannot be canonical in v1
+## 7. The rich-editor ↔ canonical-file question (OPEN)
 
-This is the architecture gate the brief flags as major. Its resolution changes the plan, so the argument is given in full.
+> **REOPENED IN F1-R1 ([R1-04](reviews/F1-R1-RECONCILIATION.md)).** F1 argued here that lossless round-trip is *structurally impossible* and dissolved the gate by choosing a Markdown-native editor. **That impossibility argument is retracted.** It conflated separable concerns and was never demonstrated. The question is open and is decided by the [Editor Gate](18-EDITOR-GATE.md), not by argument.
 
-### 7.1 The gate as posed
+### 7.1 The question
 
-> Markdown on disk → editor state → edit → serialisation → Markdown → reload. Does this preserve stable identity, formatting, links, backlinks, properties, block references, comments, agent provenance, embedded objects, rich blocks?
+> Canonical file on disk → editor state → edit → serialisation → canonical file → reload. What is preserved, what is lost, and is the loss disclosed?
 
-### 7.2 The answer: not in general, and the impossibility is structural
+### 7.2 The retracted argument, and why it failed
 
-Consider what a BlockSuite/Yjs document holds that CommonMark cannot express:
+F1 reasoned: a rich editor holds CRDT operation history; Markdown cannot express it; therefore a lossless sidecar must carry that history; therefore the sidecar becomes the real document and Markdown becomes decorative.
 
-| Editor state | CommonMark equivalent | Loss |
-|---|---|---|
-| Per-block stable identity | None | Total — block refs break on any edit |
-| Overlapping/conflicting marks | Nested emphasis only | Concurrent formatting is lossy — this is precisely Peritext's subject ([SRC-058](research/FEHREST_SOURCE_REGISTRY.md#8-research-canon)) |
-| Anchored comments | None | Total |
-| CRDT operation history | None | Total — merge capability is destroyed |
-| Awareness/presence | None | Total (acceptable — ephemeral) |
-| Database/table blocks | GFM tables (no schema, no views) | Severe |
-| Embedded object references | Links only | Semantics lost |
+The flaw is the third step. It assumes **CRDT operation history is part of canonical document meaning.** That was asserted, not shown. A CRDT's operation log is the mechanism by which concurrent edits converge — closer to a version-control object database than to the document's content. A git repository's object store is not part of what a source file *means*, and no one concludes from its existence that the working tree is decorative.
 
-So a lossless mapping requires a sidecar carrying block identity, marks, comments and CRDT history. But **once the sidecar carries CRDT history, the sidecar is the document** — the Markdown becomes a lossy human-readable *projection* of the real canonical state, and [I-5](01-ARCHITECTURE-CONSTITUTION.md#i-5--canonical-artifacts-are-open-local-and-inspectable-amended) inverts: the open file is decorative and the opaque file is authoritative.
+### 7.3 Six separable concerns
 
-That is the trap. It is not avoidable by better engineering; it follows from Markdown having no identity or overlap primitives.
+The correct decomposition, which F1 collapsed:
 
-### 7.3 The resolution: dissolve the gate
+| # | Concern | Canonical? | Notes |
+|---|---|---|---|
+| 1 | Semantic document content | **Yes** | The user's knowledge |
+| 2 | Structured metadata (properties, types) | **Yes** | Frontmatter today |
+| 3 | Stable block identity | **Yes**, where block references exist | Needs a home Markdown lacks |
+| 4 | Provenance, comments, annotations | **Yes** | Sidecar (§4.4) |
+| 5 | Collaboration history (CRDT ops) | **Not established** | Likely machinery, not meaning |
+| 6 | Transient runtime state (selection, presence, undo) | **No** | Uncontroversially ephemeral |
 
-Do not adopt a document model richer than the canonical format. Then round-trip is the **identity function**, not a mapping, and there is nothing to lose.
+Only concern 5 was ever in dispute, and it is the one F1 assumed rather than tested.
 
-- Canonical = Markdown bytes. The editor edits *those bytes*.
-- Rich affordances that do not require a richer document model — links, backlinks, properties, provenance display, comments — come from sidecars that reference content without owning it (§4.4).
-- Features that genuinely require a richer model — block transclusion, concurrent rich-text editing, database blocks — are **deferred**, and their absence is an accepted, stated v1 cost.
+### 7.4 Candidate architecture — to be tested, not adopted
 
-### 7.4 Why this is also the maintenance-safe choice
+```
+note.md
+    canonical human-readable content                 (concerns 1, 2)
 
-The evidence forces the same conclusion independently. BlockSuite's repository is a downstream mirror whose sync stopped 2025-07-07; `@blocksuite/store` has not been published since 2025-07-01 at pre-1.0 `0.22.4`; six dependency-vulnerability branches are open and unmerged; development happens inside a 446 MB application monorepo under a split license ([E-10](research/EVIDENCE_LOG.md#e-10--blocksuite-is-a-stale-downstream-mirror-editor-gate)).
+note.fehrest.json
+    canonical structured metadata, only when needed:
+      - stable block IDs                             (concern 3)
+      - provenance, comments                         (concern 4)
+      - metadata for rich objects Markdown cannot express
 
-Even if the round-trip problem were solvable, it could not be solved *against a maintained upstream* — which means passing the gate would prove a property of a frozen snapshot rather than of a substrate Fehrest could build on.
+Y.Doc / CRDT state
+    transient or collaboration-specific,
+    unless independently proven canonical            (concern 5)
+```
 
-Two independent lines of reasoning — structural impossibility and upstream health — reach the same decision. See [ADR-0002](09-TECHNOLOGY-DECISIONS.md#adr-0002--v1-editing-is-markdown-native-blocksuite-is-deferred).
+**Not adopted.** Recorded so the gate has a concrete hypothesis to falsify.
 
-### 7.5 What would reverse this
+### 7.5 The proof obligation
 
-[H-4](research/EVIDENCE_LOG.md#h-4--a-markdown-native-canonical-format-is-sufficient-for-v1-knowledge-work): if dogfooding shows users routinely need block transclusion or inline comments that sidecars cannot express, the decision reopens. It is deliberately the cheapest hypothesis in the plan to test — it needs a week of real use, not an infrastructure investment.
+Whichever candidate wins must demonstrate, with a running prototype ([18-EDITOR-GATE §4](18-EDITOR-GATE.md#4-the-round-trip-proof-obligation)):
+
+- **P-1** Round-trip fidelity, with every deviation enumerated.
+- **P-2** No silent loss — anything unrepresentable is *reported*.
+- **P-3** Identity stability across edit, reload, rename, move, external edit.
+- **P-4** External-edit tolerance.
+- **P-5** Canonical sufficiency — canonical files alone reconstruct the document.
+- **P-6** Sidecar boundedness — a sidecar carries **no content**, only references plus metadata; deleting it loses annotations, never the document.
+
+**P-6 is the discriminator.** If a candidate's sidecar must carry document content or operation history to round-trip, F1's concern was real for that candidate. If it need not, the concern was unfounded. That is an experiment, and it is cheap relative to the decision it settles.
+
+### 7.6 What is not open
+
+Whatever wins, the constitution binds it: canonical artifacts stay open, specified, locally readable and losslessly exportable ([I-5](01-ARCHITECTURE-CONSTITUTION.md#i-5--canonical-artifacts-are-open-local-and-inspectable-amended)); derived state stays rebuildable ([I-6](01-ARCHITECTURE-CONSTITUTION.md#i-6--derived-state-is-disposable-and-rebuildable)); unknown fields survive writes ([R-8](01-ARCHITECTURE-CONSTITUTION.md#2-derived-rules)). A candidate that cannot meet these is eliminated regardless of capability.
+
+**Also not open:** whether Fehrest is a Markdown editor. It is not, under any outcome. The editor is one surface over the [four-layer architecture](00-PRODUCT-THESIS.md#5-the-four-layer-architecture).
 
 ---
 

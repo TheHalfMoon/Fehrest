@@ -22,22 +22,51 @@ Fehrest must never become an untraceable amalgamation of external implementation
 
 ---
 
-## 1. Dispositions changed from the founder's draft registry
+## 0. Risk classification schema (added in F1-R1)
 
-Four dispositions in the founder's draft are **contradicted by measurement**. Each is argued in full below and re-decided here. This section exists so a reviewer can find the disagreements immediately instead of hunting for them.
+> **ADDED IN F1-R1 ([R1-20](../reviews/F1-R1-RECONCILIATION.md)).** F1's risk fields did not distinguish *current* from *historical* upstream problems. That omission directly caused both of its evidential errors: citing fixed Graphify bugs as live defects, and reading a stale distribution mirror as an unmaintained project.
 
-| Source | Draft disposition | Registry disposition | Deciding evidence |
+Every donor risk record must separate six fields:
+
+| Field | Meaning | Rule |
+|---|---|---|
+| `current_verified_state` | True at the pinned commit, verified this session | Must carry a verification date |
+| `historical_issue` | A problem that existed and shaped the design | Must be marked historical |
+| `fixed_issue` | Resolved upstream, with the fixing version | **Must never be cited as a current risk** |
+| `unresolved_issue` | Live at the pinned commit | The only class that justifies a mitigation |
+| `architectural_lesson` | The durable, defect-independent principle | Must survive upstream fixing everything |
+| `fehrest_mitigation` | What Fehrest does | Must trace to an unresolved issue or a lesson — never to a fixed one |
+
+**The test that matters:** an `architectural_lesson` must hold *even if every upstream bug is fixed*. F1's identity argument failed it. The reconstructed argument rests on design properties instead ([E-4](EVIDENCE_LOG.md#e-4--extractor-ids-are-name-derived-by-design-not-by-defect)).
+
+**Second lesson, from the BlockSuite error:** repository-level health signals are unreliable when a project vendors its own packages. Verify the *subtree where development happens*, not the repository that mirrors it.
+
+---
+
+## 1. Dispositions changed in F1-R1
+
+Two rounds of change are recorded. **F1** changed four dispositions from the founder's draft. **F1-R1 then corrected two of those changes** and reclassified two more, on evidence F1 missed.
+
+### 1.1 Corrections to F1 (⚠️ F1 was wrong)
+
+| Source | Draft | F1 | **R1** | Why F1 was wrong |
+|---|---|---|---|---|
+| **BlockSuite** | `USE`, S+ | ❌ **DEFER** ("unmaintained") | **CANDIDATE B** in the [Editor Gate](../18-EDITOR-GATE.md) | F1 measured the *standalone mirror* and concluded the editor was dead. `AFFiNE/blocksuite/…` is actively developed through 2026-08-10 ([E-10.1](EVIDENCE_LOG.md#e-101--the-evidence-f1-missed-the-affine-subtree-is-active)) |
+| **CodeMirror 6** | *absent* | ❌ **USE** (decided) | **CANDIDATE A** in the Editor Gate | F1 decided the editor by argument rather than prototype ([R1-03](../reviews/F1-R1-RECONCILIATION.md)) |
+
+### 1.2 Reclassifications in R1
+
+| Source | F1 | **R1** | Reason |
 |---|---|---|---|
-| **BlockSuite** | `USE / PROTOTYPE`, Priority **S+** | **DEFER** | [E-10](EVIDENCE_LOG.md#e-10--blocksuite-is-a-stale-downstream-mirror-editor-gate) — mirror 13.4 months stale; npm unpublished 13.5 months at 0.22.4; 6 unmerged vulnerability branches; real development inside AFFiNE monorepo |
-| **Yjs** | `USE / PROTOTYPE` | **DEFER** (healthy, but unnecessary in v1) | [E-11](EVIDENCE_LOG.md#e-11--yjs-and-codemirror-are-healthy-the-crdt-is-not-the-stale-part) — Yjs is fine; single-user MVP has no collaboration requirement to justify a CRDT |
-| **AFFiNE** | `ADAPT` | **STUDY** | [E-10](EVIDENCE_LOG.md#e-10--blocksuite-is-a-stale-downstream-mirror-editor-gate) — split license (`packages/backend`, `packages/common/native` non-MIT); 446 MB app monorepo; no releasable substrate boundary |
-| **DuckDB** | `USE FOR DATA INTELLIGENCE`, Priority **S** | **DEFER** | No MVP requirement; §16 of the brief itself declares Data Intelligence out of MVP scope. Priority S contradicts that. |
+| **Yjs** | DEFER (flat) | **CONDITIONAL / EDITOR-DEPENDENT** | Arrives with Candidate B if it wins; deferred otherwise. Collaboration must not be added to justify it ([R1-09](../reviews/F1-R1-RECONCILIATION.md)) |
+| **AFFiNE** | STUDY | **STUDY + source of Candidate B** | Split license and monorepo size are real costs, but it is where the maintained editor lives |
 
-One source is **added** that the draft registry omits and the architecture now depends on:
+### 1.3 Confirmed from F1
 
-| Source | Class | Disposition | Why added |
-|---|---|---|---|
-| **CodeMirror 6** | `CODE_DONOR` | **USE** | Replaces BlockSuite as the v1 editing surface. MIT, current ([E-11](EVIDENCE_LOG.md#e-11--yjs-and-codemirror-are-healthy-the-crdt-is-not-the-stale-part)). Admitted under Research Freeze rule (2): replaces a weaker existing candidate. |
+| Source | Disposition | Reason |
+|---|---|---|
+| **Graphify** | **ADAPT** — one implementation of a CORE capability | Identity conclusion unchanged, evidence re-grounded ([E-4](EVIDENCE_LOG.md#e-4--extractor-ids-are-name-derived-by-design-not-by-defect)). Runtime shape pending GI-BENCH |
+| **DuckDB** | **DEFER** | Data Intelligence outside MVP by the brief's own scope |
 
 ---
 
@@ -92,20 +121,43 @@ why: >
   Measured deterministic extraction at ~18.4 files/s producing 97.2% EXTRACTED-confidence
   edges with line-level provenance and zero LLM cost (E-5, E-8). Reimplementing 60,202 lines
   across 28 grammars is not justified when the upstream is Apache-2.0 and actively developed.
-risks:
-  - CRITICAL: node IDs are name-derived normalised slugs, unstable under rename and Unicode
-    representation, with documented collision history (#550 same-filename collisions, #811,
-    #1033, #2614). Mitigation: Fehrest allocates its own opaque IDs; graphify_node_id is a
-    derived non-authoritative mapping column, rebuildable (E-4, ADR-0004).
-  - Packaging weight: 32 packages / 130 MB site-packages excluding CPython; ~200-300 MB
-    installer delta with a bundled runtime (E-3). Mitigation: optional capability install.
-  - Startup: 4,451 ms cold import, 276 ms warm (E-6). Mitigation: long-lived sidecar (ADR-0003).
-  - AMBIGUOUS confidence measured at 0.0% -- do not build trust logic on it (E-5).
-  - Upstream is pre-1.0 (0.9.45) on a moving default branch named v8; API may break.
-  - Transitive CVE exposure in the optional HTTP/MCP stack, tracked upstream via pinned
-    starlette floors (E-3). Mitigation: independent sidecar update channel.
-  - Python parsers process untrusted vault content in-process with 12 worker subprocesses.
-    Mitigation: sidecar confinement + parser fuzzing (H-5).
+current_verified_state:                  # verified 2026-08-17 at pinned commit
+  - Identity layer is actively maintained and hardened: one `graphify.ids` module,
+    guarded by contract + hypothesis property tests; `_disambiguate_colliding_node_ids`
+    actively salts colliding ids apart.
+  - Pre-1.0 (0.9.45) on a moving default branch named `v8`.
+  - 32 packages / 130 MB site-packages excluding CPython.
+  - Cold import ~4,451 ms / warm ~276 ms (PRELIMINARY, single environment).
+fixed_issue:                             # MUST NOT be cited as current risk (R1-05)
+  - "#2614 Turkish U+0130 idempotency -- FIXED in 0.9.40 (2026-08-11)"
+  - "#811 Unicode collapse -- FIXED (NFKC + casefold + re.UNICODE)"
+  - "#1033 AST-vs-semantic node-id mismatch -- FIXED at the relative-path remap chokepoint"
+  - "#550 same-filename collisions -- ROOT CAUSE FIXED; four hand-synced copies unified
+     into graphify.ids with property tests"
+historical_issue:
+  - The above formed a recurring 'ghost node' bug class that motivated the unified ids module.
+    Historical only. F1 wrongly cited these as live defects; retracted in R1-05.
+unresolved_issue:
+  - Pre-1.0 API stability on a moving branch; API may break between versions.
+  - Transitive CVE exposure in the optional HTTP/MCP stack (tracked upstream via pinned
+    starlette floors, E-3).
+  - Python parsers process untrusted vault content across worker subprocesses (H-5 unproven).
+  - Incremental updates can retain stale derived edges until a forced rebuild.
+architectural_lesson:                    # holds even if upstream fixes everything
+  - Extractor IDs are name/path-derived BY DESIGN (file nodes spec'd `{parent_dir}_{stem}`)
+    and extractor ID SCHEMES change across versions -- upstream explicitly rejected an
+    alternative scheme because it "would rewrite every file and symbol id and force a
+    full-rebuild migration". An identifier whose scheme is expected to change cannot
+    anchor durable references. This is a property of extractors in general, not of Graphify.
+  - Extractor confidence vocabularies are inputs to a trust model, never a trust model.
+fehrest_mitigation:
+  - G-ID-1..G-ID-4 invariants; Fehrest-owned UUIDv7 identity; extractor_id + extractor_version
+    as rebuildable derived mapping only (ADR-0004, E §5.3).
+  - Native evidence/trust model; extractor labels map in, unknown labels degrade to
+    UNRESOLVED (F §3.3, R1-08).
+  - Optional capability install for packaging weight; independent update channel.
+  - Read-only, path-confined, no-credential, no-network worker; parser fuzzing (H-5).
+  - Runtime shape PROVISIONAL pending GI-BENCH (R1-07).
 update_strategy: >
   Pin to the commit above. Track upstream monthly. Re-pin only after (a) the extraction-schema
   contract test passes, (b) the ID-mapping rebuild test passes, and (c) dependency audit is
@@ -194,7 +246,9 @@ provenance_notes: >
 evidence: [E-9]
 ```
 
-### 2.3 CodeMirror 6
+### 2.3 CodeMirror 6 — Candidate A
+
+> **RECLASSIFIED IN F1-R1 ([R1-03](../reviews/F1-R1-RECONCILIATION.md)).** F1 recorded this as a settled `USE`. It is a **candidate** that must win the [Editor Gate](../18-EDITOR-GATE.md) on measured evidence, not a decision.
 
 ```yaml
 id: SRC-003
@@ -202,9 +256,18 @@ name: CodeMirror 6
 class: CODE_DONOR
 repository_or_url: https://github.com/codemirror   # @codemirror/* packages published independently
 upstream_owner: Marijn Haverbeke
-exact_commit_or_version: "@codemirror/state@6.7.1"   # published 2026-07-05; pin full package set at Phase 3
+exact_commit_or_version: "@codemirror/state@6.7.1"   # published 2026-07-05; pin full set at Phase 3E
 date_verified: 2026-08-17
-decision: USE
+decision: CANDIDATE_A      # was F1: USE (decided)
+resolved_by: Editor Gate (ADR-0002)
+current_verified_state:
+  - MIT, actively maintained. The archived codemirror/dev meta-repo is not the runtime;
+    the @codemirror/* packages ship independently and are current.
+strengths_to_test: [Markdown-native editing, canonical bytes ARE the document model,
+                    external-file compatibility, low dependency weight, small install]
+risks_to_expose: [rich blocks must be built separately, no page/canvas primitives inherited,
+                  tables/databases/rich embeds may need substantial custom work,
+                  block-level identity has no native home]
 fehrest_layer: UI
 relevant_upstream_paths: ["@codemirror/state", "@codemirror/view", "@codemirror/language", "@codemirror/search"]
 planned_fehrest_paths:
@@ -237,49 +300,62 @@ evidence: [E-11]
 
 ## 3. Deferred and rejected editing substrates
 
-### 3.1 BlockSuite — DEFER (reclassified from S+)
+### 3.1 BlockSuite — Candidate B in the Editor Gate
+
+> **RECLASSIFIED IN F1-R1 ([R1-02](../reviews/F1-R1-RECONCILIATION.md)).** F1 deferred BlockSuite as "unmaintained." **That was wrong.** F1 measured the standalone mirror and missed that the editor is actively developed inside AFFiNE.
 
 ```yaml
 id: SRC-004
 name: BlockSuite
 class: CODE_DONOR
-repository_or_url: https://github.com/toeverything/blocksuite
+repository_or_url: https://github.com/toeverything/AFFiNE   # blocksuite/ subtree -- NOT the standalone mirror
 upstream_owner: toeverything
-exact_commit_or_version: 5cb5cb68471ca692f3c162258f0087cb22fcb82d   # main HEAD, 2025-07-07 -- 13.4 months stale
-npm_version_observed: "@blocksuite/store@0.22.4, last published 2025-07-01"
+exact_commit_or_version: PIN AT PHASE 3E    # AFFiNE canary observed at b4c8548c (2026-08-17)
+superseded_source: >
+  toeverything/blocksuite @ 5cb5cb68471ca692f3c162258f0087cb22fcb82d (main, 2025-07-07).
+  STALE MIRROR -- do NOT evaluate or vendor this. npm @blocksuite/store@0.22.4 last
+  published 2025-07-01.
 date_verified: 2026-08-17
-decision: DEFER            # was: USE / PROTOTYPE, Priority S+
+decision: CANDIDATE_B      # was F1: DEFER; was draft: USE/PROTOTYPE S+
 fehrest_layer: UI
-what_we_use: []            # nothing in v1
-what_we_do_not_use: [everything, in, v1]
-why: >
-  Reclassified on maintenance and licensing evidence, not on capability. BlockSuite's own
-  repository is a downstream MIRROR of packages developed inside the AFFiNE monorepo -- the
-  last five commits are all "chore: sync affine blocksuite to packages" and the sync stopped
-  2025-07-07. @blocksuite/store has not been published to npm since 2025-07-01 and remains
-  pre-1.0 at 0.22.4. Six renovate/npm-*-vulnerability branches (dompurify, file-type,
-  lodash-es, minimatch, simple-git, vite, vitest) are open and unmerged. Real development
-  happens inside toeverything/AFFiNE (HEAD 2026-08-17) under a split license.
-  Consequence: the round-trip architecture gate CANNOT be cleared against a maintained
-  upstream. Clearing it against a frozen mirror would prove a property of a snapshot, not of
-  a substrate Fehrest can depend on.
-risks_if_adopted_anyway:
-  - Fehrest's primary editing substrate would be unmaintained and unreleased from day one
-  - Inherited unpatched transitive dependency vulnerabilities
-  - Vendoring from a 446 MB application monorepo with no releasable boundary
-  - MPL-2.0 on the mirror vs split MIT/other in AFFiNE -- file-level license provenance
-    would have to be established per vendored file
-reconsider_if: >
-  (1) upstream resumes independent releases for two consecutive quarters, OR
-  (2) H-4 is falsified -- dogfooding proves Markdown plus documented sidecars genuinely
-      cannot express required knowledge work -- AND no maintained alternative exists, OR
-  (3) Fehrest decides to vendor a specific frozen subset at a pinned AFFiNE commit with
-      per-file license provenance and accepts permanent maintenance ownership.
-license: MPL-2.0 (mirror); AFFiNE upstream is split MIT / separate backend license
-evidence: [E-10]
+current_verified_state:
+  - AFFiNE blocksuite/ subtree received commits through 2026-08-10, including
+    "feat(editor): improve select perf" (#15353), "feat(editor): code block line
+    numbers" (#15376), "fix(mobile): keyboard padding" (#15365), "chore: bump
+    typescript 7" (#15465), and "chore: bump up js-yaml v5 [SECURITY]" (#15385).
+  - The editor implementation is ACTIVELY MAINTAINED.
+historical_issue:
+  - The standalone toeverything/blocksuite repository stopped syncing 2025-07-07.
+  - Six renovate/npm-*-vulnerability branches are open and unmerged ON THAT MIRROR.
+fixed_issue:
+  - Security dependency bumps land in the maintained AFFiNE tree (#15385), so the
+    "unpatched transitive vulnerabilities" argument applies to the mirror, not to the
+    code that would actually be vendored.
+unresolved_issue:
+  - No independent release channel; vendoring from a 446 MB application monorepo.
+  - Coupling to AFFiNE-specific infrastructure is unmeasured.
+  - Split license: MIT applies OUTSIDE packages/backend and packages/common/native.
+    Per-file license provenance required for every vendored file.
+  - Maintenance burden if Fehrest diverges from upstream.
+architectural_lesson:
+  - Repository-level health signals are unreliable when a project vendors its own
+    packages. Verify the subtree where development happens, not the mirror.
+what_we_evaluate:
+  - Block architecture; Page + Edgeless primitives; rich blocks; databases/data views;
+    editing interaction model; canonical-file round-trip behaviour (P-1..P-6).
+what_we_do_not_evaluate:
+  - The stale standalone package, under any circumstances.
+fehrest_mitigation:
+  - Evaluated only through the Editor Gate against a pinned AFFiNE commit.
+  - Eliminated on packaging grounds if extraction proves untenable (F-5) -- a DIFFERENT
+    and legitimate reason, to be recorded precisely if it occurs.
+license: AFFiNE split -- MIT outside packages/backend and packages/common/native
+evidence: [E-10, E-10.1]
 ```
 
-### 3.2 Yjs — DEFER
+### 3.2 Yjs — CONDITIONAL / EDITOR-DEPENDENT
+
+> **RECLASSIFIED IN F1-R1 ([R1-09](../reviews/F1-R1-RECONCILIATION.md)).** F1's flat `DEFER` was too coarse: whether a CRDT enters v1 is a **consequence of the Editor Gate**, not an independent choice.
 
 ```yaml
 id: SRC-005
@@ -288,23 +364,34 @@ class: [CODE_DONOR, RESEARCH]
 repository_or_url: https://github.com/yjs/yjs
 exact_commit_or_version: yjs@13.6.32     # published 2026-08-04
 date_verified: 2026-08-17
-decision: DEFER
+decision: CONDITIONAL      # was F1: DEFER
+resolved_by: Editor Gate (ADR-0002) via ADR-0012
 fehrest_layer: KNOWLEDGE
-why: >
-  Deferred on NECESSITY, not health -- an important distinction. Yjs is MIT and actively
-  released. But a single-user, local-first MVP has no collaboration requirement, and a CRDT
-  introduces exactly the class of state that Fehrest's canonical-file invariant forbids:
-  document state that is authoritative inside the runtime but not expressible in the open file.
-  Introducing it before there is a collaborator to synchronise with buys risk with no product.
-reconsider_if: Real-time multi-writer collaboration enters scope (post-v1, Phase 8+).
-constraint_when_reconsidered: >
-  Do not introduce a second CRDT runtime alongside it. Do not combine with Automerge without
-  a dedicated ADR proving a need neither satisfies alone.
+current_verified_state:
+  - MIT licensed, actively released (13.6.32, 2026-08-04). NO maintenance objection.
+conditional_outcomes:
+  - if_candidate_B_wins: >
+      Yjs arrives AS PART OF the editing substrate. Not a separate adoption decision.
+      The gate's ADR must then specify which CRDT state is canonical, which is
+      collaboration-specific, and which is transient (18-EDITOR-GATE section 4).
+  - if_candidate_A_or_C_wins: >
+      Yjs stays deferred until collaboration or sync independently justifies it.
+hard_constraint: >
+  Collaboration must NOT be added to the MVP in order to justify a CRDT. If a CRDT
+  arrives, it arrives because the winning editor uses it for local document state.
+unresolved_issue:
+  - Whether CRDT operation history is canonical document meaning is OPEN, not settled
+    (R1-04). F1 assumed it was; that assumption is retracted.
+constraint_when_adopted: >
+  One CRDT runtime only. Do not combine with Automerge without a dedicated ADR proving
+  a need neither satisfies alone.
 license: MIT
 evidence: [E-11]
 ```
 
-### 3.3 AFFiNE — STUDY (reclassified from ADAPT)
+### 3.3 AFFiNE — STUDY + source of Candidate B
+
+> **RECLASSIFIED IN F1-R1 ([R1-02](../reviews/F1-R1-RECONCILIATION.md)).** AFFiNE is not only a product reference — it is **where the maintained BlockSuite editor lives** ([SRC-004](#31-blocksuite--candidate-b-in-the-editor-gate)).
 
 ```yaml
 id: SRC-006
@@ -313,19 +400,29 @@ class: [PRODUCT_REFERENCE, CODE_DONOR]
 repository_or_url: https://github.com/toeverything/AFFiNE
 exact_commit_or_version: b4c8548c09da21b2898443559a5b846f0ccf5dd8   # canary, 2026-08-17
 date_verified: 2026-08-17
-decision: STUDY            # was: ADAPT
+decision: STUDY + SOURCE_OF_CANDIDATE_B
 fehrest_layer: UI
-what_we_use: [workspace UX patterns, document/canvas/database view concepts, local-first app patterns]
-what_we_do_not_use: [any code in v1]
-why: >
-  Downgraded from ADAPT because there is no clean substrate boundary to adapt: the editing
-  layer lives inside a 446 MB application monorepo and its license is split -- content under
-  packages/backend and packages/common/native falls under a separate license, with MIT
-  applying only outside those directories. Adapting code would require per-file license
-  provenance for every vendored file. As a product reference it remains valuable.
-  Explicitly NOT to be forked and renamed Fehrest.
+current_verified_state:
+  - Actively developed; canary HEAD 2026-08-17.
+  - Contains blocksuite/ as an in-repo subtree (affine, framework, playground,
+    integration-test), which receives ongoing editor feature and security work.
+what_we_study: [workspace UX, document/canvas/database view concepts, local-first app patterns]
+what_we_may_vendor: >
+  ONLY the blocksuite/ subtree, ONLY at a pinned commit, ONLY if it wins the Editor Gate,
+  and ONLY with per-file license provenance established first.
+what_we_do_not_use:
+  - The application itself. Fehrest is NOT an AFFiNE fork -- explicitly rejected.
+  - Anything under packages/backend or packages/common/native (separate license).
+unresolved_issue:
+  - Split license: MIT applies only OUTSIDE packages/backend and packages/common/native.
+    Per-file provenance is mandatory before any vendoring.
+  - 446 MB monorepo; extraction cost and coupling depth are unmeasured (Phase 3E measures).
+  - No independent release channel for the editor subtree.
+architectural_lesson:
+  - A project can be simultaneously an unusable dependency (no releases) and a viable
+    code donor (maintained subtree). These require separate assessments.
 license: Split -- MIT outside packages/backend and packages/common/native; separate license within
-evidence: [E-10]
+evidence: [E-10, E-10.1]
 ```
 
 ### 3.4 Automerge — STUDY

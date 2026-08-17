@@ -56,7 +56,7 @@ A-3 deserves emphasis. Fehrest's *purpose* is that agents trust its memory. A me
 | **Fehrest core** | Full | Enforces policy | The TCB. Must be small and auditable |
 | **Local agent (MCP client)** | **Untrusted, authenticated** | Only its grant | Identified per session. Assume compromised or manipulated |
 | **Remote model provider** | Untrusted | Sees what is sent | Assume logging. Assume prompt-injectable output |
-| **Graphify sidecar** | **Semi-trusted, unprivileged** | Compute only; no canonical write ([R-7](01-ARCHITECTURE-CONSTITUTION.md#2-derived-rules)) | Parses hostile input in Python with 12 worker subprocesses ([E-5](research/EVIDENCE_LOG.md#e-5--graphify-measured-extraction-throughput-and-confidence-distribution)) |
+| **Graphify sidecar** | **Semi-trusted, unprivileged** | Compute only; no canonical write ([R-7](01-ARCHITECTURE-CONSTITUTION.md#2-derived-rules)) | Parses hostile input in Python with 12 worker subprocesses ([E-5](research/EVIDENCE_LOG.md#e-5--graphify-measured-extraction-throughput-preliminary)) |
 | **Imported document** | **Hostile** | None | The primary injection vector |
 | **Vault files on disk** | **Untrusted input** | None | May be attacker-authored, synced, or restored from a hostile backup |
 | **Other local processes** | Untrusted | OS-level | Vault is readable by anything running as the user — see [T-19](#t-19--local-process-reads-the-vault) |
@@ -199,7 +199,7 @@ Each entry: attack → why it works → controls → detection → residual risk
 ### T-10 — Parser vulnerabilities
 **Attack.** A malformed PDF, DOCX, image or source file triggers memory corruption or infinite loops in a parser. The exposure is large: 28 tree-sitter grammars plus optional document parsers ([E-3](research/EVIDENCE_LOG.md#e-3--graphify-dependency-weight-and-installed-footprint)).
 
-**Controls.** Content-based type detection via Magika *before* dispatch, so extension spoofing does not select the wrong parser ([SRC-020](research/FEHREST_SOURCE_REGISTRY.md#5-ingestion)); all parsing in the unprivileged sidecar, never in core; per-file wall-clock, memory and output-size caps; failure is per-file and non-fatal — Graphify already degrades this way ([E-5](research/EVIDENCE_LOG.md#e-5--graphify-measured-extraction-throughput-and-confidence-distribution)); continuous parser fuzzing.
+**Controls.** Content-based type detection via Magika *before* dispatch, so extension spoofing does not select the wrong parser ([SRC-020](research/FEHREST_SOURCE_REGISTRY.md#5-ingestion)); all parsing in the unprivileged sidecar, never in core; per-file wall-clock, memory and output-size caps; failure is per-file and non-fatal — Graphify already degrades this way ([E-5](research/EVIDENCE_LOG.md#e-5--graphify-measured-extraction-throughput-preliminary)); continuous parser fuzzing.
 
 **Detection.** `cargo-fuzz`/ClusterFuzzLite on Fehrest-owned parsers; malformed-corpus regression suite; [H-5](research/EVIDENCE_LOG.md#h-5--a-single-sidecar-process-is-sufficient-isolation-for-the-extraction-path) is the open hypothesis here.
 

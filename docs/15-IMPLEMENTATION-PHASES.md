@@ -35,7 +35,7 @@ Rule 2 is what prevents the failure the brief names: downstream work starting wh
 **Objective.** Verify that the measurements this plan rests on hold beyond one machine, and close the decisions deliberately left open.
 
 **Scope.**
-- Re-run [E-3](research/EVIDENCE_LOG.md#e-3--graphify-dependency-weight-and-installed-footprint), [E-5](research/EVIDENCE_LOG.md#e-5--graphify-measured-extraction-throughput-and-confidence-distribution), [E-6](research/EVIDENCE_LOG.md#e-6--graphify-startup-cost-cold-vs-warm) on Windows, macOS and Linux.
+- Re-run [E-3](research/EVIDENCE_LOG.md#e-3--graphify-dependency-weight-and-installed-footprint), [E-5](research/EVIDENCE_LOG.md#e-5--graphify-measured-extraction-throughput-preliminary), [E-6](research/EVIDENCE_LOG.md#e-6--graphify-startup-cost-preliminary) on Windows, macOS and Linux.
 - Measure extraction at 5K and 10K files to test [H-2](research/EVIDENCE_LOG.md#h-2--extraction-scales-linearly-in-file-count) (linearity).
 - Measure Docling's installed weight to settle its optional/required classification.
 - Obtain LongMemEval-V2; reproduce at least one published baseline locally ([E-14](research/EVIDENCE_LOG.md#e-14--longmemeval-v2-exists-and-defines-the-right-target)).
@@ -57,7 +57,7 @@ Rule 2 is what prevents the failure the brief names: downstream work starting wh
 
 **Rollback.** None — nothing built.
 
-**Redesign trigger.** If H-2 is falsified badly (10K extraction > 3× projection), reopen [ADR-0003](09-TECHNOLOGY-DECISIONS.md#adr-0003--graphify-runs-as-a-managed-long-lived-sidecar) before writing any code that assumes the graph is affordable.
+**Redesign trigger.** If H-2 is falsified badly (10K extraction > 3× projection), reopen [ADR-0003](09-TECHNOLOGY-DECISIONS.md#adr-0003--graph-intelligence-runtime-integration-shape) before writing any code that assumes the graph is affordable.
 
 ---
 
@@ -141,7 +141,7 @@ Rule 2 is what prevents the failure the brief names: downstream work starting wh
 3. `test_sidecar_readonly` — sidecar cannot write anywhere in the vault.
 4. `test_sidecar_no_egress` — zero outbound connections during a full extraction.
 5. `test_sidecar_crash_recovery` — SIGKILL mid-extraction; resumes; no corruption.
-6. `test_id_collision_surfaced` — a same-filename collision produces multiple mappings surfaced as ambiguity, never a silent pick ([E-4](research/EVIDENCE_LOG.md#e-4--graphify-node-ids-are-name-derived-not-stable-identities)).
+6. `test_id_collision_surfaced` — a same-filename collision produces multiple mappings surfaced as ambiguity, never a silent pick ([E-4](research/EVIDENCE_LOG.md#e-4--extractor-ids-are-name-derived-by-design-not-by-defect)).
 7. `test_schema_validation_rejects_malformed` — a hostile sidecar response is rejected, not ingested.
 8. `test_startup_excludes_sidecar_import` — the 4,451 ms cold import never appears on the startup path.
 
@@ -151,9 +151,42 @@ Rule 2 is what prevents the failure the brief names: downstream work starting wh
 
 **Exit criteria.** All acceptance tests green; B-3 ablation reports the graph's measured contribution.
 
-**Decision point.** If B-3 shows graph expansion adds **no measurable recall** over FTS + memory, invoke [failure condition F-3](17-FAILURE-CONDITIONS.md): reduce Graphify to code-only understanding or drop it. This would remove ~300 MB from the installer and one process from the architecture — a good outcome if the evidence says so, and the reason the ablation is mandatory rather than optional.
+**Benchmarks (added in R1).** [GI-BENCH](10-BENCHMARK-PLAN.md#b-11--gi-bench--graph-intelligence-benchmark-matrix) runs here. **No packaging or runtime decision may be finalised before it reports** ([ADR-0003](09-TECHNOLOGY-DECISIONS.md#adr-0003--graph-intelligence-runtime-integration-shape) is PROVISIONAL until then).
+
+**Decision point.** If B-3 shows graph expansion adds no measurable recall over FTS + memory, or GI-BENCH shows the runtime is untenable, invoke [failure condition F-3](17-FAILURE-CONDITIONS.md#f-3--the-graph-intelligence-capability-does-not-earn-its-cost). Note what that permits and forbids: **the implementation may be replaced; the capability may not be dropped** ([R1-06](reviews/F1-R1-RECONCILIATION.md)). Graph Intelligence answers "what is connected?", one of the four questions Fehrest exists to answer.
 
 **Rollback.** Disable the sidecar; the system reverts to Phase 2 behaviour with no data loss.
+
+---
+
+## Phase 3E — Editor bake-off gate
+
+> **ADDED IN F1-R1 ([R1-03](reviews/F1-R1-RECONCILIATION.md)).** F1 chose the editor by argument. R1 requires it be chosen by executable prototype. Full specification: [18-EDITOR-GATE](18-EDITOR-GATE.md).
+
+**Objective.** Decide the editor architecture on measured evidence, producing an ADR that supersedes [ADR-0002](09-TECHNOLOGY-DECISIONS.md#adr-0002--editor-architecture-open--prototype-gated).
+
+**Scope.** Build the common corpus (`bench/editor/corpus/`) with expected-output fixtures; implement a minimal round-trip harness per candidate — **A** CodeMirror 6, **B** maintained AFFiNE `blocksuite/` subtree at a pinned commit, **C** only if A and B leave a documented gap; run the 24-item acceptance suite identically across candidates; score against fixed weights.
+
+**Non-goals.** Building the actual Fehrest editor. Shipping UI. Canvas. Collaboration. This phase produces a **decision and throwaway prototypes**, not product code.
+
+**Dependencies.** Phase 1 (identity, canonical files) so round-trip has something canonical to round-trip against. Independent of Phases 2–4; **may run in parallel**.
+
+**Acceptance criteria.**
+1. All 24 acceptance tests executed against every candidate, results recorded with raw measurements.
+2. **P-1…P-6** verdicts recorded per candidate ([18-EDITOR-GATE §4.3](18-EDITOR-GATE.md#43-what-must-be-proven)).
+3. Every fidelity deviation **enumerated** — no candidate scored on "mostly works."
+4. Elimination conditions evaluated: silent data loss, content loss on crash (test 15), sidecar carrying document content (P-6).
+5. Turkish/combining-mark idempotency verified for any candidate computing block identity from content (test 11).
+6. Git-diff readability measured (test 18) — a one-word change must produce a minimal reviewable diff.
+7. Successor ADR written, including the consequent status of [ADR-0012](09-TECHNOLOGY-DECISIONS.md#adr-0012--crdt-adoption-is-editor-dependent) (CRDT/Yjs).
+
+**Security gates.** Any candidate's dependency tree passes the [L §3](11-SECURITY-VERIFICATION-PLAN.md#3-dependency-and-supply-chain) scanners. For Candidate B, per-file license provenance is established for every vendored file before scoring is finalised.
+
+**Exit criteria.** A decision with recorded evidence — **or** a recorded finding that no candidate clears the fidelity floor, which is a legitimate outcome requiring a scope conversation rather than a winner picked on aggregate score.
+
+**Rollback.** Prototypes are throwaway. No canonical format is committed by this phase.
+
+**Blocks.** [Phase 7](#phase-7--desktop-application). No UI work may begin until this gate closes.
 
 ---
 
@@ -252,15 +285,15 @@ Rule 2 is what prevents the failure the brief names: downstream work starting wh
 
 **Objective.** Make the proven slice usable by a human.
 
-**Entry criteria — hard.** Phase 6 exit criteria met **in full**. No UI work begins on an unproven thesis.
+**Entry criteria — hard.** Phase 6 exit criteria met **in full**, **and [Phase 3E](#phase-3e--editor-bake-off-gate) closed with a decided editor ADR.** No UI work begins on an unproven thesis or an undecided substrate.
 
-**Scope.** Desktop shell ([ADR-0011](09-TECHNOLOGY-DECISIONS.md#adr-0011--desktop-shell)); CodeMirror 6 Markdown editing; vault browser; search UI; memory review and confirmation queue; agent session and audit views; provenance display; onboarding including backup guidance; the UI capability boundary (B1) with **no raw filesystem API exposed to the webview**.
+**Scope.** Desktop shell ([ADR-0011](09-TECHNOLOGY-DECISIONS.md#adr-0011--desktop-shell)); **the editor chosen by Phase 3E**; vault browser; search UI; memory review and confirmation queue; agent session and audit views; provenance and trust-level display; onboarding including backup guidance; the UI capability boundary (B1) with **no raw filesystem API exposed to the webview**.
 
 **Non-goals.** Canvas. Graph explorer. Database views. Plugins. Sync. Mobile.
 
 **Acceptance criteria.** UI cannot bypass the authorization chokepoint; every budget in [O §3](14-PERFORMANCE-BUDGETS.md) met with UI attached; confirmation queue measured **< 5/day** in dogfooding ([O §10](14-PERFORMANCE-BUDGETS.md)); accessibility baseline (keyboard-complete, screen-reader labelled, WCAG AA contrast, no colour-only encoding); [H-4](research/EVIDENCE_LOG.md#h-4--a-markdown-native-canonical-format-is-sufficient-for-v1-knowledge-work) tested in real use.
 
-**Decision point.** If [H-4](research/EVIDENCE_LOG.md#h-4--a-markdown-native-canonical-format-is-sufficient-for-v1-knowledge-work) is falsified — Markdown plus sidecars genuinely cannot support the work — [ADR-0002](09-TECHNOLOGY-DECISIONS.md#adr-0002--v1-editing-is-markdown-native-blocksuite-is-deferred) reopens. Re-evaluate ProseMirror/Lexical **before** BlockSuite.
+**Decision point.** If [H-4](research/EVIDENCE_LOG.md#h-4--a-markdown-native-canonical-format-is-sufficient-for-v1-knowledge-work) is falsified — Markdown plus sidecars genuinely cannot support the work — [ADR-0002](09-TECHNOLOGY-DECISIONS.md#adr-0002--editor-architecture-open--prototype-gated) reopens. Re-evaluate ProseMirror/Lexical **before** BlockSuite.
 
 ---
 

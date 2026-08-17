@@ -43,14 +43,77 @@ The honest bar is also published there: the best reported memory system scores 7
 |---|---|
 | A cloud knowledge service | Core function must work with no network, no account, no server ([B](01-ARCHITECTURE-CONSTITUTION.md)) |
 | An Obsidian clone | Obsidian stores human notes. Fehrest stores human knowledge *and* machine memory in one temporally-resolved substrate, with an audited agent boundary |
-| An AFFiNE fork | Explicitly rejected. See [SRC-006](research/FEHREST_SOURCE_REGISTRY.md#33-affine--study-reclassified-from-adapt) |
+| An AFFiNE fork | Explicitly rejected. See [SRC-006](research/FEHREST_SOURCE_REGISTRY.md#33-affine--study--source-of-candidate-b) |
 | A RAG pipeline | RAG retrieves passages. Fehrest resolves *current state* deterministically, and can say "this decision was superseded on 3 June" |
 | An agent framework | Fehrest is what agents connect *to*. It does not own the agent loop |
 | A BI or analytics product | Deferred entirely ([SRC-018](research/FEHREST_SOURCE_REGISTRY.md#4-storage-and-retrieval)) |
 | A Linear or Airtable clone | Structured views are a later projection over the object model, not the product |
 | A vector database | Vectors are an optional, rebuildable accelerator. sqlite-vec's current release line is **alpha** ([E-12](research/EVIDENCE_LOG.md#e-12--vector-store-maturity)) |
 
-## 4. The three-plane thesis
+## 4. The v1 user wedge
+
+**Resolved in F1-R1 ([R1-11](reviews/F1-R1-RECONCILIATION.md)) as a founder-decision candidate.** F1 left this vague, which was a real gap: it changes architecture.
+
+> **Fehrest v1 targets power users, developers, researchers and AI-native knowledge workers who regularly use multiple agents and need durable local project memory across tools, sessions and model providers.**
+
+This wedge is not the ceiling. It is the population for whom the unique thesis is *provable* — people who already feel the pain of memory dying with every session, and who already run several of: Claude, Codex, Gemini, GLM, Cursor, local models, MCP tools.
+
+**Fehrest makes memory portable across all of them.** That is the wedge's defining requirement, and no incumbent serves it: Obsidian has no agent boundary, each vendor's memory is locked to that vendor, and RAG tools have no temporal or provenance model.
+
+**Architecture consequences — this is why the wedge matters:**
+
+| Decision | Because of the wedge |
+|---|---|
+| MCP gateway is v1, not deferred | Multi-provider portability *is* the value proposition |
+| CLI-first through Phase 6 | This user is comfortable in a terminal; UI can follow proof |
+| Graph Intelligence stays in v1 | Code and structured corpora are central to this user's work |
+| Local-first is a feature, not a constraint | This user has strong opinions about data ownership |
+| Rich block editing is not the wedge's core need | Supports — but does not decide — the [Editor Gate](18-EDITOR-GATE.md) |
+
+**Strongest alternative considered:** *general knowledge workers (an Obsidian-adjacent audience)*. Rejected for v1 because it would make the editor the product, demote the agent gateway, and put Fehrest in direct feature competition with mature incumbents on their strongest axis — while leaving the actual thesis (portable agent memory) untested. It remains the natural **second** market once the thesis is proven.
+
+If this wedge is wrong, the decisions that change are the four in the table above. Recorded in [Q-8](16-OPEN-QUESTIONS.md#q-8--v1-user-wedge-resolved-candidate).
+
+## 5. The four-layer architecture
+
+**Made explicit in F1-R1 ([R1-12](reviews/F1-R1-RECONCILIATION.md)).** Fehrest answers four different questions, and each has its own layer:
+
+```
+                    Canonical Knowledge
+                    "what exists?"
+                            │
+              ┌─────────────┴─────────────┐
+              │                           │
+              ▼                           ▼
+     Graph Intelligence            Event Journal
+     "what is connected?"          "what happened?"
+              │                           │
+              └─────────────┬─────────────┘
+                            │
+                  temporal interpretation
+                            │
+                            ▼
+                         Memory
+                "what remains true now?"
+                            │
+                            ▼
+                   Context Compiler
+             "what should this agent see?"
+```
+
+| Layer | Question | Donor influence |
+|---|---|---|
+| **Canonical Knowledge** | What exists? | Obsidian-style local ownership |
+| **Graph Intelligence** | What is connected? | Graphify-style deterministic relationship extraction |
+| **Event Journal** | What happened? | DeepSeek-Harness-style append-only typed events |
+| **Memory** | What remains relevant and currently true? | Bitemporal + supersession |
+| **Context Compiler** | What should this agent see now? | Fehrest-native |
+
+**Graph Intelligence is a CORE capability; Graphify is a replaceable implementation of it** ([R1-06](reviews/F1-R1-RECONCILIATION.md)). Lexical search alone cannot answer "what is connected," and the thesis requires that answer. If Graphify proves unsuitable, it is **replaced** — not dropped ([ADR-0003](09-TECHNOLOGY-DECISIONS.md#adr-0003--graph-intelligence-runtime-integration-shape)).
+
+The Event Journal is equally first-class. Knowledge without activity history cannot answer "why is this the current decision," and memory without events has no provenance to resolve conflicts against ([D §5](03-CANONICAL-DATA-MODEL.md#5-the-event-plane)).
+
+## 6. The three-plane storage thesis
 
 Evaluated in detail in [D](03-CANONICAL-DATA-MODEL.md) and [E](04-DERIVED-DATA-MODEL.md). Summarised:
 
@@ -62,7 +125,7 @@ Evaluated in detail in [D](03-CANONICAL-DATA-MODEL.md) and [E](04-DERIVED-DATA-M
 
 The decomposition survives scrutiny, with one correction: **the Event Plane must be selective.** Storing every model chunk forever is what the founder's brief warns against, and the harness's own event vocabulary includes `assistant/chunk` for "token-level replay fidelity" ([E-9](research/EVIDENCE_LOG.md#e-9--deepseek-harness-pinned-version-and-adoptable-patterns)) — appropriate for a debugging runtime, wrong for a decade-long personal memory store. Fehrest splits durability tiers within the Event Plane; see [D §5](03-CANONICAL-DATA-MODEL.md#5-the-event-plane).
 
-## 5. The defining capability: context compilation
+## 7. The defining capability: context compilation
 
 If Fehrest has one feature that justifies it, it is this:
 
@@ -72,7 +135,7 @@ Not "retrieve the top 20 chunks." A compiled package: current project state, act
 
 Deterministic and reproducible is the load-bearing property. The same inputs must produce the same package, because a memory substrate that cannot be re-derived cannot be audited, and one that cannot be audited cannot be trusted with a decade of a person's thinking. LLM summarisation is an optional final stage, never the mechanism. Full specification in [H](07-CONTEXT-COMPILER-SPEC.md).
 
-## 6. The falsification test
+## 8. The falsification test
 
 Fehrest's thesis is falsifiable by a single experiment, specified as [B-7](10-BENCHMARK-PLAN.md):
 
@@ -82,7 +145,7 @@ Fehrest must beat: raw chat-history stuffing, BM25, dense RAG, hybrid RAG, graph
 
 If Fehrest cannot beat the last baseline, it does not deserve to exist. That is stated here deliberately, before any code is written.
 
-## 7. Scope commitments
+## 9. Scope commitments
 
 **In scope for v1** (challenged item-by-item in [P](15-IMPLEMENTATION-PHASES.md)): local vault of open files, stable identity, deterministic ingestion, append-only event journal, Markdown-native editing, deterministic structural graph, lexical search, bitemporal memory with supersession, context compiler, scoped MCP gateway, provenance and audit.
 
@@ -90,15 +153,15 @@ If Fehrest cannot beat the last baseline, it does not deserve to exist. That is 
 
 **Explicitly forbidden in v1:** mandatory cloud, hosted auth, opaque telemetry, mandatory LLM, mandatory vector DB, mandatory graph DB, unrestricted agent filesystem or network access.
 
-## 8. Why this is buildable by a small team
+## 10. Why this is buildable by a small team
 
-The architecture deliberately buys rather than builds where the evidence supports it: deterministic code understanding comes from Graphify (60,202 lines, 28 grammars, Apache-2.0, ~18 files/s measured, zero LLM cost — [E-5](research/EVIDENCE_LOG.md#e-5--graphify-measured-extraction-throughput-and-confidence-distribution)); the event-plane design comes from a donor whose subsystem documentation is specification-grade ([E-9](research/EVIDENCE_LOG.md#e-9--deepseek-harness-pinned-version-and-adoptable-patterns)); storage is SQLite.
+The architecture deliberately buys rather than builds where the evidence supports it: deterministic code understanding comes from Graphify (60,202 lines, 28 grammars, Apache-2.0, ~18 files/s measured, zero LLM cost — [E-5](research/EVIDENCE_LOG.md#e-5--graphify-measured-extraction-throughput-preliminary)); the event-plane design comes from a donor whose subsystem documentation is specification-grade ([E-9](research/EVIDENCE_LOG.md#e-9--deepseek-harness-pinned-version-and-adoptable-patterns)); storage is SQLite.
 
-And it deliberately refuses to build the most expensive thing — a rich collaborative block editor — because the one candidate substrate is a 13-month-stale unreleased mirror ([E-10](research/EVIDENCE_LOG.md#e-10--blocksuite-is-a-stale-downstream-mirror-editor-gate)), and because Markdown-native editing makes canonical round-trip an identity function instead of a lossy mapping ([ADR-0002](09-TECHNOLOGY-DECISIONS.md#adr-0002--v1-editing-is-markdown-native-blocksuite-is-deferred)).
+And it deliberately refuses to build the most expensive thing — a rich collaborative block editor — because the one candidate substrate is a 13-month-stale unreleased mirror ([E-10](research/EVIDENCE_LOG.md#e-10--blocksuite-distribution-is-stale-the-implementation-is-not-editor-gate)), and because Markdown-native editing makes canonical round-trip an identity function instead of a lossy mapping ([ADR-0002](09-TECHNOLOGY-DECISIONS.md#adr-0002--editor-architecture-open--prototype-gated)).
 
 The remaining novel work — bitemporal memory, promotion, context compilation, the agent boundary — is where Fehrest's actual contribution lies, and is small enough to build correctly.
 
-## 9. What would change this thesis
+## 11. What would change this thesis
 
 | Finding | Consequence |
 |---|---|

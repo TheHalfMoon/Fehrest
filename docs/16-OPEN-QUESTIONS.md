@@ -11,15 +11,25 @@ Each question records: what is unresolved, why I did not decide it, what depends
 
 ## Blocking — must be answered before Phase 0 exits
 
-### Q-1 — Which repository is canonical?
+### Q-1 — Repository identity: CLOSED
 
-**Finding.** `TheHalfMoon/Fehrest` **does not exist** (HTTP 404). `TheHalfMoon` is a user account with 8 repositories, none named Fehrest. `wepld/Fehrest` exists, is public, and is **completely empty** — zero commits, zero branches ([E-0](research/EVIDENCE_LOG.md#e-0--canonical-repository-state)).
+> **RESOLVED IN F1-R1 ([R1-01](reviews/F1-R1-RECONCILIATION.md)).** F1 recorded this as open because it concluded `TheHalfMoon/Fehrest` did not exist. That conclusion was a **category error** — a 404 from an unaffiliated token against a private repository is indistinguishable from a 404 against a nonexistent one ([E-0](research/EVIDENCE_LOG.md#e-0--canonical-repository-state)).
 
-**Why I did not decide.** Repository ownership, visibility and licensing are founder decisions with legal and commercial consequences.
+**CLOSED:** the canonical repository is **`TheHalfMoon/Fehrest`** — private, default branch `main`, size 0, no implementation.
 
-**Needed.** (a) Which remote is canonical? (b) Public or private during development? (c) Which license? The registry assumes a permissive license is intended — Apache-2.0 obligations from Graphify and MIT from other donors are all compatible with either MIT or Apache-2.0 for Fehrest, but a copyleft choice would change the donor analysis.
+**`wepld/Fehrest` is NOT canonical**, is not a fallback, and receives no planning work.
 
-**Blocks.** All work with a remote. The planning package is committed locally and pushes nowhere until this is answered.
+**Environment note:** this session authenticates as `wepld` and cannot read `TheHalfMoon/Fehrest`. That is an access limitation of the available credential, recorded as such, and is not evidence about the repository.
+
+**What remains open — and must not be conflated with identity:**
+
+| # | Question | Nature |
+|---|---|---|
+| Q-1a | Open-source license choice | Legal. Donor obligations (Apache-2.0 from Graphify, MIT from others) are compatible with either MIT or Apache-2.0 for Fehrest; a copyleft choice would change the donor analysis |
+| Q-1b | Public/private release timing | Commercial |
+| Q-1c | Publication strategy | Commercial |
+
+**No longer blocks anything.** The planning package is committed to a local repository whose `origin` now points at `TheHalfMoon/Fehrest`. **Nothing has been pushed**, pending explicit authorization.
 
 ### Q-2 — Core implementation language
 
@@ -77,13 +87,21 @@ Each question records: what is unresolved, why I did not decide it, what depends
 
 **Founder decision if the gain is small.** Drop it entirely (simpler, smaller, safer), restrict it to code-only vaults, or keep it as an optional install for users who want it. My recommendation is the optional-install path regardless, since it makes the decision reversible without a rebuild.
 
-### Q-8 — What is v1's target user?
+### Q-8 — V1 user wedge: RESOLVED (candidate)
 
-**The question.** Not answered anywhere in this package, and it changes real decisions: a developer-first product justifies CLI-first and the code graph; a knowledge-worker product prioritises the editor and demotes Graphify; an agent-builder product makes MCP and the compiler primary and the UI secondary.
+> **RESOLVED IN F1-R1 ([R1-11](reviews/F1-R1-RECONCILIATION.md))** as a founder-decision candidate. F1 left it vague, which was a real gap — it changes architecture.
 
-**Why it matters here.** [Phase 7](15-IMPLEMENTATION-PHASES.md)'s scope and [Q-7](#q-7--is-the-graph-worth-300-mb)'s answer both depend on it.
+**Adopted wedge:**
 
-**No recommendation.** This is a founder question about who Fehrest is for.
+> Fehrest v1 targets **power users, developers, researchers and AI-native knowledge workers who regularly use multiple agents** and need durable local project memory across tools, sessions and model providers.
+
+Such a user plausibly runs several of: Claude, Codex, Gemini, GLM, Cursor, local models, MCP tools. **Fehrest makes memory portable across them** — the defining requirement, and one no incumbent serves.
+
+**Architecture consequences** ([A §4](00-PRODUCT-THESIS.md#4-the-v1-user-wedge)): MCP gateway is v1 rather than deferred; CLI-first through Phase 6; Graph Intelligence stays in v1; local-first is a feature rather than a constraint; rich block editing informs but does not decide the [Editor Gate](18-EDITOR-GATE.md).
+
+**Strongest alternative considered:** general knowledge workers (Obsidian-adjacent). Rejected for v1 because it would make the editor the product, demote the agent gateway, and force direct feature competition with mature incumbents on their strongest axis — while leaving the actual thesis untested. It remains the natural **second** market.
+
+**Still a founder decision.** If the wedge is wrong, the four decisions above change. Recorded as a candidate, not a fait accompli.
 
 ---
 
@@ -105,7 +123,7 @@ Deferred; key custody is the unsolved part, not encryption. Note that it would *
 The constitution forbids *opaque* telemetry. Is *transparent, opt-in, locally-inspectable* telemetry acceptable? Without any, benchmark tuning depends entirely on the founder's own vault, which is a sample of one. Recommendation: local-only metrics the user can read, with export requiring explicit action — never automatic transmission.
 
 ### Q-14 — Sidecar distribution
-Bundled Python runtime, or system Python, or a downloaded capability pack? Bundling is ~200–300 MB and needs its own update channel ([ADR-0003](09-TECHNOLOGY-DECISIONS.md#adr-0003--graphify-runs-as-a-managed-long-lived-sidecar)); system Python is smaller but fragile across user environments. Decide at Phase 3.
+Bundled Python runtime, or system Python, or a downloaded capability pack? Bundling is ~200–300 MB and needs its own update channel ([ADR-0003](09-TECHNOLOGY-DECISIONS.md#adr-0003--graph-intelligence-runtime-integration-shape)); system Python is smaller but fragile across user environments. Decide at Phase 3.
 
 ---
 
@@ -122,7 +140,7 @@ Stated so reviewers do not have to find them:
 7. **Windows confinement is the weakest platform and the most likely deployment** ([T-18](02-THREAT-MODEL.md#t-18--windows-confinement-is-weaker-than-posix)).
 8. **`AI OFF` viability is unproven** ([H-3](research/EVIDENCE_LOG.md#h-3--deterministic-promotion-rules-capture-most-durable-memory-value)).
 9. **No user research.** Nothing here is validated against a real user's behaviour, including the founder's.
-10. **The editor decision trades a real product capability for maintainability.** [ADR-0002](09-TECHNOLOGY-DECISIONS.md#adr-0002--v1-editing-is-markdown-native-blocksuite-is-deferred) is well-evidenced on upstream health and structurally argued, but it means v1 ships without block transclusion, inline comments beyond sidecars, or database blocks. A reviewer could reasonably argue this makes v1 uncompetitive with Obsidian, and that argument deserves a real answer rather than a dismissal.
+10. **The editor decision trades a real product capability for maintainability.** [ADR-0002](09-TECHNOLOGY-DECISIONS.md#adr-0002--editor-architecture-open--prototype-gated) is well-evidenced on upstream health and structurally argued, but it means v1 ships without block transclusion, inline comments beyond sidecars, or database blocks. A reviewer could reasonably argue this makes v1 uncompetitive with Obsidian, and that argument deserves a real answer rather than a dismissal.
 
 ---
 

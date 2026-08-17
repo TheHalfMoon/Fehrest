@@ -12,9 +12,17 @@
 
 **PLANNING ONLY. NO IMPLEMENTATION EXISTS AND NONE IS AUTHORIZED.**
 
-This repository currently contains an architecture and implementation plan awaiting independent adversarial review. No product code has been written. The next gate is external review, not coding.
+| Phase | State |
+|---|---|
+| F0 Discovery | ✅ Complete |
+| F1 Architecture + Plan | ✅ Complete |
+| **F1-R1 Reconciliation** | ✅ **Complete** — [delta](docs/reviews/F1-R1-RECONCILIATION.md) |
+| GPT-5.6 Sol delta review | ⏳ Next gate |
+| Independent model review → GLM-5.3 security review → freeze → authorization | Pending |
 
-**Verdict:** `READY_FOR_ADVERSARIAL_REVIEW` — see [the final verdict](docs/VERDICT.md).
+**Verdict:** `F1_R1_RECONCILED_READY_FOR_GPT_REVIEW` — see [the delta](docs/reviews/F1-R1-RECONCILIATION.md) and [the verdict](docs/VERDICT.md).
+
+**Canonical repository:** `TheHalfMoon/Fehrest` (private, `main`, size 0). `wepld/Fehrest` is **not** canonical and receives nothing.
 
 ---
 
@@ -49,24 +57,40 @@ This repository currently contains an architecture and implementation plan await
 | [O — Performance Budgets](docs/14-PERFORMANCE-BUDGETS.md) | Measurable envelopes |
 | [P — Implementation Phases](docs/15-IMPLEMENTATION-PHASES.md) | 8 gated phases, CLI-first vertical slice |
 | [Q — Open Questions](docs/16-OPEN-QUESTIONS.md) | Founder decisions and known weaknesses |
+| [Editor Gate](docs/18-EDITOR-GATE.md) | Prototype bake-off deciding the editor |
 | [Failure Conditions](docs/17-FAILURE-CONDITIONS.md) | What would force redesign |
+| [F1-R1 Reconciliation](docs/reviews/F1-R1-RECONCILIATION.md) | **The R1 delta — read this first if you reviewed F1** |
 | [Source Registry](docs/research/FEHREST_SOURCE_REGISTRY.md) | Every external source, pinned |
 | [Evidence Log](docs/research/EVIDENCE_LOG.md) | Every measurement |
 | [Verdict](docs/VERDICT.md) | Final assessment |
 
 ---
 
-## The four decisions most likely to be contested
+## The four layers
 
-Each is argued from measurement, not preference. Full reasoning at the links.
+Fehrest answers four different questions, and each has its own layer ([A §5](docs/00-PRODUCT-THESIS.md#5-the-four-layer-architecture)):
 
-1. **BlockSuite is deferred, not adopted.** Its repository is a downstream mirror whose sync stopped 2025-07-07; `@blocksuite/store` has not been published in 13.5 months and sits at pre-1.0 `0.22.4`; six dependency-vulnerability branches are unmerged. Separately, the Markdown round-trip gate is *structurally* unpassable — a lossless mapping requires a sidecar that then becomes the real canonical document. v1 editing is Markdown-native on CodeMirror 6, which makes round-trip the identity function. [E-10](docs/research/EVIDENCE_LOG.md#e-10--blocksuite-is-a-stale-downstream-mirror-editor-gate) · [ADR-0002](docs/09-TECHNOLOGY-DECISIONS.md#adr-0002--v1-editing-is-markdown-native-blocksuite-is-deferred)
+```
+Canonical Knowledge  "what exists?"
+      ├─► Graph Intelligence  "what is connected?"
+      └─► Event Journal       "what happened?"
+                └─► Memory            "what remains true now?"
+                      └─► Context Compiler  "what should this agent see?"
+```
 
-2. **Graphify runs as a long-lived sidecar, and its IDs are never identities.** Cold import measured at 4,451 ms, warm 276 ms — so per-call invocation is impossible and a sidecar is forced. Its node IDs are name-derived slugs with documented same-filename collisions, so Fehrest allocates its own UUIDv7 identities. [E-4](docs/research/EVIDENCE_LOG.md#e-4--graphify-node-ids-are-name-derived-not-stable-identities) · [E-6](docs/research/EVIDENCE_LOG.md#e-6--graphify-startup-cost-cold-vs-warm) · [ADR-0003](docs/09-TECHNOLOGY-DECISIONS.md#adr-0003--graphify-runs-as-a-managed-long-lived-sidecar)
+**Graph Intelligence is a CORE capability. Graphify is a replaceable implementation of it.** No implementation cost may delete a core capability.
 
-3. **Retrieval is lexical-first; vectors are optional.** sqlite-vec's current release line is alpha, and the one prose-memory benchmark reported for graph retrieval shows it *tying* dense RAG. Neither approach dominates, so vectors must earn inclusion by measurement. [E-8](docs/research/EVIDENCE_LOG.md#e-8--graphifys-self-reported-retrieval-benchmarks) · [E-12](docs/research/EVIDENCE_LOG.md#e-12--vector-store-maturity) · [ADR-0007](docs/09-TECHNOLOGY-DECISIONS.md#adr-0007--retrieval-is-lexical-first-vectors-are-optional)
+## The decisions most likely to be contested
+
+1. **The editor is OPEN, decided by a prototype bake-off.** F1 concluded "BlockSuite is stale ⇒ CodeMirror 6." **R1 corrected that:** the standalone mirror is stale, but the editor is actively developed inside AFFiNE (`feat(editor)` and security commits through 2026-08-10). Candidate A = CodeMirror 6; Candidate B = the maintained `AFFiNE/blocksuite/…` subtree. [E-10.1](docs/research/EVIDENCE_LOG.md#e-101--the-evidence-f1-missed-the-affine-subtree-is-active) · [Editor Gate](docs/18-EDITOR-GATE.md) · [ADR-0002](docs/09-TECHNOLOGY-DECISIONS.md#adr-0002--editor-architecture-open--prototype-gated)
+
+2. **Extractor IDs are never canonical identities — on structural grounds.** F1 justified this with upstream bugs; **those bugs are fixed** and the citation is retracted. The durable argument: extractor IDs are path-derived by design (`{parent_dir}_{stem}`) and their *schemes* change across versions — upstream itself rejected an alternative because it "would rewrite every file and symbol id." Formalised as G-ID-1…G-ID-4. [E-4](docs/research/EVIDENCE_LOG.md#e-4--extractor-ids-are-name-derived-by-design-not-by-defect) · [ADR-0004](docs/09-TECHNOLOGY-DECISIONS.md#adr-0004--object-identity-is-fehrest-allocated-and-opaque)
+
+3. **Retrieval is lexical-first; vectors are optional.** sqlite-vec's current release line is alpha, and the one prose-memory benchmark reported for graph retrieval shows it *tying* dense RAG. Vectors must earn inclusion by measurement. [E-12](docs/research/EVIDENCE_LOG.md#e-12--vector-store-maturity) · [ADR-0007](docs/09-TECHNOLOGY-DECISIONS.md#adr-0007--retrieval-is-lexical-first-vectors-are-optional)
 
 4. **Memory is bitemporal with deterministic resolution.** Valid time answers "what is true now"; recorded time answers "what did we believe last month." Both are needed, and neither requires an LLM. [ADR-0008](docs/09-TECHNOLOGY-DECISIONS.md#adr-0008--memory-is-bitemporal-with-deterministic-resolution)
+
+5. **Graph Intelligence runtime shape is PROVISIONAL.** F1's "100K files ≈ 90 min" was a linear extrapolation from one corpus on one machine. Withdrawn; [GI-BENCH](docs/10-BENCHMARK-PLAN.md#b-11--gi-bench--graph-intelligence-benchmark-matrix) decides. [ADR-0003](docs/09-TECHNOLOGY-DECISIONS.md#adr-0003--graph-intelligence-runtime-integration-shape)
 
 ---
 
@@ -82,10 +106,16 @@ If it cannot beat that last baseline, Fehrest does not deserve to exist. Stated 
 
 ## Repository note
 
-The brief named `TheHalfMoon/Fehrest`, which **does not exist** (HTTP 404). The only reachable Fehrest repository, `wepld/Fehrest`, is **empty** — zero commits. This planning package is committed locally and pushed nowhere pending a founder decision on which remote is canonical. [E-0](docs/research/EVIDENCE_LOG.md#e-0--canonical-repository-state) · [Q-1](docs/16-OPEN-QUESTIONS.md#q-1--which-repository-is-canonical)
+The canonical repository is **`TheHalfMoon/Fehrest`** — private, default branch `main`, size 0, no implementation. Repository identity is **CLOSED**.
+
+This session authenticates as a different account (`wepld`) and therefore cannot read it. The resulting 404 is an **environment access limitation**, not evidence about the repository. F1 misread that 404 as non-existence — a category error, since GitHub returns 404 rather than 403 for private repositories precisely to avoid disclosing them. Corrected in [R1-01](docs/reviews/F1-R1-RECONCILIATION.md).
+
+`wepld/Fehrest` is **not canonical**, is not a fallback, and receives no planning work.
+
+The planning package lives in a local git repository whose `origin` points at `TheHalfMoon/Fehrest`. **Nothing has been pushed**, pending explicit authorization. [E-0](docs/research/EVIDENCE_LOG.md#e-0--canonical-repository-state) · [Q-1](docs/16-OPEN-QUESTIONS.md#q-1--repository-identity-closed)
 
 ---
 
 ## License
 
-Undecided — see [Q-1](docs/16-OPEN-QUESTIONS.md#q-1--which-repository-is-canonical). Donor obligations (Apache-2.0 from Graphify, MIT from others) are compatible with either MIT or Apache-2.0 for Fehrest.
+Undecided — see [Q-1a](docs/16-OPEN-QUESTIONS.md#q-1--repository-identity-closed). Donor obligations (Apache-2.0 from Graphify, MIT from others) are compatible with either MIT or Apache-2.0 for Fehrest. This is a **separate question from repository identity** and must not be conflated with it.

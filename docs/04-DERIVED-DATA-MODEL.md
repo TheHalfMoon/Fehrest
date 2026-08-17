@@ -9,7 +9,25 @@ That property is not a convenience. It is what makes every index decision in thi
 
 ---
 
-## 1. Inventory
+## 1. Two classes of state inside `.fehrest/`
+
+> **CLARIFIED IN F1-R1 ([R1-16](reviews/F1-R1-RECONCILIATION.md)).** F1 was correct that derived state is rebuildable, but its phrasing invited a catastrophic misreading: that the whole `.fehrest/` directory is disposable. **It is not.**
+
+| | **Canonical** — inside `.fehrest/` | **Derived** — inside `.fehrest/derived/` |
+|---|---|---|
+| Contents | event journal, memory assertions, sidecars, vault identity, schema version | search index, graph, vectors, caches, projections |
+| Rebuildable | **No** | **Yes, always** |
+| If deleted | **Irreplaceable history loss** | Inconvenience |
+| Backup | **Required** | Never needed |
+| Sync | Must be included | Should be excluded |
+
+**The rule:** *"delete derived state and restart"* is a supported recovery instruction. *"delete `.fehrest/` and restart"* **destroys the event journal and every memory** — the two things in Fehrest that cannot be recomputed from anything.
+
+Every recovery instruction, support document and CLI affordance must name the **derived subtree explicitly**. A `fehrest doctor --reset-derived` command should exist precisely so no user is ever told to delete a directory by hand.
+
+The rest of this document concerns the **derived** class only.
+
+## 2. Inventory
 
 | Artifact | Store | Rebuild source | Rebuild cost (10K files) | Required? |
 |---|---|---|---|---|
@@ -18,7 +36,7 @@ That property is not a convenience. It is what makes every index decision in thi
 | FTS5 index | `index.sqlite` | Object bodies | ~2 min | Yes |
 | Memory projection | `index.sqlite` | Memory JSONL | seconds | Yes |
 | Event mirror | `index.sqlite` | Event JSONL | ~1 min | No — convenience |
-| Structural graph | `derived/graph/` | Sidecar extraction | **~9 min** ([E-5](research/EVIDENCE_LOG.md#e-5--graphify-measured-extraction-throughput-and-confidence-distribution)) | No |
+| Structural graph | `derived/graph/` | Sidecar extraction | **~9 min** ([E-5](research/EVIDENCE_LOG.md#e-5--graphify-measured-extraction-throughput-preliminary)) | No |
 | Graph↔object ID map | `index.sqlite` | Graph + object index | seconds | No |
 | Communities | `derived/graph/` | Graph | ~1 min | No |
 | Extracted text | `derived/cache/` | Attachments | Varies; **lossy if source deleted** | No |
@@ -29,7 +47,7 @@ Only five artifacts are required, and all five rebuild in **under 5 minutes for 
 
 ---
 
-## 2. Tiering
+## 3. Tiering
 
 | Tier | Meaning | Members | Startup behaviour |
 |---|---|---|---|
@@ -37,11 +55,11 @@ Only five artifacts are required, and all five rebuild in **under 5 minutes for 
 | **D2 — Enhancing** | Improves retrieval; absence is graceful | graph, communities, ID map, event mirror | Built in background; **never gates startup** |
 | **D3 — Optional** | Requires a model or heavy compute | embeddings, summaries, OCR, transcripts | Explicit opt-in only |
 
-D2's "never gates startup" is forced by measurement: full graph extraction is ~9 minutes at 10K files and ~90 minutes at 100K ([E-5](research/EVIDENCE_LOG.md#e-5--graphify-measured-extraction-throughput-and-confidence-distribution)). Any design that blocks the UI on graph availability is dead on arrival for a large vault. The application must be fully usable — search, read, edit, memory, context compilation — with the graph entirely absent.
+D2's "never gates startup" is forced by measurement: full graph extraction is ~9 minutes at 10K files and ~90 minutes at 100K ([E-5](research/EVIDENCE_LOG.md#e-5--graphify-measured-extraction-throughput-preliminary)). Any design that blocks the UI on graph availability is dead on arrival for a large vault. The application must be fully usable — search, read, edit, memory, context compilation — with the graph entirely absent.
 
 ---
 
-## 3. SQLite as the derived store
+## 4. SQLite as the derived store
 
 One database, `.fehrest/derived/index.sqlite`, containing all D1 state and the D2 mappings.
 
@@ -78,13 +96,20 @@ CREATE VIRTUAL TABLE object_fts USING fts5(
   content = '', contentless_delete = 1
 );
 
--- Graph node ids are name-derived and unstable (E-4): mapping only, never identity.
+-- Extractor ids are name/path-derived and scheme-versioned (E-4):
+-- mapping only, never identity. Satisfies G-ID-1..G-ID-4.
 CREATE TABLE graph_node_map (
-  graphify_node_id TEXT NOT NULL,
-  object_id TEXT REFERENCES object(id) ON DELETE CASCADE,
-  symbol TEXT, source_file TEXT, source_location TEXT,
-  confidence TEXT NOT NULL,         -- EXTRACTED | INFERRED | AMBIGUOUS
-  PRIMARY KEY (graphify_node_id, object_id)
+  extractor_id      TEXT NOT NULL,   -- G-ID-1: never a canonical identity
+  extractor_version TEXT NOT NULL,   -- G-ID-3: makes stale mappings detectable
+  fehrest_object_id TEXT REFERENCES object(id) ON DELETE CASCADE,  -- G-ID-2
+  symbol            TEXT,
+  source_uri        TEXT NOT NULL,   -- G-ID-4: trace back to canonical evidence
+  source_revision   TEXT,            -- G-ID-4: content hash at extraction time
+  source_location   TEXT,            -- G-ID-4: line/range
+  relationship_confidence TEXT NOT NULL,  -- extractor label, mapped into the
+                                          -- Fehrest trust model (F §3.3), not
+                                          -- used as a trust value directly
+  PRIMARY KEY (extractor_id, extractor_version, fehrest_object_id)
 );
 ```
 
@@ -95,21 +120,34 @@ Two schema choices carry weight:
 
 ---
 
-## 4. The Graphify boundary
+## 5. Graph Intelligence: capability vs implementation
 
-### 4.1 Ownership
+> **CLARIFIED IN F1-R1 ([R1-06](reviews/F1-R1-RECONCILIATION.md)).** F1 framed this section as "the Graphify boundary," which risked binding a core capability to one donor's implementation cost.
 
-| Owned by Graphify (sidecar) | Owned by Fehrest (core) |
+```
+GRAPH_INTELLIGENCE_CAPABILITY  = CORE          (thesis-critical; not droppable)
+GRAPHIFY_PYTHON_RUNTIME        = REPLACEABLE   (one candidate implementation)
+```
+
+**The capability** — deterministic extraction of relationships between objects, with provenance to source locations — answers *"what is connected?"*, one of the four questions Fehrest exists to answer ([A §5](00-PRODUCT-THESIS.md#5-the-four-layer-architecture)). Lexical search cannot answer it. It is not optional to the thesis.
+
+**The implementation** is a choice among: upstream Graphify as a managed worker · adapted Graphify modules · a bundled persistent worker · a later native reimplementation · a different extractor entirely if benchmarks favour one.
+
+**Consequence:** if Graphify proves too heavy, too slow or too risky, it is **replaced** — not dropped ([F-3](17-FAILURE-CONDITIONS.md#f-3--the-graph-intelligence-capability-does-not-earn-its-cost)). What *is* legitimately optional is whether the graph is installed on a given machine (D2 tiering below); a user without it gets degraded retrieval, and Fehrest ships that capability as a first-class part of the product.
+
+### 5.1 Ownership
+
+| Owned by the extractor (worker) | Owned by Fehrest (core) |
 |---|---|
-| tree-sitter parsing, 28 grammars | Object identity |
+| Parsing, grammars | Object identity |
 | Node/edge extraction | Canonical writes |
 | Cross-file symbol resolution | ID mapping and scope enforcement |
 | Community detection | Retrieval policy and ranking |
-| Graph diff | Memory and provenance |
+| Graph diff | Memory, provenance and trust classification |
 
-The rule is [R-7](01-ARCHITECTURE-CONSTITUTION.md#2-derived-rules): **the sidecar has no authority.** It receives file paths and returns proposed facts. It cannot write canonical state, allocate identity, or influence authorization.
+The rule is [R-7](01-ARCHITECTURE-CONSTITUTION.md#2-derived-rules): **the extractor has no authority.** It receives file paths and returns proposed facts. It cannot write canonical state, allocate identity, or influence authorization. This holds for *any* implementation, which is what makes the implementation replaceable without re-litigating the security model.
 
-### 4.2 The wire contract
+### 5.2 The wire contract
 
 Fehrest consumes the documented extraction schema as a stable contract ([E-2](research/EVIDENCE_LOG.md#e-2--graphify-module-inventory-and-size)):
 
@@ -123,33 +161,38 @@ Fehrest consumes the documented extraction schema as a stable contract ([E-2](re
 
 Core validates every response against this schema before accepting it — the sidecar is semi-trusted ([boundary B2](02-THREAT-MODEL.md#4-trust-boundaries)), so a malformed or hostile response must be rejected rather than ingested.
 
-**Measured properties Fehrest must design around:**
-- Confidence is effectively binary: `EXTRACTED` 97.2%, `INFERRED` 2.8%, `AMBIGUOUS` **0.0%** ([E-5](research/EVIDENCE_LOG.md#e-5--graphify-measured-extraction-throughput-and-confidence-distribution)). No UI or trust logic may depend on `AMBIGUOUS` being populated, though the vocabulary stays open.
-- Observed relation vocabulary: `calls`, `contains`, `rationale_for`, `imports`, `references`, `imports_from`, `method`, `indirect_call`. Fehrest treats this as **open** and must not enumerate it exhaustively in a schema constraint, or an upstream addition breaks ingestion.
-- Missing optional grammars degrade to partial graphs with warnings rather than failures. Fehrest surfaces these as index health, not errors.
+**Properties Fehrest must design around:**
+- **Extractor confidence labels are inputs, not trust values.** One corpus showed `EXTRACTED` 97.2% / `INFERRED` 2.8% / `AMBIGUOUS` 0.0% ([E-5](research/EVIDENCE_LOG.md#e-5--graphify-measured-extraction-throughput-preliminary)), but a single corpus proves nothing about ambiguity in general ([R1-08](reviews/F1-R1-RECONCILIATION.md)). Fehrest defines its **own** evidence and trust model ([F §3.3](05-MEMORY-MODEL.md#33-the-fehrest-evidence-and-trust-model)); extractor labels **map into** it. No Fehrest trust semantics may be derived from an extractor's label distribution.
+- The relation vocabulary is **open**. Never enumerate it exhaustively in a schema constraint, or an upstream addition breaks ingestion.
+- Missing optional grammars degrade to partial graphs with warnings rather than failures. Surface as index health, not errors.
 
-### 4.3 ID mapping is the critical seam
+### 5.3 ID mapping is the critical seam
 
-Graphify node IDs are name-derived slugs, unstable under rename and Unicode representation, with documented same-filename collisions ([E-4](research/EVIDENCE_LOG.md#e-4--graphify-node-ids-are-name-derived-not-stable-identities)). Therefore:
+Extractor IDs are name- or path-derived and their schemes change across versions ([E-4](research/EVIDENCE_LOG.md#e-4--extractor-ids-are-name-derived-by-design-not-by-defect)). This is a property of extractors in general, not a defect of one. Therefore:
 
-1. `graph_node_map` is many-to-many and **fully rebuildable**.
-2. No canonical record ever references a Graphify node ID.
-3. A collision produces multiple mappings, surfaced as ambiguity, never silently resolved to one.
-4. On rename, the map entry is invalidated and re-derived; object identity is untouched because it never depended on the graph.
+1. `graph_node_map` is many-to-many and **fully rebuildable** (G-ID-3).
+2. No canonical record ever references an extractor ID (G-ID-1).
+3. Every derived node maps to a Fehrest identity where one exists (G-ID-2).
+4. Every derived node retains `source_uri` + `source_revision` + `source_location` to trace back to canonical evidence (G-ID-4).
+5. A collision produces multiple mappings, surfaced as ambiguity, never silently resolved.
+6. On rename, map entries are invalidated and re-derived; object identity is untouched because it never depended on the graph.
+7. On extractor upgrade, `extractor_version` changes and mappings rebuild; **canonical identity does not move.**
 
-This is the concrete mechanism by which [I-15](01-ARCHITECTURE-CONSTITUTION.md#i-15--paths-are-locations-stable-ids-are-identities) survives contact with a donor that violates it.
+Point 7 is the load-bearing one. It is what lets Fehrest upgrade or **swap** its extractor without migrating a single canonical record — the mechanism that makes [ADR-0003](09-TECHNOLOGY-DECISIONS.md#adr-0003--graph-intelligence-runtime-integration-shape)'s "implementation is replaceable" true in practice rather than in principle.
 
-### 4.4 Process model
+### 5.4 Process model — PROVISIONAL
 
-**Long-lived managed sidecar.** Forced by measurement: cold import 4,451 ms, warm 276 ms, bare interpreter ~100 ms ([E-6](research/EVIDENCE_LOG.md#e-6--graphify-startup-cost-cold-vs-warm)). Per-operation invocation costs ~376 ms of pure overhead even warm, making per-file calls impossible; the 4.45 s cold path would make first use look broken.
+**Provisional shape: a long-lived managed worker**, indicated by preliminary measurement — cold import ≈4,451 ms, warm ≈276 ms, bare interpreter ≈100 ms ([E-6](research/EVIDENCE_LOG.md#e-6--graphify-startup-cost-preliminary)). Per-operation invocation would cost ~376 ms of pure overhead even warm.
 
-Lifecycle: lazy start on first graph need (never on app launch — startup must not pay 4.45 s); private authenticated local channel; read-only path-confined to the vault; no credentials; network features disabled ([T-11](02-THREAT-MODEL.md#t-11--sidecar-network-egress)); supervised with restart-on-crash and backoff; idle shutdown; resource caps. Extraction spawns 12 worker subprocesses ([E-5](research/EVIDENCE_LOG.md#e-5--graphify-measured-extraction-throughput-and-confidence-distribution)), which must be counted in resource budgets.
+Lifecycle: lazy start on first graph need (**never** on app launch); private authenticated local channel; read-only, path-confined to the vault; no credentials; network features disabled ([T-11](02-THREAT-MODEL.md#t-11--sidecar-network-egress)); supervised with restart-and-backoff; idle shutdown; resource caps. Extraction spawned 12 worker subprocesses in the observed configuration, which must be counted in resource budgets and made configurable.
 
-**A Rust port is not justified by current evidence.** The measured cost being amortised is *startup*, which a sidecar eliminates entirely. Porting 60,202 lines across 28 grammars would address *throughput*, which has not been shown to be the binding constraint. Reconsider only if [H-2](research/EVIDENCE_LOG.md#h-2--extraction-scales-linearly-in-file-count) is falsified or packaging proves untenable. See [ADR-0003](09-TECHNOLOGY-DECISIONS.md#adr-0003--graphify-runs-as-a-managed-long-lived-sidecar).
+**Not final.** These figures are single-machine, single-corpus ([R1-07](reviews/F1-R1-RECONCILIATION.md)). The choice among lazy worker, preloaded worker, background process and adaptation depends on incremental-update latency, memory under concurrency, and behaviour across corpus *types* — none measured. **[GI-BENCH](10-BENCHMARK-PLAN.md#b-11--gi-bench--graph-intelligence-benchmark-matrix) decides.**
+
+**Do not port Graphify** ([R1-06](reviews/F1-R1-RECONCILIATION.md)). Revisit only if GI-BENCH shows throughput or packaging — not startup — is the binding constraint.
 
 ---
 
-## 5. Incremental maintenance
+## 6. Incremental maintenance
 
 Full rebuild is a fallback, not the normal path — at 10K files the graph alone is ~9 minutes.
 
@@ -176,7 +219,7 @@ file change (watch, debounced)
 
 ---
 
-## 6. Vectors
+## 7. Vectors
 
 **Optional, D3, off by default.** Three independent reasons:
 
@@ -190,13 +233,13 @@ When enabled, embeddings are stored with the model identifier and dimension. A m
 
 ---
 
-## 7. Rebuild semantics
+## 8. Rebuild semantics
 
 **Determinism requirement:** rebuilding must produce *functionally identical* query results, not byte-identical files. Byte-identical is unachievable (SQLite page layout, insertion order, parallel extraction ordering) and demanding it would create a permanently failing test.
 
 `test_nuke_and_rebuild_equivalence` therefore compares a fixed query set's results — ordered result IDs, scores within tolerance, memory resolutions, context package digests — rather than file bytes. This is the most important test in the suite because it is the guarantee that every decision in this document is reversible.
 
-**Cost, extrapolated from measurement** ([E-5](research/EVIDENCE_LOG.md#e-5--graphify-measured-extraction-throughput-and-confidence-distribution), linear assumption flagged as [H-2](research/EVIDENCE_LOG.md#h-2--extraction-scales-linearly-in-file-count)):
+**Cost, extrapolated from measurement** ([E-5](research/EVIDENCE_LOG.md#e-5--graphify-measured-extraction-throughput-preliminary), linear assumption flagged as [H-2](research/EVIDENCE_LOG.md#h-2--extraction-scales-linearly-in-file-count)):
 
 | Vault | D1 (required) | D2 graph | D3 embeddings |
 |---|---|---|---|
@@ -208,7 +251,7 @@ The 100K graph figure is the number that shapes the architecture: it must be a r
 
 ---
 
-## 8. Failure and degradation
+## 9. Failure and degradation
 
 | Failure | Detection | Response | User impact |
 |---|---|---|---|
