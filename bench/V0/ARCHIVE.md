@@ -180,8 +180,43 @@ room for the R1 benchmark. Three mechanical changes were required:
 
 Re-run after relocation and diffed against `results.txt`: **byte-identical.**
 
+**E-3 · This archive was not reproducible from a clean checkout (Phase T-R1-X0).**
+
+Discovered while verifying the frozen implementation identity, and it is the most
+important erratum here because it means the reproduction instruction below was
+**wrong** for anyone who cloned the repository.
+
+The repository carried no `.gitattributes`. On a host with `core.autocrlf=true` — the
+Windows default — a fresh checkout produced **CRLF** fixtures. V0 reads its fixtures
+with `fs::read_to_string` and packs them under a 4,000-byte budget, so larger
+documents mean one fewer document fits, and the packed context changes.
+
+Measured, by checking out `HEAD` into a separate worktree and running the harness there:
+
+| Arm | Sealed `results.txt` (LF) | Fresh checkout (CRLF) |
+|---|---|---|
+| B1 mean bytes | 2,805 | **2,884** |
+| B3 mean bytes | 2,624 | **2,698** |
+| B4 mean bytes | 1,370 | **1,406** |
+
+**The adequacy verdict does not move.** B0 1/6 · B1 2/6 · B3 3/6 · B4 5/6 · B5 6/6 in
+both regimes, and `INCONCLUSIVE` is unchanged. Only the byte-cost figures are
+checkout-dependent — including the 2.4× B5/B4 ratio in §2.2, which should be read as
+"measured under an LF checkout" rather than as a platform-independent constant.
+
+**Repaired** by pinning `* text=auto eol=lf` in `.gitattributes`. Verified by checking
+out `HEAD` into a fresh worktree again after the fix and re-running: the harness now
+reproduces `results.txt` **exactly**. No fixture, query, token, budget, arm or scored
+number was touched.
+
+**R1 was checked and is not affected.** Its `.scn` parser normalises through
+`str::lines()`, which strips a trailing `\r`. Verified rather than assumed: the full
+68-file R1 bundle built from a CRLF checkout is byte-identical to the one built from
+the LF worktree, and the instrument pilot passes 631/0 in both. R1's preregistration
+digest is unaffected and was not invalidated.
+
 **No fixture, query, ground-truth token, budget, arm or scored number was changed by
-either erratum.**
+any of the three errata.**
 
 ### Reproduction
 
@@ -191,6 +226,9 @@ cargo run --bin fehrest-bench-v0
 
 Output must equal [results.txt](./results.txt) exactly. If it does not, the archive
 has been disturbed and its numbers should not be cited.
+
+This now holds from a clean checkout. Before erratum E-3 it did **not** — that is
+what E-3 records.
 
 ### Seal
 

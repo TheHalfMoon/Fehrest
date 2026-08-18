@@ -275,6 +275,34 @@ PHASE_T_TECHNICAL_CORE_PASS_WITH_PLATFORM_EVIDENCE_PENDING
 2. Windows native symbolic links — K-12 has not executed on Windows.
 3. Bare-metal Linux, and any distribution other than the one WSL2 image.
 
+### Two counts that must never be collapsed
+
+Phase T-R1 reported `SECURITY_KILL_TEST_PENDING_PLATFORM=0 roster entries`. That
+number is correct and the phrasing is dangerous: read quickly, "0 pending" says *no
+platform evidence is outstanding*, which is false. The roster is complete; the
+platform matrix is not.
+
+They are different questions and from here they get different fields:
+
+```
+PENDING_KILL_TEST_ROSTER_ENTRIES = 0
+PLATFORM_EVIDENCE_PENDING        = WINDOWS_NATIVE_SYMLINK, MACOS_FILESYSTEM
+```
+
+| Field | Asks | Value |
+|---|---|---|
+| `PENDING_KILL_TEST_ROSTER_ENTRIES` | Is any roster entry still unexecuted **everywhere**? | **0** — every applicable entry has execution evidence on at least one platform |
+| `PLATFORM_EVIDENCE_PENDING` | Which platforms lack evidence they should have? | **`WINDOWS_NATIVE_SYMLINK`, `MACOS_FILESYSTEM`** |
+
+The first went from 1 to 0 when K-12 executed on Linux. **The second did not change
+and is not on a path to change on this host**, because Windows symlink creation needs
+Developer Mode or elevation and neither will be enabled to make a test pass.
+
+This is a reporting correction only. **No test result changes, and the technical pass
+is not downgraded**: 22 kill tests executed and passed, 0 failed, 3 deferred surfaces
+that do not exist in Phase T. Nor is it upgraded — `FULL_CROSS_PLATFORM_PASS` remains
+unclaimed and unclaimable until both entries above are cleared.
+
 ### What is now claimed that was not before
 
 | Phase T | Phase T-R1 |

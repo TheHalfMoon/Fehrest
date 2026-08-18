@@ -6,15 +6,35 @@ R1_CORPUS_STATUS:              COMPLETE -- 3 scenarios, 28 checkpoints, 36 evide
 R1_MAINTENANCE_PROTOCOL_STATUS: COMPLETE -- specified, not yet executed
 R1_SCORING_STATUS:             IMPLEMENTED AND VALIDATED
 R1_BLINDING_STATUS:            SPECIFIED -- enforced at execution time
-R1_PREREGISTRATION_STATUS:     v1 SEALED
+R1_PREREGISTRATION_STATUS:     v1 SEALED -- unchanged at gate X0, digest reverified
+R1_VARIANCE_PILOT_PROTOCOL:    SEALED
+R1_RUNNER_REQUIREMENTS:        SPECIFIED
 R1_INSTRUMENT_PILOT_STATUS:    PASS -- 631 checks, 0 failed
 R1_MODEL_RUNNER:               NONE_AVAILABLE
 R1_REAL_MODEL_EXECUTION:       NO
+R1_VARIANCE_PILOT_STATUS:      NOT_STARTED -- awaiting a qualifying runner
 CONFIRMATORY_STATUS:           NOT_STARTED
 PRODUCT_THESIS_STATUS:         NOT_EVALUATED
 ```
 
 **READY_FOR_EXTERNAL_MODEL_EXECUTION.**
+
+## Gate X0 — external model execution admission
+
+Three things were added and one defect was repaired. See
+[ADDENDUM-X0.md](./ADDENDUM-X0.md) for the full record; the short version:
+
+| | |
+|---|---|
+| **Two-stage execution frozen** | The next run is [R1-VARIANCE-PILOT](./VARIANCE-PILOT.md), not confirmatory. Its size, repeats, randomization, model rules, variance estimators, α, power, minimum effect, the mechanical confirmatory-N formula and its safety bounds are all sealed **before any variance data exists** |
+| **Runner admissibility specified** | [RUNNER.md](./RUNNER.md) — session isolation, per-run evidence schema, failure taxonomy, symmetric retry, immutable raw output, blinded scoring. An interactive IDE is explicitly **not** admissible |
+| **Platform fields separated** | `PENDING_KILL_TEST_ROSTER_ENTRIES = 0` and `PLATFORM_EVIDENCE_PENDING = WINDOWS_NATIVE_SYMLINK, MACOS_FILESYSTEM` are now distinct, because a single "0 pending" read as "nothing outstanding", which is false |
+| **Reproducibility defect repaired** | The repository had no `.gitattributes`, so a fresh checkout on a `core.autocrlf=true` host produced CRLF and the sealed **V0** results did not reproduce. **R1 was verified immune** — its `.scn` parser normalises through `str::lines()`, and the full 68-file bundle built from a CRLF checkout is byte-identical to the LF one, with the pilot passing 631/0 in both |
+
+**Preregistration v1 was not edited and not invalidated.** No digested file changed and
+the digest recomputes to `2645806d…`.
+
+Handoff for an external executor: [HANDOFF.md](./HANDOFF.md).
 
 ---
 

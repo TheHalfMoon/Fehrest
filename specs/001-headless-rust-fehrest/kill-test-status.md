@@ -24,6 +24,18 @@
 > Windows symbolic-link capability is still absent (no Developer Mode, non-elevated),
 > and per the standing directive it was **not** enabled to make a test pass. K-13
 > remains a different attack that does not substitute for K-12.
+>
+> **Two counts, deliberately separate (Phase T-R1-X0):**
+>
+> ```
+> PENDING_KILL_TEST_ROSTER_ENTRIES = 0
+> PLATFORM_EVIDENCE_PENDING        = WINDOWS_NATIVE_SYMLINK, MACOS_FILESYSTEM
+> ```
+>
+> A single "pending = 0" reads as *nothing is outstanding*, which is false. Every
+> roster entry now has execution evidence **on at least one platform**; the platform
+> matrix is still incomplete, and on this host it will stay incomplete. Neither number
+> raises or lowers the technical pass.
 
 This file records what was **actually executed on this host**, not what the suite
 appears to report. It exists because `cargo test` has no "skipped" state: a test
