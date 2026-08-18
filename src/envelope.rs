@@ -55,6 +55,14 @@ pub enum TemporalState {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Envelope {
     pub item_id: String,
+    /// Which section of the package this item belongs to (`H §3`).
+    ///
+    /// Machine-owned like every other field here. It is emitted on the wire, not
+    /// only recorded in the manifest, because `H §3` requires that the **agent** be
+    /// told when two memories conflict -- "these two conflict and Fehrest cannot
+    /// decide" is information for the reader, and a manifest the model never sees
+    /// cannot deliver it.
+    pub section: String,
     pub trust_level: TrustLevel,
     pub basis: Basis,
     pub verification: Verification,
@@ -100,6 +108,7 @@ impl Envelope {
         let mut out = String::with_capacity(self.content.len() + 512);
         out.push_str("<fehrest:item authority=\"none\"");
         out.push_str(&format!(" id={}", quote(&self.item_id)));
+        out.push_str(&format!(" section={}", quote(&self.section)));
         out.push_str(&format!(" trust_level=\"{}\"", self.trust_level as u8));
         out.push_str(&format!(" basis=\"{:?}\"", self.basis));
         out.push_str(&format!(" verification=\"{:?}\"", self.verification));
@@ -197,6 +206,7 @@ mod tests {
     fn env(content: &str) -> Envelope {
         Envelope {
             item_id: "obj-1".into(),
+            section: "project_state".into(),
             trust_level: TrustLevel::VaultKnowledge,
             basis: Basis::Extracted,
             verification: Verification::Unverified,

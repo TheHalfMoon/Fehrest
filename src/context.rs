@@ -157,6 +157,7 @@ pub fn compile(req: &CompileRequest, items: &[SourceItem]) -> ContextPackage {
 
         let mut env = Envelope {
             item_id: item.item_id.clone(),
+            section: item.section.to_string(),
             trust_level: item.trust_level,
             basis: item.memory.as_ref().map(|m| m.basis).unwrap_or(crate::memory::Basis::Extracted),
             verification: item

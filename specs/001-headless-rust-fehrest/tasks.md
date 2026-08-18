@@ -48,14 +48,14 @@ Vertical slices. Tests live beside behaviour. **No future scaffolding** — no t
 - [x] **T029** `tests/kill_tests.rs`: K-12, K-13, K-14, K-15, K-16, K-17, K-18
 - [x] **T030** `tests/kill_tests.rs`: K-20, K-21, K-22, K-23, K-24, K-24b
 - [x] **T031** `tests/integration.rs`: the eight acceptance scenarios from spec.md
-- [ ] **T032** `bench/fixtures/`: temporal corpus with ground truth — decisions, supersessions, constraints, gotchas
-- [ ] **T033** `bench/harness.rs`: arms B0, B1, B3, B4, B5; shared task definition; no metadata leakage *(CL-61..63)*
-- [ ] **T034** Run harness; record results as measured, including negative *(CL-64, CL-65)*
+- [x] **T032** `bench/fixtures/`: temporal corpus with ground truth — decisions, supersessions, constraints, gotchas
+- [x] **T033** `bench/harness.rs`: arms B0, B1, B3, B4, B5; shared task definition; no metadata leakage *(CL-61..63)*
+- [x] **T034** Run harness; record results as measured, including negative *(CL-64, CL-65)*
 
 ## Verification
 
 - [x] **T035** `cargo fmt --check`, `cargo check`, `cargo clippy -D warnings`, `cargo test`
-- [ ] **T036** Checklist verification pass; `analyze.md` and `ponytail-final.md`
+- [x] **T036** Checklist verification pass; `analyze.md` and `ponytail-final.md`
 
 ---
 

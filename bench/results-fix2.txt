@@ -1,0 +1,49 @@
+FEHREST PHASE T — CONTEXT ADEQUACY PILOT
+PRE_REGISTERED: bench/PRE-REGISTRATION.md
+MEASURES: context adequacy. NOT the product thesis.
+THESIS_STATUS: NOT_EVALUATED (PENDING_MODEL_EXECUTION)
+BUDGET_BYTES: 4000 (identical for every arm)
+QUERIES: 6 | CORPUS_DOCS: 7
+SAMPLE_SIZE_STATUS: PILOT_ONLY_NOT_POWERED — no significance is claimed
+
+PER-QUERY ADEQUACY
+QRY   CLASS            B0   B1   B3   B4   B5
+Q1    CURRENT          --   OK   OK   OK   OK
+Q2    SUPERSEDED       --   --   --   OK   OK
+Q3    HISTORICAL       --   --   --   OK   OK
+Q4    SCOPE            --   --   --   --   OK
+Q5    CONTRADICTION    --   --   --   OK   OK
+Q6    ABSENT           OK   --   OK   --   OK
+
+ARM TOTALS
+ARM    ADEQUATE   MISLEADING   MEAN_BYTES
+B0         1/6          0/6             0
+B1         1/6          4/6          2805
+B3         2/6          3/6          2624
+B4         4/6          2/6          1370
+B5         6/6          0/6          3249
+
+FAILURES BY ARM
+  B0:
+    Q1 (CURRENT) — missing the correct answer
+    Q2 (SUPERSEDED) — missing the correct answer
+    Q3 (HISTORICAL) — missing the correct answer
+    Q4 (SCOPE) — missing the correct answer
+    Q5 (CONTRADICTION) — missing the correct answer
+  B1:
+    Q2 (SUPERSEDED) — stale material present with no label
+    Q3 (HISTORICAL) — stale material present with no label
+    Q4 (SCOPE) — stale material present with no label
+    Q5 (CONTRADICTION) — both claims present but the conflict is not marked
+    Q6 (ABSENT) — stale material present with no label
+  B3:
+    Q2 (SUPERSEDED) — stale material present with no label
+    Q3 (HISTORICAL) — stale material present with no label
+    Q4 (SCOPE) — stale material present with no label
+    Q5 (CONTRADICTION) — both claims present but the conflict is not marked
+  B4:
+    Q4 (SCOPE) — stale material present with no label
+    Q6 (ABSENT) — stale material present with no label
+  B5: none
+
+REMINDER: adequacy is necessary, not sufficient. No thesis claim follows from these numbers.

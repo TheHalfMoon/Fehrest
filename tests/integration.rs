@@ -235,6 +235,17 @@ fn as3_inseparable_candidates_report_contradiction() {
     );
     assert_eq!(pkg.manifest.entries.len(), 2, "both sides must be served");
     assert!(pkg.manifest.entries.iter().all(|e| e.section == "contradictions"));
+
+    // And the section must reach the WIRE, not only the manifest. H section 3
+    // requires that the AGENT be told the two memories conflict; a manifest the
+    // model never sees cannot deliver that. Serving both claims flat, with no
+    // marker, invites exactly the silent coin-flip the section exists to prevent.
+    for (header, _) in envelope::parse_wire_items(&pkg.wire) {
+        assert!(
+            header.contains("section=\"contradictions\""),
+            "the conflict must be visible to the reader, not just recorded: {header}"
+        );
+    }
 }
 
 // ---------------------------------------------------------------------------
