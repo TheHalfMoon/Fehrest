@@ -11,14 +11,14 @@
 ## Status
 
 ```
-ARCHITECTURE:            FROZEN
-PRODUCT_IMPLEMENTATION:  NOT AUTHORIZED
-HEADLESS_THESIS_PROOF:   READY_FOR_FOUNDER_AUTHORIZATION — NOT STARTED
+ARCHITECTURE:                 FROZEN
+HEADLESS_RUST_THESIS_PROOF:   AUTHORIZED — Phase T in progress
+PRODUCT_IMPLEMENTATION:       BOUNDED_TO_PHASE_T
+UI / MCP / GRAPH / AUTO-MEM:  NOT AUTHORIZED
 ```
 
-**➤ [ARCHITECTURE FREEZE](docs/canonical/ARCHITECTURE_FREEZE.md) — the authoritative entry point.**
-
-**PLANNING ONLY. NO IMPLEMENTATION EXISTS AND NONE IS AUTHORIZED.** Freeze is not authorization: the founder must explicitly authorize the Headless Rust Thesis-Proof before any code is written.
+**➤ [ARCHITECTURE FREEZE](docs/canonical/ARCHITECTURE_FREEZE.md) — the authoritative architecture.**
+**➤ [PHASE T AUTHORIZATION](docs/canonical/PHASE_T_AUTHORIZATION.md) — what is authorized, and what is not.**
 
 | Phase | State |
 |---|---|
@@ -31,10 +31,12 @@ HEADLESS_THESIS_PROOF:   READY_FOR_FOUNDER_AUTHORIZATION — NOT STARTED
 | GLM-5.3 adversarial security review | ✅ `G3_SECURITY_PASS_WITH_REQUIRED_RECONCILIATION` — CRITICAL=0, HIGH=2, MED=7, LOW=5, INFO=4 |
 | G3 Security Reconciliation | ✅ Complete — [delta](docs/reviews/G3-SECURITY-RECONCILIATION.md) |
 | GPT-5.6 Sol final security delta review | ✅ `G3_SECURITY_FINAL_ACCEPTED` · `SECURITY_RECONCILIATION_CLEAN` |
-| **G4 Architecture Freeze** | ✅ **Complete** — [frozen architecture](docs/canonical/ARCHITECTURE_FREEZE.md) |
-| Founder authorization of the Headless Rust Thesis-Proof | ⏳ **Next gate — blocking all implementation** |
+| G4 Architecture Freeze | ✅ Complete — [frozen architecture](docs/canonical/ARCHITECTURE_FREEZE.md) |
+| Founder authorization of the Headless Rust Thesis-Proof | ✅ **Granted** — [authorization boundary](docs/canonical/PHASE_T_AUTHORIZATION.md) |
+| **Phase T — Headless Rust Thesis-Proof** | 🔨 **In progress** |
+| Thesis benchmark → founder decision on v1 | Pending Phase T |
 
-**Verdict:** `G4_ARCHITECTURE_FROZEN_READY_FOR_FOUNDER_AUTHORIZATION` — see [the freeze](docs/canonical/ARCHITECTURE_FREEZE.md) and [the verdict](docs/VERDICT.md).
+**The architecture is frozen; the thesis is not proven.** Phase T exists to find out — cheaply — whether Fehrest deserves to exist. A negative result is an acceptable outcome ([F-1](docs/17-FAILURE-CONDITIONS.md#f-1--compiled-context-does-not-beat-a-competent-agent-with-plain-file-tools)).
 
 **No foundational trust assumption was found invalid.** What G3 corrected were **claims stronger than their mechanisms** — see [what Fehrest v1 does not claim](docs/02-THREAT-MODEL.md#71-security-claims-fehrest-v1-explicitly-does-not-make).
 
@@ -86,7 +88,8 @@ The desktop shell ([ADR-0011](docs/09-TECHNOLOGY-DECISIONS.md#adr-0011--desktop-
 | [Q — Open Questions](docs/16-OPEN-QUESTIONS.md) | Founder decisions and known weaknesses |
 | [S — Engineering Method](docs/19-ENGINEERING-METHOD.md) | Spec Kit + Ponytail — how implementation proceeds after authorization |
 | [T — Future Capability Gates](docs/20-FUTURE-GATES.md) | Visual/Canvas Engine · Unified Surface Test · Collaboration/CRDT · View Engine — **none authorized** |
-| [**ARCHITECTURE FREEZE**](docs/canonical/ARCHITECTURE_FREEZE.md) | **What is frozen, conditional, open — and what is not authorized. Start here** |
+| [**ARCHITECTURE FREEZE**](docs/canonical/ARCHITECTURE_FREEZE.md) | **What is frozen, conditional, open. Start here** |
+| [**PHASE T AUTHORIZATION**](docs/canonical/PHASE_T_AUTHORIZATION.md) | Founder authorization boundary · v0 future UI workflow · donor-use representation · Impeccable |
 | [G3 Security Reconciliation](docs/reviews/G3-SECURITY-RECONCILIATION.md) | The security delta |
 | [Editor Gate](docs/18-EDITOR-GATE.md) | Prototype bake-off deciding the editor |
 | [Failure Conditions](docs/17-FAILURE-CONDITIONS.md) | What would force redesign |

@@ -1699,3 +1699,80 @@ changes since the prior reviewed pin
 **Two failure modes, and the second is the subtler one.** *"Latest `main`"* is not a reviewed pin — it is whatever landed most recently, reviewed by nobody. But **a CI or dependabot commit is not inherently disqualifying either**: the problem is the *absence of deliberate review*, not the commit's authorship or message. Rejecting a revision because its message looks automated, while accepting one because its message looks human, is aesthetics standing in for diligence.
 
 This is the [§11 provenance ledger](#11-code-provenance-ledger) gate stated at the level of *revision selection*, and it applies to every source in §14 without exception.
+
+---
+
+### 14.13 Impeccable — future UI/quality donor
+
+> **ADDED AT PHASE T AUTHORIZATION (2026-08-18).** Founder-supplied, and admitted under the [§14.9](#149-research-freeze--now-binding) gap rule — it closes a documented future UI and design-quality gap. **This is not a reopening of broad donor discovery**, which remains `FROZEN`.
+
+```yaml
+id: SRC-190
+name: Impeccable
+class: [CODE_DONOR, DEVELOPMENT_TOOL, DESIGN_SYSTEM_DONOR,
+        UI_QUALITY_REFERENCE, AGENT_WORKFLOW_REFERENCE]
+repository_or_url: https://github.com/pbakaus/impeccable
+upstream_owner: pbakaus
+exact_commit_or_version: f88b2837a7d7c3182e46307bbbb091a1ed547571
+pin_status: EXTERNALLY_OBSERVED_SOURCE_REVISION   # NOT an adoption pin (section 14.12)
+date_verified: 2026-08-18 (external observation; not verified in this environment)
+license: Apache-2.0 (observed; confirm at pin time)
+founder_use_authorization: >
+  YES -- covered by FOUNDER_REPRESENTED_DONOR_USE_AUTHORIZATION. Authorization is
+  not provenance: any actual reuse still records upstream owner, repository, exact
+  commit, exact source path, portion imported, destination, modifications, licence
+  and import date, and preserves Apache-2.0 attribution and NOTICE obligations.
+decision: STUDY / ADAPT / FUTURE_UI_USE
+runtime_dependency: NO
+phase_t: NO PRODUCT INTEGRATION
+future_gate: UI / FRONTEND QUALITY GATE
+
+what_we_study:
+  - "DURABLE PRODUCT CONTEXT -- a PRODUCT.md-like artifact covering audience,
+     product lane, voice, anti-references, constraints, intended feel."
+  - "DURABLE DESIGN CONTEXT -- a DESIGN.md-like artifact covering visual language,
+     design tokens, typography, spacing, components, interaction principles,
+     anti-patterns."
+  - "SHAPE BEFORE BUILD -- the separation among shape, craft, critique, audit,
+     polish and harden as distinct stages rather than one review."
+  - "DETERMINISTIC UI DETECTORS -- machine-testable checks for accessibility,
+     responsive behaviour, layout problems, overflow, structural quality, and
+     recurring AI-generated UI anti-patterns."
+  - "CRITIQUE vs AUDIT -- subjective UX/hierarchy/clarity judgement kept separate
+     from mechanically verifiable technical quality."
+  - "HARDENING -- error states, empty states, overflow, responsive failure, i18n
+     stress, edge cases."
+  - "MULTI-AGENT DESIGN CONTINUITY -- durable design intent so future UI agents do
+     not rediscover product and visual decisions every session."
+
+why_this_matters_to_fehrest: >
+  The last item is the one that is not merely a UI concern. "Durable intent so a
+  fresh agent does not re-derive it" is Fehrest's own thesis (A section 2) applied to
+  design work. Impeccable is prior art for the same problem in a different domain,
+  and is worth studying for that reason independently of whether its tooling is
+  ever used.
+
+boundary_discipline:
+  - "CRITIQUE must never become a deterministic build gate. Subjective model taste
+     failing a build is how a quality tool becomes a blocker nobody trusts. Only
+     AUDIT-class checks -- objectively machine-testable -- may gate."
+
+what_we_will_not_do:
+  - Install it, run it, or run npx impeccable during Phase T.
+  - Install React, use v0, or generate any frontend file during Phase T.
+  - Create PRODUCT.md or DESIGN.md for future UI during Phase T.
+  - Treat the observed revision as an approved production dependency pin.
+  - Introduce any runtime dependency. It is development tooling, like Spec Kit and
+     Ponytail, and R-11 forbids development tooling in a shipped dependency graph.
+
+primary_value:
+  - durable product/design context
+  - deterministic UI detector rules
+  - agent design workflow
+  - critique/audit separation
+  - hardening and polish workflow
+  - live visual iteration concepts
+evidence: []
+```
+
+**Registry gap note.** SRC-190 joins the [§14.12](#1412-an-observed-revision-is-not-an-adoption-pin) rule without exception: `f88b283…` identifies the source and makes it inspectable. It authorises nothing.
