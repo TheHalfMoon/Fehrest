@@ -518,7 +518,9 @@ fn score(q: &Query, ctx: &str) -> Score {
 // ---------------------------------------------------------------------------
 
 fn main() {
-    let bench_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("bench");
+    let bench_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("bench")
+        .join("V0");
     let fixtures = bench_dir.join("fixtures");
     let queries = load_queries(&fixtures.join("queries.json"));
     let docs = corpus_docs(&fixtures.join("corpus"));

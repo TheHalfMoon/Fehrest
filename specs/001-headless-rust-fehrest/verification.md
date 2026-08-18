@@ -176,7 +176,7 @@ claim exists yet, positive or negative.
 
 > **Amendment — Phase T-R1.** The harness stopped being a stub in `90205c1`. It was
 > implemented and run as the context-adequacy pilot, whose verdict is `INCONCLUSIVE`
-> — see [bench/RESULTS.md](../../bench/RESULTS.md) and the archival record in
+> — see [bench/V0/RESULTS.md](../../bench/V0/RESULTS.md) and the archival record in
 > [bench/V0/](../../bench/V0/). **The conclusion of this section is unchanged:**
 > `SC-006…SC-008` remain `NOT_YET_EVALUATED`, because the pilot measured context
 > adequacy and not agent continuation, and no model has executed on any arm.

@@ -130,7 +130,7 @@ was made after B5 failed Q5.
   A change that labelled only the failing case would have been rescue, and was not
   made.
 - It is covered by an acceptance-test assertion that stands independently of the
-  benchmark ([tests/integration.rs](../tests/integration.rs), AS-3).
+  benchmark ([tests/integration.rs](../../tests/integration.rs), AS-3).
 
 **Reversal condition:** if a reviewer judges that `H §3`'s sectioning applies only to
 the manifest and not to model-visible output, then correction 1 is rescue, B5's Q5
@@ -164,7 +164,7 @@ included as classes.
 2. **Maintenance cost** (§2.1). The most consequential omission.
 3. **Latency.** Nothing was timed. Any future timing must come from a release binary;
    the release build requires a target directory outside the OneDrive-synced repo
-   path (see [verification.md](../specs/001-headless-rust-fehrest/verification.md)).
+   path (see [verification.md](../../specs/001-headless-rust-fehrest/verification.md)).
 4. **Scale.** Seven documents, nine memories, six queries. Nothing here says how any
    arm behaves at a thousand documents.
 5. **Statistical significance.** Not computed and not computable from n=1 per class.
