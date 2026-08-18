@@ -91,6 +91,11 @@ Steps 1–7 are blocking: canonical integrity must be established before the vau
 
 ### 3.11 Git operations on the vault
 **Detection.** Many files change at once; hashes diverge en masse.
+
+> **Mechanism, named in F1-R2 ([SRC-110](research/FEHREST_SOURCE_REGISTRY.md#src-110--gitoxide-gix)).** This scenario requires reading repository state — refs, index, worktree, status, ignore rules — and F1 specified the *behaviour* without naming how. **`gitoxide`/`gix` is the candidate for reading correctness-sensitive Git state through a typed API rather than by parsing shell `git` porcelain output**, which is a documented source of locale, version and encoding defects. Evaluated, not adopted.
+>
+> **Git remains optional.** [I-1](01-ARCHITECTURE-CONSTITUTION.md#i-1--user-knowledge-exists-locally-by-default) makes the vault an ordinary directory, and most vaults will not be repositories. No code path may make Git mandatory, and a vault with no `.git` must behave identically minus these scenarios.
+
 **Recovery.** Treated as bulk external modification. A debounced full reconciliation scan rather than thousands of individual watcher events — watchers are unreliable under bulk change, and a missed event that silently drops a file from the index is indistinguishable from a suppression attack ([T-16](02-THREAT-MODEL.md#t-16--corrupted-derived-indexes)).
 **Specific hazards.** A checkout to a commit before Fehrest existed removes identity frontmatter — files are re-identified and the association reported. `.fehrest/` should be git-ignored by default *except* the event and memory logs if the user wants history versioned; this is a documented choice, with the caveat that git merge conflicts in an append-only log are painful and the default is to ignore the whole directory.
 
@@ -117,6 +122,69 @@ Not applicable to v1 — no plugin system. When plugins arrive, the required pro
 ### 3.17 Vault moved or copied
 **Detection.** Vault path differs from the recorded path.
 **Recovery.** Normal — paths are locations, not identity ([I-15](01-ARCHITECTURE-CONSTITUTION.md#i-15--paths-are-locations-stable-ids-are-identities)). Update the path; nothing else changes. A *copied* vault produces two vaults with the same vault id; on detection, offer to re-identify one. Two vaults with duplicate object IDs would otherwise cause cross-contamination if they were ever merged.
+
+---
+
+## 3A. Hostile filesystem and sync environments
+
+> **ADDED IN F1-R2 ([R2-13](reviews/F1-R2-RECONCILIATION.md)).** §3 models failures of *Fehrest's own operations*. It does not adequately model the environment those operations run in. The founder's own environment is Windows 11 with the vault under **OneDrive** ([E-15 environment](research/EVIDENCE_LOG.md#measurement-environment)) — a case where transient locks, placeholder files and sync-driven rewrites are ordinary rather than exceptional. A recovery model that assumes a quiet local disk is modelling a machine nobody has.
+
+### 3A.1 Transient locks and sharing violations
+
+**Windows in particular** returns sharing violations when another process — an editor, an indexer, an antivirus scanner, a sync client — holds a file open. These are **transient and expected**, not errors.
+
+**Handling.** Bounded retry with exponential backoff and a maximum attempt count, applied to reads and to atomic-rename writes. On exhaustion: **fail the operation loudly, retain the original, and record the failure** — never a partial write, never a silent skip. A file that could not be read is reported as unindexed, not as absent, because "absent" is indistinguishable from a suppression attack ([T-16](02-THREAT-MODEL.md#t-16--corrupted-derived-indexes)).
+
+### 3A.2 Watcher storms
+
+Bulk operations — a `git checkout`, a sync catch-up, a mass rename — generate event volumes that overwhelm a naive watcher, and dropped events are the dangerous outcome.
+
+**Handling.** Debounce and coalesce; **above a threshold, escalate from per-file events to a full reconciliation scan** rather than attempting to process the flood. The watcher is a latency optimisation; **reconciliation is the correctness mechanism** ([E §6](04-DERIVED-DATA-MODEL.md#6-incremental-maintenance)). This is already the rule for [§3.11](#311-git-operations-on-the-vault); R2 generalises it to any bulk source.
+
+### 3A.3 Partial, offline and cloud placeholder files
+
+Cloud sync clients present files that are **not locally present**: OneDrive Files On-Demand and iCloud "optimised storage" leave a placeholder whose metadata exists and whose content requires a network fetch — which may be slow, may prompt, or may fail entirely on a metered or offline connection.
+
+**Handling.** Detect placeholder/offline state **before** reading. A placeholder is **not** an empty file and must never be indexed as one — that would replace real content with nothing in the derived index and, worse, would look like a legitimate edit. Placeholders are recorded as `content_unavailable`, retried later, and **never hydrated implicitly**: silently pulling a user's entire archive down from the cloud because Fehrest wanted to index it is a data-charge and disk-space event the user did not authorise.
+
+### 3A.4 Hard links, symlinks and external modification
+
+- **Symlinks and junctions** are not followed by default ([T-8](02-THREAT-MODEL.md#t-8--symlink-and-junction-attacks)). Unchanged.
+- **Hard links**, where the platform supports them, mean one object with two paths. Reconciliation must not treat the second path as a copy: identity comes from the embedded UUID ([D §3.3](03-CANONICAL-DATA-MODEL.md#33-filesystem-identity-and-path-semantics)), so a hard link resolves to the same object and the additional path is recorded as an additional location, surfaced to the user rather than silently deduplicated.
+- **External modification** is normal and expected ([§3.10](#310-concurrent-editor-external-modification)).
+
+### 3A.5 Sync rollback and conflict patterns
+
+Sync clients resolve conflicts by their own rules, which include creating conflict-copy files, restoring earlier revisions, and rewriting files Fehrest believes are current.
+
+**Handling.** A file whose content returns to a **prior known revision** is a real, observable event: **preserve that fact in provenance** — record that content reverted to a previously-seen hash, with both hashes and the time. **Do not invent user intent.** Fehrest does not know whether a revert was a deliberate restore, a sync conflict resolved against the user, or a backup rollback, and guessing produces a confident and wrong history. It is recorded and surfaced.
+
+Conflict-copy files (`document (conflicted copy).md`, `document 2.md`) that carry a **duplicate embedded UUID** are handled as identity conflicts ([D §3.2](03-CANONICAL-DATA-MODEL.md#32-identity-across-filesystem-operations)): both retained, neither discarded, surfaced for resolution.
+
+### 3A.6 Disk full and concurrent editors
+
+Covered by [§3.15](#315-disk-full) and [§3.10](#310-concurrent-editor-external-modification); listed here because they co-occur with sync pressure far more often than with local-only use.
+
+### 3A.7 Cloud-sync compatibility is an EMPIRICAL GATE, not an assumption
+
+> **What was NOT accepted ([R2-13](reviews/F1-R2-RECONCILIATION.md)).** The review asserted specific behaviours of particular sync clients — guaranteed version-history reset, guaranteed delete-plus-create semantics. **Those claims are not adopted.** They are unverified, they vary by client version, platform, account type and per-folder configuration, and designing recovery around an unverified vendor behaviour is how a recovery model acquires a confident false assumption. Fehrest already made an absence-of-signal error twice in F1; asserting a *presence* of behaviour without testing it is the same error inverted.
+
+**Support is claimed only after measurement.** Before Fehrest states that a sync environment is supported, it must pass the recovery suite **running on**:
+
+| Environment | Status |
+|---|---|
+| **OneDrive on Windows** | Required before claiming support. The founder's own environment |
+| **iCloud Drive on macOS** | Required before claiming support |
+| Dropbox, Google Drive, Syncthing, others | Untested. Reported as untested, not as unsupported and not as supported |
+
+**Until a given environment is tested, its status is `UNTESTED`** — which is a statement about Fehrest's knowledge, not about the environment.
+
+### 3A.8 Checkpoint loss
+
+**Detection.** No valid projection checkpoint at startup: absent, digest mismatch, or `schema_version` / `deriver_version` mismatch ([E §11](04-DERIVED-DATA-MODEL.md#11-projection-checkpoints)).
+**Recovery.** Discard the invalid checkpoint. Fall back to an older valid checkpoint if one exists; otherwise replay canonical state in full. Record the event.
+**Canonical loss.** **None** — checkpoints are derived, non-authoritative and disposable by construction.
+**Duration.** Healthy-start budgets are in [O §3](14-PERFORMANCE-BUDGETS.md#3-startup). **The degraded full-replay path is deliberately unbudgeted pending measurement** ([R2-08](reviews/F1-R2-RECONCILIATION.md)); the vault remains readable throughout, since replay rebuilds projections rather than gating access to canonical files.
 
 ---
 
@@ -154,6 +222,8 @@ Recovery is itself auditable. A user (or reviewer) can ask what has ever gone wr
 Every scenario above has an automated test using fault injection at a specific point ([L §8](11-SECURITY-VERIFICATION-PLAN.md#8-recovery-tests)). Assertions for all: **zero canonical data loss**, automatic detection, automatic or clearly-guided recovery, and a recorded event.
 
 Chaos testing at Phase 5: random kills, disk-full injection, clock manipulation, concurrent external modification, and bulk git operations, run against a real vault under load.
+
+**Added in F1-R2 — environment testing, on real clients:** the §3A scenarios are exercised against **real OneDrive on Windows and real iCloud Drive on macOS**, not against a simulation. Simulating a sync client tests the simulation. This is the [§3A.7](#3a7-cloud-sync-compatibility-is-an-empirical-gate-not-an-assumption) compatibility gate, and it is what converts "we handle sync" from a claim into a measurement.
 
 ---
 

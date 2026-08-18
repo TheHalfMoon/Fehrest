@@ -166,6 +166,15 @@ Executed identically against every candidate. Each is pass/fail with recorded de
 
 ## 6. Scoring
 
+```
+EDITOR GATE WEIGHTS:
+PROVISIONAL — CONTINGENT ON V1 WEDGE RATIFICATION
+```
+
+> **MARKED PROVISIONAL IN F1-R2 ([R2-18](reviews/F1-R2-RECONCILIATION.md)).** These weights encode a persona's priorities. That persona — the [v1 target wedge](00-PRODUCT-THESIS.md#4-the-v1-user-wedge) — is `PROVISIONALLY_ACCEPTED_FOR_PLANNING` / `FOUNDER_RATIFICATION_REQUIRED` ([Q-8](16-OPEN-QUESTIONS.md#q-8--v1-target-wedge-provisionally-accepted-for-planning)). **Weights derived from an unratified persona may not be presented as fixed**, or the wedge's four architecture consequences quietly acquire a fifth through a scoring table.
+>
+> The **procedural rule below is unchanged and still binds**: whatever weights are in force when evaluation begins are frozen at that moment. Provisional means *revisable before Phase 3E starts*, never *tunable after results arrive*.
+
 | Criterion | Weight | Measured by |
 |---|---|---|
 | Canonical / open-file fidelity | **30%** | Tests 1–11, 16, 18; P-1, P-2, P-5, P-6 |
@@ -174,12 +183,22 @@ Executed identically against every candidate. Each is pass/fail with recorded de
 | Performance | **10%** | Test 12; load/edit/save latency at corpus scale |
 | Binary / install size | **10%** | Measured bundle delta |
 | Security surface | **5%** | Dependency count, advisory exposure, sandbox implications |
-| Agent editability | **5%** | Test 17; ease of correct programmatic edit |
+| **Agent editability** | **5%** — *see §6.1* | Test 17; ease of correct programmatic edit |
 | Future canvas integration | **5%** | Test 22; cost to reach [Phase 8](15-IMPLEMENTATION-PHASES.md#phase-8--deferred) canvas |
 
 **Weights are fixed before evaluation and may be changed only with written reasoning recorded in this document — never after seeing results.**
 
 Fidelity dominates at 30% because it is the criterion the constitution makes non-negotiable. Maintenance is second at 20% because it is where F1's analysis was strongest and remains a genuine differentiator: vendoring from an active monorepo and depending on an unreleased package are different risks, and the gate must price both.
+
+### 6.1 Agent editability at 5% — the question raised, not answered
+
+**The argument for raising it.** Fehrest's thesis is that **agents are first-class users of the vault**. Agents write memories, and — via `object.write` ([G §3](06-AGENT-MODEL.md#3-tools)) — objects. A canonical format that is hard to edit programmatically without corruption is a format that makes the product's primary non-human user error-prone, which is a *thesis* cost, not an ergonomics cost. On that reading, 5% is low: agent editability is weighted at one third of "rich editing capability," a feature set the same wedge table describes as *not the wedge's core need* ([A §4](00-PRODUCT-THESIS.md#4-the-v1-user-wedge)).
+
+**The argument against raising it.** Test 17 measures *ease of correct programmatic edit*, and the properties that actually protect an agent-authored write — verbatim unknown-field preservation ([R-8](01-ARCHITECTURE-CONSTITUTION.md#2-derived-rules)), atomic write, round-trip fidelity, minimal readable diffs (test 18) — are already scored, and scored heavily, inside the 30% fidelity criterion. Raising agent editability may double-count rather than correct.
+
+**Not resolved here, deliberately.** Rewriting weights during a governance reconciliation, to match a persona that is not ratified, on an argument that may be double-counting, would be exactly the unearned confidence this package exists to prevent — and it would mean weights had moved once for reasons other than evidence, which is precisely what the freezing rule exists to stop.
+
+**What is recorded instead:** this is a **founder decision, due before Phase 3E begins**, in one of three forms — ratify the wedge and keep these weights; ratify the wedge and adopt a justified reweighting; or replace the wedge, in which case the weights are re-derived from the new persona. **Editor architecture remains `OPEN / PROTOTYPE-GATED` under every outcome** ([ADR-0002](09-TECHNOLOGY-DECISIONS.md#adr-0002--editor-architecture-open--prototype-gated)).
 
 **Elimination conditions**, independent of score: silent data loss (P-2), content loss on crash (test 15), or a sidecar that must carry document content (P-6).
 
@@ -195,7 +214,8 @@ An inconclusive result is a legitimate outcome. If no candidate clears the fidel
 
 ## 8. What this gate does not decide
 
-- **Whether Fehrest has a canvas.** Canvas remains [Phase 8](15-IMPLEMENTATION-PHASES.md#phase-8--deferred). Candidate B inheriting Edgeless primitives is scored as future value, not a v1 feature.
+- **Whether Fehrest has a canvas.** Canvas remains [Phase 8](15-IMPLEMENTATION-PHASES.md#phase-8--deferred). Candidate B inheriting Edgeless primitives is scored as future value, not a v1 feature. The engine question is the separate [Visual/Canvas Engine Gate](20-FUTURE-GATES.md#2-visualcanvas-engine-gate), where BlockSuite Edgeless is one candidate among several.
+- **Whether one substrate should serve documents, canvas and structured views.** That is the [Unified Surface Test](20-FUTURE-GATES.md#3-unified-surface-test), and **AFFiNE's unified approach is not assumed to win it**. This gate decides a text editor, nothing wider.
 - **Whether collaboration is in scope.** It is not. Collaboration must never be added to justify a CRDT ([R1-09](reviews/F1-R1-RECONCILIATION.md)).
 - **The desktop shell.** [ADR-0011](09-TECHNOLOGY-DECISIONS.md#adr-0011--desktop-shell) is separate, though partly editor-dependent.
 - **Whether Fehrest is a Markdown editor.** It is not, under any outcome. The editor is one surface over the [four-layer architecture](00-PRODUCT-THESIS.md#5-the-four-layer-architecture); the memory, graph, event and context layers are the product.

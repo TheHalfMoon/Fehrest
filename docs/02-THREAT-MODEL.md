@@ -129,10 +129,10 @@ Each entry: attack → why it works → controls → detection → residual risk
 
 **Controls.**
 1. Provenance is mandatory and non-nullable ([I-11](01-ARCHITECTURE-CONSTITUTION.md#i-11--agent-generated-memories-preserve-provenance)); a memory with no evidence chain cannot be stored.
-2. `epistemic_status` distinguishes observed/asserted/inferred/unverified; agent-asserted memories enter as `asserted`, never `observed` ([I-12](01-ARCHITECTURE-CONSTITUTION.md#i-12--inference-is-never-silently-promoted-to-fact-amended)).
-3. Promotion to high-influence types (`decision`, `constraint`, `preference`) requires human confirmation — see [F §5](05-MEMORY-MODEL.md).
-4. Contradiction detection surfaces conflicts to the user rather than silently resolving them.
-5. Memories are scoped; a memory written in one project's scope cannot be retrieved into another.
+2. Four orthogonal semantic axes, all core-assigned or human-gated ([I-12](01-ARCHITECTURE-CONSTITUTION.md#i-12--inference-is-never-silently-promoted-to-fact-amended), [F §3.3](05-MEMORY-MODEL.md#33-the-fehrest-evidence-and-trust-model)): an agent's write enters as `basis: AGENT_ASSERTED`, never `EXTRACTED`, and as `verification: UNVERIFIED`. **No actor can corroborate its own assertion.**
+3. Promotion to high-influence types (`decision`, `constraint`, `preference`) requires human confirmation and rests at `lifecycle: PENDING` until given — where it is explicitly non-authoritative ([F §5.5](05-MEMORY-MODEL.md#55-pending-confirmation-semantics), [R-12](01-ARCHITECTURE-CONSTITUTION.md#2-derived-rules)).
+4. Contradiction detection surfaces conflicts to the user rather than silently resolving them. **Uncalibrated model confidence can no longer break a tie** ([F §4.2](05-MEMORY-MODEL.md#42-deterministic-resolution)) — an attacker cannot win a conflict by asserting high confidence.
+5. Memories are scoped over orthogonal dimensions; a memory written in one project's scope cannot be retrieved into another, and a vault-global memory cannot silently override a conflicting project-local one because vault-global is strictly *less* specific ([F §3.4](05-MEMORY-MODEL.md#34-scope-is-orthogonal-dimensions-not-an-ordered-lattice)). Creating a vault-global durable memory requires explicit user authority and is unreachable by any agent.
 6. Every write is an event; poisoned memories are traceable to actor, session and evidence, and revocable in bulk by provenance.
 
 **Detection.** `test_memory_requires_provenance`; a "memory audit" view listing all memories by asserting actor; alert on unusual promotion volume from one session.
@@ -140,13 +140,28 @@ Each entry: attack → why it works → controls → detection → residual risk
 **Residual risk.** A user may confirm a plausible false memory. Irreducible; mitigated by showing evidence at the confirmation point.
 
 ### T-3 — Forged provenance
-**Attack.** An agent writes a memory claiming its evidence is a trusted note, or claiming a different actor asserted it.
 
-**Controls.** Provenance is not agent-supplied: the core stamps actor identity from the authenticated session, and evidence links must resolve to objects the session was actually shown, verified against `context/compiled` events. An evidence reference to an object outside the session's grant is rejected.
+> **REWRITTEN IN F1-R2 ([R2-02](reviews/F1-R2-RECONCILIATION.md)).** The F1 control claimed evidence links were *"verified against `context/compiled` events"* to confirm the session was actually shown them. **No such record existed.** `context/compiled` stored inputs plus a digest ([D §5.2](03-CANONICAL-DATA-MODEL.md#52-durability-tiers--the-correction-to-the-brief)) — enough to attempt a recomputation, and insufficient to answer "was item X in the package this session received?", which is the only question the control needed answered. T-3 was therefore a **boundary control with no implementable mechanism**: a decorative guarantee in the row of the summary table marked *Boundary*.
 
-**Detection.** `test_provenance_cannot_be_spoofed`; invariant check that every memory's evidence set is a subset of what its session was served.
+**Attack.** An agent writes a memory claiming its evidence is a trusted note it was shown, or claiming a different actor asserted it. The valuable variant is subtler than outright fabrication: the agent cites a **real object that is genuinely inside its grant but was never served to it**, manufacturing the appearance of first-hand observation for something it inferred, was told, or invented.
 
-**Residual risk.** Low. Requires core compromise.
+**Controls.**
+1. **Actor identity is never agent-supplied.** The core stamps it from the authenticated session; `basis` is core-assigned ([F §3.3](05-MEMORY-MODEL.md#33-the-fehrest-evidence-and-trust-model)).
+2. **Evidence links are verified against the served-item manifest** ([H §3.2](07-CONTEXT-COMPILER-SPEC.md#32-the-served-item-manifest--permanent-t1)) — a permanent T1 record of exactly which items each package emitted, written at emission and never compacted. Each accepted evidence link records the `served_in` package that carried it.
+3. **In-grant is not sufficient.** An evidence reference to an object inside the session's grant but **absent from the relevant manifest** is rejected as *observed by this session*. It may still be recorded as an unobserved reference, which is a materially weaker and correctly-labelled claim.
+4. An evidence reference to an object outside the session's grant is rejected outright.
+
+**The required negative property, stated so it can be tested rather than asserted:**
+
+> A memory claiming evidence observed by a session, referencing an object that was inside that session's grant but **not present in the relevant served-item manifest**, must not be accepted as evidence observed by this session.
+
+**Detection.** `test_provenance_cannot_be_spoofed`, which must include the **in-grant-but-not-served** negative case explicitly — the case F1's control silently failed. Plus an invariant check that every memory's observed-evidence set is a subset of what its session's manifests record as served.
+
+**What is *not* claimed.** The manifest proves an item was **emitted to** the session. It cannot prove the model **read** it, and Fehrest does not claim otherwise. The guarantee is availability-of-evidence, not attention.
+
+**Residual risk.** Low, and now bounded by a mechanism rather than by a sentence. Requires core compromise or manifest tampering — the latter detected by the same hash chain as any other T1 event ([T-4](#t-4--event-log-tampering)).
+
+**If the manifest mechanism is not built, T-3 must be downgraded honestly** rather than left standing as a Boundary control, and the [controls summary](#6-controls-summary-by-mechanism) row corrected with it.
 
 ### T-4 — Event-log tampering
 **Attack.** Edit or truncate the journal to erase an action or fabricate a decision.
@@ -160,7 +175,7 @@ Each entry: attack → why it works → controls → detection → residual risk
 ### T-5 — Memory supersession abuse
 **Attack.** Attacker supersedes a true current memory with a false one — the temporal model's own mechanism turned into a weapon. Or backdates `valid_from` to win resolution.
 
-**Controls.** Supersession is an event requiring the superseding memory to satisfy the same provenance rules; superseded memories are retained, never deleted, so the substitution is visible; `recorded_at` is **system-assigned and not actor-supplied**, so backdating recorded time is impossible; `valid_from` is actor-supplied but a `valid_from` earlier than the evidence's own timestamp is flagged; supersession of human-confirmed memories by agent-asserted ones requires confirmation.
+**Controls.** Supersession is an event requiring the superseding memory to satisfy the same provenance rules; superseded memories are retained, never deleted, so the substitution is visible; `recorded_at` is **system-assigned and not actor-supplied**, so backdating recorded time is impossible; `valid_from` is actor-supplied but a `valid_from` earlier than the evidence's own timestamp is flagged; a `verification: USER_CONFIRMED` memory may be superseded only by another `USER_CONFIRMED` memory or after explicit confirmation; **a `PENDING` memory may never supersede anything** ([F §6](05-MEMORY-MODEL.md#6-supersession), [F §5.5](05-MEMORY-MODEL.md#55-pending-confirmation-semantics)).
 
 **Detection.** `test_supersession_requires_provenance`; property test asserting resolution is monotone in `recorded_at`; report of agent-superseded human decisions.
 
@@ -297,7 +312,9 @@ Each entry: attack → why it works → controls → detection → residual risk
 | Pre-retrieval frozen capability grants | T-1, T-13, T-14 | **Boundary** |
 | Single authorization chokepoint | T-6, T-13, T-14 | **Boundary** |
 | Mandatory unforgeable provenance | T-2, T-3, T-5 | **Boundary** |
-| Event-sourced epistemic status | T-2, T-5 | **Boundary** |
+| **Permanent served-item manifest** ([R2-01](reviews/F1-R2-RECONCILIATION.md)) | T-3 | **Boundary** — and the mechanism T-3's boundary claim previously lacked |
+| Event-sourced four-axis memory semantics | T-2, T-5 | **Boundary** |
+| **Single core response envelope on every read path** ([R2-03](reviews/F1-R2-RECONCILIATION.md)) | T-1, T-2 | **Defence-in-depth — with complete coverage** |
 | ID-only addressing (no agent-supplied paths) | T-7, T-8 | **Boundary** |
 | Deny-by-default egress | T-1, T-11, T-21 | **Boundary** |
 | Read-only path-confined sidecar | T-10, T-11 | **Boundary** |
@@ -330,8 +347,9 @@ The middle column matters more than the list. **Only the rows marked Boundary ar
 The model is **wrong and must be redesigned** if any of the following is demonstrated:
 
 1. A retrieved document changes a capability grant, adds a tool, or causes an unapproved side effect. → I-13 is not structurally enforced; redesign the plane separation.
-2. A memory can be written whose provenance chain does not resolve to evidence the session was actually served. → the provenance boundary is decorative.
+2. A memory can be written whose provenance chain does not resolve to evidence the session was actually served — **including the in-grant-but-not-served case**. → the provenance boundary is decorative. *(This criterion fired in F1-R2 against F1's own design, and is the reason [T-3](#t-3--forged-provenance) was rewritten.)*
 3. An agent reaches an object outside its grant through graph expansion. → scope filtering is in the wrong layer.
+3a. **Content reaches a model through any agent-facing tool without its trust level, provenance and temporal state.** → the labelling boundary has a hole; centralise the response path before shipping the gateway ([R2-03](reviews/F1-R2-RECONCILIATION.md)).
 4. The event log can be edited without detection. → tamper-evidence claim is false; withdraw it.
 5. Rebuilding derived state does not restore identical query results. → [I-6](01-ARCHITECTURE-CONSTITUTION.md#i-6--derived-state-is-disposable-and-rebuildable) fails and the entire "derived is disposable" security argument collapses with it.
 6. Parser fuzzing yields host code execution reachable from vault content. → sidecar confinement is insufficient; per-parser isolation becomes mandatory before v1 ships.

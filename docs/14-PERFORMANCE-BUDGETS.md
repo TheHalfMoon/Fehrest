@@ -136,11 +136,14 @@ The sidecar spawns 12 worker processes during extraction ([E-5](research/EVIDENC
 
 ## 8. Disk
 
+> **The log rows below are derived from the unvalidated 500 events/day assumption and are `PENDING B-0`** ([R2-12](reviews/F1-R2-RECONCILIATION.md)). Index and graph rows are derived from file counts and are unaffected.
+
 | Artifact | S | M | L |
 |---|---|---|---|
 | Canonical files | user's own | — | — |
-| Event log (1 year) | ~20 MB | ~200 MB | ~1 GB |
-| Memory log (1 year) | ~2 MB | ~20 MB | ~200 MB |
+| Event log (1 year) — **PENDING B-0** | ~20 MB | ~200 MB | ~1 GB |
+| Memory log (1 year) — **PENDING B-0** | ~2 MB | ~20 MB | ~200 MB |
+| Served-item manifests (1 year) — **PENDING B-0** | TBD | TBD | TBD |
 | SQLite derived | ~30 MB | ~300 MB | ~3 GB |
 | Graph derived | ~10 MB | ~100 MB | ~1 GB |
 | Embeddings (optional) | ~30 MB | ~300 MB | ~3 GB |
@@ -156,11 +159,40 @@ Shipping a ~350 MB default installer for a note-taking app would be a product pr
 
 ## 9. Growth over time
 
-Ten years at 50 memories/day and 500 events/day: ~1.8M events, ~180K memories, ~2 GB of canonical logs.
+```
+EVENT AND MEMORY VOLUME:
+UNVALIDATED PLANNING ASSUMPTION — PENDING MEASUREMENT (B-0)
+```
 
-Requirements: query latency must not degrade more than 2× from year 1 to year 10 on a fixed vault size; T2 compaction must keep the *active* log within an order of magnitude of the T1 log; and startup must not scan the full history — projections are incremental and checkpointed.
+> **RECLASSIFIED IN F1-R2 ([R2-12](reviews/F1-R2-RECONCILIATION.md)).** The figures below rest on **50 memories/day and 500 events/day**. Those numbers were never measured. They are not a budget, not a finding, and not a system property — they are an assumption that has been propagating through this document, [F §8](05-MEMORY-MODEL.md#8-growth-and-forgetting), [D §5.2](03-CANONICAL-DATA-MODEL.md#52-durability-tiers--the-correction-to-the-brief) and [§8 Disk](#8-disk) as though it were grounded.
+>
+> **What was also NOT accepted:** the review's counter-estimate of `10K–100K events/day`. It is an unverified estimate offered without measurement. Replacing one ungrounded number with another that is two orders of magnitude larger would change which decisions are wrong without making any of them right — and a 200× disagreement about the input is itself the finding: **nobody knows, so measure.**
 
-The last point matters most. A startup that replays 1.8M events would take minutes by year ten. Memory and object projections must be checkpointed so startup replays only events since the last checkpoint, with a full replay available as a repair operation.
+**Illustrative only, at the assumed rate:** ten years at 50 memories/day and 500 events/day → ~1.8M events, ~180K memories, ~2 GB of canonical logs.
+
+**[B-0](10-BENCHMARK-PLAN.md#b-0--event-volume-measurement) at Phase 0** captures or reconstructs representative real multi-agent usage and counts potential events **by class**. Its measured distributions — not the numbers above — decide:
+
+- which event types deserve canonical retention at all;
+- whether the T1/T2 split is necessary and where the line falls;
+- the retention window and compaction policy;
+- the disk budget in [§8](#8-disk);
+- checkpoint cadence;
+- the per-item cost ceiling for the served-item manifest ([H §3.2](07-CONTEXT-COMPILER-SPEC.md#32-the-served-item-manifest--permanent-t1)).
+
+**Gate: no event-tiering, retention, compaction or checkpoint-cadence parameter may be frozen before B-0 reports.**
+
+**Requirements that hold regardless of volume**, because they follow from the architecture rather than from the number: query latency must not degrade more than 2× from year 1 to year 10 on a fixed vault size; compaction must keep the *active* log within an order of magnitude of the permanent log; and **startup must not scan the full history** — projections are incremental and checkpointed ([E §11](04-DERIVED-DATA-MODEL.md#11-projection-checkpoints)).
+
+The last point matters most, and it holds more strongly the larger the true volume turns out to be. Memory and object projections are checkpointed so that startup replays only events since the last valid checkpoint.
+
+**Two startup paths, budgeted separately ([R2-08](reviews/F1-R2-RECONCILIATION.md)):**
+
+| Path | Budget |
+|---|---|
+| **Healthy start** — a valid checkpoint exists; replay the tail only | [§3](#3-startup) |
+| **Degraded recovery** — no valid checkpoint; full replay of canonical state | **Deliberately unbudgeted. Measured, then set** |
+
+**No degraded-path number is invented here.** Setting one would require knowing the event volume (unmeasured, above), the replay throughput (unimplemented), and the checkpoint cadence (unset because it depends on the first two). A plausible-sounding figure derived from three unknowns is not a budget; it is a guess that later gets cited as a requirement.
 
 ---
 
@@ -170,10 +202,12 @@ Not performance in the usual sense, but they determine whether controls work:
 
 | Metric | Target | Rationale |
 |---|---|---|
-| Memory confirmations per active day | **< 5** | Above this users approve blindly and the [T-2](02-THREAT-MODEL.md#t-2--memory-poisoning) control becomes theatre |
+| Memory confirmations per active day | **UNVALIDATED — assumed < 5, to be measured** | Above whatever the real tolerance is, users approve blindly and the [T-2](02-THREAT-MODEL.md#t-2--memory-poisoning) control becomes theatre |
 | Tool approvals per agent session | < 3 | Same failure mode ([T-13](02-THREAT-MODEL.md#t-13--privilege-escalation-via-mcp-or-plugin)) |
 | Time to first useful context after vault open | < 5 min | Onboarding viability |
 | Manual steps to recover from any [N](13-RECOVERY-MODEL.md) scenario | 0–1 | Recovery must not require expertise |
+
+> **The "< 5 confirmations per active day" figure is NOT canonised ([R2-06](reviews/F1-R2-RECONCILIATION.md)).** It appeared in F1 as a design target and was then cited across [F §9](05-MEMORY-MODEL.md#9-falsification-criteria), [F-17](17-FAILURE-CONDITIONS.md#f-17--confirmation-fatigue) and [B-5](10-BENCHMARK-PLAN.md#b-5--memory-promotion-quality) as though it were a measured tolerance. **It is an assumption about human behaviour, made without observing any human**, and it has never been tested against real multi-agent traces — which is also where the confirmation volume actually comes from. Both the *tolerable* rate and the *produced* rate are measured in dogfooding before either becomes a gate, and **before automatic promotion is widened**.
 
 These are measured in dogfooding ([B-5](10-BENCHMARK-PLAN.md)). Missing them means the *rules* are wrong, not the user — a distinction worth stating, because the usual response to alert fatigue is to blame the operator.
 
@@ -196,4 +230,6 @@ A budget that is missed and then quietly raised is worse than no budget. Any bud
 | Context compilation exceeds 2× budget at M | Pre-computation and caching become mandatory, threatening determinism |
 | Memory footprint exceeds 2× at M | Streaming/paged processing required throughout |
 | Derived state exceeds canonical size | Index design is wrong |
-| Startup exceeds 5 s at M | Projection checkpointing is insufficient |
+| Startup exceeds 5 s at M **on the healthy path** | Projection checkpointing is insufficient |
+| **Measured event volume ([B-0](10-BENCHMARK-PLAN.md#b-0--event-volume-measurement)) differs from assumption by more than an order of magnitude** | Every log-derived row in [§8](#8-disk) and [§9](#9-growth-over-time) is re-derived, and the T1/T2 tiering in [D §5.2](03-CANONICAL-DATA-MODEL.md#52-durability-tiers--the-correction-to-the-brief) is re-decided before it is frozen |
+| **Degraded full-replay recovery proves unacceptably slow once measured** | Increase checkpoint cadence, or checkpoint more projections — never make a checkpoint authoritative to avoid replaying ([E §11](04-DERIVED-DATA-MODEL.md#11-projection-checkpoints)) |

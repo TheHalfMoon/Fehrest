@@ -18,10 +18,13 @@ Statuses: `PROPOSED` (awaiting review) · `OPEN` (decision deliberately not yet 
 | [0007](#adr-0007--retrieval-is-lexical-first-vectors-are-optional) | Retrieval is lexical-first; vectors optional | PROPOSED |
 | [0008](#adr-0008--memory-is-bitemporal-with-deterministic-resolution) | Memory is bitemporal with deterministic resolution | PROPOSED |
 | [0009](#adr-0009--agents-address-objects-by-id-never-by-path) | Agents address objects by ID, never by path | PROPOSED |
-| [0010](#adr-0010--core-implementation-language) | Core implementation language | **OPEN** |
-| [0011](#adr-0011--desktop-shell) | Desktop shell | **OPEN** |
+| [0010](#adr-0010--core-implementation-language) | Core implementation language | ✅ **ACCEPTED — Rust** (founder decision D-1, F1-R2) |
+| [0011](#adr-0011--desktop-shell) | Desktop shell | **OPEN** — deliberately *not* resolved by D-1 |
 | [0012](#adr-0012--crdt-adoption-is-editor-dependent) | CRDT adoption is editor-dependent | 🔄 **CONDITIONAL** (reclassified in R1) |
 | [0013](#adr-0013--storage-layout-provisional) | Physical storage layout | 🔄 **PROVISIONAL** — semantic categories first |
+| [0014](#adr-0014--engineering-method-spec-kit--ponytail) | Engineering method: Spec Kit + Ponytail | ✅ **ACCEPTED** (founder decisions D-2, D-3, F1-R2) |
+| [0015](#adr-0015--long-term-canonical-schema-compatibility) | Long-term canonical schema compatibility | 🔄 **OPEN — study framed** (F1-R2) |
+| [0016](#adr-0016--derivation-lineage-and-projection-checkpoints) | Derivation lineage and projection checkpoints | **PROPOSED** (F1-R2) |
 
 ---
 
@@ -103,7 +106,9 @@ Fehrest's thesis holds that understanding relationships beyond lexical search ma
 
 **Consequences.** ~200–300 MB installer delta with a bundled runtime ([E-3](research/EVIDENCE_LOG.md#e-3--graphify-dependency-weight-and-installed-footprint)) — mitigated by making Graph Intelligence an **optional capability install**. A second process to supervise, and IPC to design. An independent update channel is required, since the app and worker cannot share a release cadence given upstream CVE tracking.
 
-**Finalised when.** GI-BENCH reports across 4 vault sizes × 5 corpus types × 10 operations × concurrency levels.
+**Sequencing corrected in F1-R2 ([R2-15](reviews/F1-R2-RECONCILIATION.md)).** [GI-CAP (B-13)](10-BENCHMARK-PLAN.md#b-13--gi-cap--graph-intelligence-capability-experiment) — a throwaway static-graph capability experiment with no supervisor, IPC, packaging, Python lifecycle or incremental pipeline — **runs before any production integration work begins** ([Phase 3A](15-IMPLEMENTATION-PHASES.md#phase-3a--capability-experiment-throwaway)). F1 built the integration and then measured the benefit, which made [F-3](17-FAILURE-CONDITIONS.md#f-3--graph-intelligence-does-not-deliver-material-benefit-at-acceptable-cost)'s removal branch payable only after its cost had been sunk. **Graph Intelligence remains a `CORE CURRENT PRODUCT HYPOTHESIS` that is `EXPLICITLY FALSIFIABLE`; Graphify remains an `OPTIONAL IMPLEMENTATION CANDIDATE`.** The reordering does not change either status — it makes the falsifiability affordable.
+
+**Finalised when.** GI-CAP retains the capability, **and** GI-BENCH reports across 4 vault sizes × 5 corpus types × 10 operations × concurrency levels.
 
 **Reverses if.** GI-BENCH shows throughput or incremental latency is the binding constraint rather than startup; **or** packaging proves untenable on a target platform; **or** [H-5](research/EVIDENCE_LOG.md#h-5--a-single-sidecar-process-is-sufficient-isolation-for-the-extraction-path) is falsified and per-parser isolation is required — in which case the answer is likely WASM-isolated parsers, not a rewrite.
 
@@ -194,7 +199,12 @@ RRF is chosen for fusion because it is deterministic, rank-only, and needs no sc
 
 **Consequences.** Wider indexes, more complex queries, and users must sometimes supply `valid_from`. No LLM, graph DB or vector store required.
 
-**Reverses if.** Structured `payload` proves extractable for < 30% of real memories → deterministic resolution covers too little to matter and the model degrades to prose-first, which is much weaker. This is the main risk to this ADR and is measured in [B-4](10-BENCHMARK-PLAN.md).
+**Amended in F1-R2 ([R2-04](reviews/F1-R2-RECONCILIATION.md), [R2-05](reviews/F1-R2-RECONCILIATION.md)).** Two changes to the resolution half of this ADR:
+
+1. **Resolution is deterministic but no longer *total*.** The ladder in [F §4.2](05-MEMORY-MODEL.md#42-deterministic-resolution) compares one well-founded axis per rung and skips rungs where no comparison exists. Where nothing separates two candidates, the result is `CONTRADICTION` — the honest answer, and one the compiler already has a section for.
+2. **Uncalibrated confidence is removed from the resolution path entirely.** F1's final tie-break let a model-produced float decide what Fehrest reported as true whenever principled rules ran out — importing exactly the non-determinism this ADR rejects in its own "Rejected" list, through the last rung.
+
+**Reverses if.** Structured `payload` proves extractable for < 30% of real memories → deterministic resolution covers too little to matter and the model degrades to prose-first, which is much weaker. This is the main risk to this ADR and is measured in [B-4](10-BENCHMARK-PLAN.md). **`CONTRADICTION` being returned too often is not a reversal condition for the confidence removal** — it is an argument for more evidence-based rungs, never for restoring a number that has no evidential content.
 
 ---
 
@@ -216,33 +226,58 @@ Adopts the donor's two rules verbatim: a location is not an authorization token,
 
 ## ADR-0010 — Core implementation language
 
-**Status: OPEN — deliberately not decided.**
+**Status: ✅ ACCEPTED — Rust. Closed by founder decision D-1 in F1-R2.**
 
-**Context.** The core must implement identity, the event log, the memory projection, retrieval, the compiler, and the policy chokepoint. Constraints: single-binary desktop distribution, must supervise a Python sidecar, must be memory-safe in the TCB, must reimplement patterns from a TypeScript donor.
+> This ADR was `OPEN` through F1 and F1-R1, deliberately, because the choice turned on a founder priority rather than an architectural deduction. **The founder has now made it.** The weak recommendation recorded in R1 — Rust core, TypeScript UI — is the decision, and it is recorded as a founder decision rather than as an architect's inference.
 
-**Candidates.**
+**Decision.** **Rust is the canonical implementation language for Fehrest Core.**
 
-| Option | For | Against |
-|---|---|---|
-| **Rust** | Memory-safe TCB; excellent SQLite/fuzzing/single-binary story; pairs with Tauri; `cargo-fuzz` for the parser/log surface | Slower iteration; donor patterns are TS; UI needs a separate stack |
-| **TypeScript (Node/Bun)** | Direct pattern transplant from the donor; one language with the UI; fastest iteration | Weaker isolation guarantees in the TCB; heavier runtime; supply-chain surface |
-| **Go** | Simple concurrency, fast builds, easy single binary | Weakest ecosystem fit for editor/UI; fewer relevant donors |
+**Rust owns all correctness- and security-sensitive product logic:**
 
-**Why left open.** The right answer depends on [ADR-0011](#adr-0011--desktop-shell) and on whether the founder's velocity or the TCB's safety properties dominate — a founder decision, not an architectural deduction. Deciding it here on my own preference would be exactly the false confidence this package is meant to avoid.
+```
+canonical domain model · stable identity · filesystem reconciliation
+canonical write and recovery semantics · SQLite and storage · migrations
+FTS integration · event and audit primitives · temporal memory
+deterministic resolution · retrieval · context compilation · provenance
+authorization · agent gateway · MCP server · CLI · recovery
+every security-sensitive boundary
+```
 
-**Weak recommendation:** Rust core + TypeScript UI, on the grounds that the TCB should be memory-safe and the parser/event-log surfaces are the fuzzing targets. Explicitly not a decision. See [Q-2](16-OPEN-QUESTIONS.md).
+**TypeScript/React may be used for presentation and UI.** **No business-critical state semantic may be duplicated in TypeScript** — not memory resolution, not supersession, not authorization, not identity allocation, not any canonical write path. The UI renders what the Core decides.
+
+**Python may be used only behind an explicit optional process boundary**, for hypothesis-gated donor capabilities such as Graph Intelligence ([ADR-0003](#adr-0003--graph-intelligence-runtime-integration-shape)). **Canonical Fehrest operation must not require Python.**
+
+**Two invariants make this testable rather than aspirational** ([B](01-ARCHITECTURE-CONSTITUTION.md)):
+
+- **[I-16](01-ARCHITECTURE-CONSTITUTION.md#i-16--fehrest-remains-operable-without-its-user-interface)** — if the desktop UI disappears, Fehrest remains operable through its Rust Core and CLI.
+- **[I-17](01-ARCHITECTURE-CONSTITUTION.md#i-17--fehrest-remains-usable-without-python)** — if Python disappears, canonical Fehrest knowledge, memory and recovery remain usable.
+
+**Reasoning.** The TCB should be memory-safe, and the parser, event-log and reconciliation surfaces are exactly the fuzzing targets ([L §4](11-SECURITY-VERIFICATION-PLAN.md#4-fuzzing)). A memory OS that must outlive its own dependencies benefits from a single-binary distribution with no runtime to install. And the thesis — *the user's knowledge must survive Fehrest itself* — is better served by a Core with one language, one binary and no interpreter than by a stack whose correctness is spread across three runtimes.
+
+**Rejected alternatives.**
+- *TypeScript core* — fastest iteration and a direct transplant of the donor's TS patterns, but weaker isolation in the TCB, a heavier runtime, and a much larger supply-chain surface for a component that holds a decade of private knowledge.
+- *Go core* — simple concurrency and easy single binaries, but the weakest ecosystem fit for the editor/UI seam and the fewest relevant donors.
+- *Rust core with business logic mirrored in TypeScript for UI responsiveness* — rejected explicitly, because a mirrored state semantic is two semantics, and the one users see would win arguments it should lose.
+
+**Consequences.** Donor patterns from a TypeScript source ([ADR-0005](#adr-0005--fehrest-adapts-harness-event-patterns-without-depending-on-the-harness-runtime)) must be reimplemented rather than transplanted, losing declaration merging and branded types — replaced by Rust's type system plus runtime invariant checks, which was already the plan. Iteration on UI-adjacent work is slower. The UI needs a separate stack, which [ADR-0011](#adr-0011--desktop-shell) still has to choose.
+
+**What this decision does NOT decide.** **[ADR-0011](#adr-0011--desktop-shell) (desktop shell) remains OPEN.** Tauri 2 pairs naturally with a Rust core and remains the leading candidate, but "the Core is Rust" does not entail "the shell is Tauri" — that is a separate decision with separate evidence, and resolving it by association is exactly the unearned inference this package exists to prevent.
+
+**Reverses if.** Rust proves unable to meet the interactive latency budgets in [O](14-PERFORMANCE-BUDGETS.md) — implausible, and would indicate a design fault rather than a language fault. Or the founder reverses D-1 explicitly. **Implementation velocity alone is not a reversal condition**; it was weighed and decided against.
 
 ---
 
 ## ADR-0011 — Desktop shell
 
-**Status: OPEN.**
+**Status: OPEN — and deliberately NOT resolved by founder decision D-1.**
+
+> **Explicitly stated in F1-R2.** D-1 decided the **Core language** ([ADR-0010](#adr-0010--core-implementation-language)), not the shell. Tauri 2 is written in Rust and pairs naturally with a Rust core, and that adjacency is exactly why the inference must be refused: "our core is Rust, therefore our shell is Tauri" is an association, not an argument. **Tauri 2 may remain the leading candidate; it is not a decision.**
 
 **Candidates.** Tauri 2 (Apache-2.0, active, capability system usable as boundary B1 — [SRC-041](research/FEHREST_SOURCE_REGISTRY.md#7-agent-protocol-authorization-isolation)); Electron (mature, heavy, weaker default isolation); native per platform (best integration, 3× the work); CLI-first with a later GUI.
 
 **Weak recommendation:** Tauri 2, primarily for its capability allowlist as a real boundary rather than for bundle size. But the brief lists it as `STUDY → likely USE`, and inheriting "likely" as a decision would be exactly the unearned assumption this document is meant to prevent. A genuine ADR is owed at Phase 3.
 
-**Note.** [Phase 0–2](15-IMPLEMENTATION-PHASES.md) are CLI-only, so this decision is not on the critical path and can be made with more information.
+**Note.** [Phase 0](15-IMPLEMENTATION-PHASES.md#phase-0--foundation-validation), [Phase T](15-IMPLEMENTATION-PHASES.md#phase-t--headless-rust-thesis-proof-slice) and Phases 1–6 are headless, so this decision is not on the critical path and can be made with more information. [I-16](01-ARCHITECTURE-CONSTITUTION.md#i-16--fehrest-remains-operable-without-its-user-interface) additionally guarantees it can never become one: the Core must work without any shell, permanently.
 
 ---
 
@@ -292,3 +327,100 @@ Adopts the donor's two rules verbatim: a location is not an authorization token,
 **Explicitly warned against:** reading "`.fehrest/` is disposable." It is not. It contains canonical event and memory state. Only the derived subtree is disposable.
 
 **Finalised when.** Phase 1–2 prototypes report on write patterns, crash behaviour, backup ergonomics, and how sync tools and `git` interact with the directory.
+
+---
+
+## ADR-0014 — Engineering method: Spec Kit + Ponytail
+
+**Status: ✅ ACCEPTED — founder decisions D-2 and D-3, F1-R2.**
+
+**Context.** Fehrest is built largely by AI coding agents against a specification-heavy planning package. Two failure modes follow directly from that: work that drifts from the specification because no artifact binds them, and code that accretes because generating a new implementation is cheaper for an agent than finding the existing one. Both are governance problems, and neither is solved by architecture.
+
+**Decision.** Two development disciplines are adopted, and **neither is a Fehrest runtime dependency** ([R-11](01-ARCHITECTURE-CONSTITUTION.md#2-derived-rules)). Full specification: [S — Engineering Method](19-ENGINEERING-METHOD.md).
+
+**D-2 — GitHub Spec Kit is the canonical specification-driven implementation workflow.**
+
+```
+constitution → specify → clarify → plan → checklist → tasks
+             → analyze → implement → converge
+```
+
+The full production lifecycle is used where appropriate. **A reduced workflow may be used for small bounded work where the reduction is justified in writing** — an escape hatch that is recorded, not assumed, because an unjustifiable reduction is how a process becomes a formality.
+
+**D-3 — Ponytail is the canonical implementation-minimisation / reuse-first discipline.** Before writing new code, in order:
+
+1. Does this capability need to exist?
+2. Does Fehrest already implement it?
+3. Can Rust `std`/`core` or a platform primitive solve it?
+4. Can an already-approved dependency solve it?
+5. Can the requirement be satisfied with a smaller implementation?
+6. Only then: implement the minimum correct solution.
+
+**Ponytail's hard exclusions — the list is the decision.** Ponytail MUST NOT be used to minimise:
+
+```
+authorization boundaries · canonical-data integrity · security controls
+recovery correctness · provenance · privacy · data-loss prevention
+required accessibility · invariant tests
+```
+
+**Reasoning.** These two disciplines fail in opposite directions, which is why both are needed and why each is bounded. Spec Kit without Ponytail produces well-specified bloat: every specification is honoured and the codebase doubles. Ponytail without Spec Kit produces minimal code that solves the wrong problem. **Ponytail applied to a security boundary produces a smaller attack surface in exactly the sense that a thinner wall is smaller** — hence the exclusion list, which is not advisory.
+
+**Rejected alternatives.**
+- *Neither, relying on review* — review catches drift after it is written, which is the expensive point.
+- *Spec Kit as runtime architecture* — a category error; it is a development workflow, and [R-11](01-ARCHITECTURE-CONSTITUTION.md#2-derived-rules) forbids it in a shipped dependency graph.
+- *Ponytail without exclusions* — would license arguing that an authorization chokepoint "does not need to exist," which is the failure mode the discipline is most likely to produce when applied by an agent optimising for less code.
+
+**Consequences.** Each production feature carries specification artifacts. Reviews check the Ponytail gate explicitly. Neither tool is installed into the project during F1-R2; both are stood up at [Phase 0](15-IMPLEMENTATION-PHASES.md#phase-0--foundation-validation) as CI/governance tooling.
+
+**Reverses if.** Spec Kit's artifact overhead measurably exceeds its drift-prevention benefit across several features → reduce to the shortened workflow by default, keeping `specify` and `analyze`. Or Ponytail's gate is observed producing under-built security-relevant code despite the exclusion list → the exclusions are insufficiently specific, and the gate is removed from those paths entirely rather than reworded.
+
+---
+
+## ADR-0015 — Long-term canonical schema compatibility
+
+**Status: 🔄 OPEN — study framed, policy deliberately not frozen. Opened in F1-R2 ([R2-17](reviews/F1-R2-RECONCILIATION.md)).**
+
+**Context.** [M §3](12-MIGRATION-SCHEMA-EVOLUTION.md#3-event-and-memory-log-evolution) states that *"the upcast chain is permanent. Deleting an old upcaster makes historical logs unreadable, which is data loss."* [M §4](12-MIGRATION-SCHEMA-EVOLUTION.md#4-file-level-migration) states that readers must therefore support **every** historical version forever.
+
+**The concern is valid.** A runtime that supports every schema version it has ever emitted, through an ever-growing chain of upcasters, carries an **unbounded maintenance and security surface**: every upcaster is code that parses old, potentially attacker-influenced data, is exercised rarely, and can never be deleted. Over a decade that is a large quantity of rarely-run parsing code inside a system whose event-log parser is [the one component whose corruption is unrecoverable](11-SECURITY-VERIFICATION-PLAN.md#4-fuzzing).
+
+**What must NOT be concluded from that.** The obvious response — bound the compatibility window, drop old upcasters — **abandons old-vault readability**, which contradicts the product's governing promise: *the user's knowledge must survive Fehrest itself* ([A §1](00-PRODUCT-THESIS.md#1-what-fehrest-is)). A user's decade-old vault becoming unreadable because Fehrest evolved is precisely the failure the whole architecture exists to prevent. **Both horns are real**, which is why this is an open ADR rather than a decision.
+
+**The model to study** — not adopted:
+
+- A **bounded live-runtime compatibility window** — the shipping binary reads recent versions directly.
+- **Explicit versioned migration tooling** for anything older, shipped and maintained separately from the runtime.
+- **Preserved, published documentation of every historical format**, permanently, so that a third party can read an old vault with no Fehrest software at all ([I-5](01-ARCHITECTURE-CONSTITUTION.md#i-5--canonical-artifacts-are-open-local-and-inspectable-amended), [I-9](01-ARCHITECTURE-CONSTITUTION.md#i-9--export-does-not-depend-on-fehrest-infrastructure)).
+- **Mandatory backup before any migration**, already required by [M §6](12-MIGRATION-SCHEMA-EVOLUTION.md#6-migration-execution).
+- **Migration epochs** at major boundaries, so the chain has documented joints rather than growing monotonically.
+- **An auditable path from any historical canonical record to its current form**, whatever tooling that path requires.
+
+**The property that must hold under any policy chosen:** *a user-owned old vault must not become unreadable merely because Fehrest evolved.* "Readable" may come to mean "readable via a documented migration tool" rather than "readable by double-clicking the current release" — that is a legitimate narrowing. "Readable only if you kept a five-year-old binary" is not.
+
+**Deliberately not frozen.** R2 evidence is insufficient: there is no implementation, no schema history, and no measurement of upcaster maintenance cost. Freezing a compatibility window now would be a guess with a decade-long blast radius.
+
+**Decided when.** After the first two real major schema migrations, when the maintenance cost of an upcaster chain is an observation rather than a projection.
+
+---
+
+## ADR-0016 — Derivation lineage and projection checkpoints
+
+**Status: PROPOSED (F1-R2 — [R2-07](reviews/F1-R2-RECONCILIATION.md), [R2-08](reviews/F1-R2-RECONCILIATION.md)).**
+
+**Context.** [I-6](01-ARCHITECTURE-CONSTITUTION.md#i-6--derived-state-is-disposable-and-rebuildable) makes derived state rebuildable; [E §6](04-DERIVED-DATA-MODEL.md#6-incremental-maintenance) makes the *normal* path incremental because a full rebuild is minutes to hours. Those are only compatible if incremental maintenance provably converges to the same state as a rebuild — and F1 had no mechanism that could test it. Separately, [O §9](14-PERFORMANCE-BUDGETS.md#9-growth-over-time) required checkpointed projections without specifying what a checkpoint is.
+
+**Decision.** Adopt two small, closely related mechanisms, specified in [E §10](04-DERIVED-DATA-MODEL.md#10-derivation-lineage-as-data) and [E §11](04-DERIVED-DATA-MODEL.md#11-projection-checkpoints):
+
+1. **A derivation registry** — every derived artifact records `artifact`, `inputs`, `deriver_id`, `deriver_version`. **Lineage as data, not a workflow engine.**
+2. **A checkpoint contract** — checkpoints are derived, non-authoritative, disposable and rebuildable, carrying `log_sequence_high_water_mark`, `schema_version`, `deriver_version`, `digest`. Invalid → discard → older valid checkpoint → otherwise full replay.
+
+**Provenance of the idea, stated precisely.** The lineage-as-data concept and the framing of a checkpoint as *truncation of recomputation depth* are taken from studying Apache Spark ([SRC-100](research/FEHREST_SOURCE_REGISTRY.md#414-apache-spark--study--defer)). **Nothing else is.**
+
+**Explicitly rejected for v1:** the Spark runtime, any JVM requirement, driver/executor architecture, cluster execution, RDD/DataFrame as a runtime dependency, Structured Streaming, GraphX/Pregel, a DAG scheduler, and lazy distributed recomputation. Adopting a concept is not adopting a system, and a memory OS whose thesis is that knowledge must outlive its dependencies has no business acquiring a cluster computing framework.
+
+**Consequences.** Two new test properties become expressible: `test_incremental_equals_full` and `test_invalidation_completeness`. Every deriver must be versioned. A small amount of bookkeeping is added to every derived write.
+
+**What is deliberately not specified.** The degraded-recovery latency budget — full replay after checkpoint loss. It is **measured, not asserted** ([E §11](04-DERIVED-DATA-MODEL.md#11-projection-checkpoints)); the review's suggestion that replay "necessarily takes minutes" is an unmeasured claim about an unbuilt system running an unvalidated event volume, and three unknowns multiplied do not make a budget.
+
+**Reverses if.** The registry's bookkeeping measurably dominates incremental update latency → reduce granularity (per-artifact-class rather than per-artifact), never remove the lineage. Or `test_incremental_equals_full` proves unachievable within documented tolerances → **incremental maintenance is unsound and full rebuild becomes the only correct path**, which would be a serious finding requiring [E §6](04-DERIVED-DATA-MODEL.md#6-incremental-maintenance) to be redesigned rather than the test to be relaxed.

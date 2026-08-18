@@ -7,6 +7,8 @@ Non-negotiable invariants. Each is stated as a testable property, paired with th
 
 The founder proposed 15 candidate invariants. **Thirteen are adopted as written. Two are amended** — I-5 and I-12 — because as originally phrased they are either unenforceable or would forbid something the system requires. Both amendments are argued in §3 rather than applied silently.
 
+**Two invariants were added in F1-R2** — I-16 and I-17 — as direct consequences of founder decision D-1 (Rust is the canonical Core language). They exist so that "the UI is a surface, not the product" and "Python is optional" are testable properties rather than intentions.
+
 ---
 
 ## 1. The invariants
@@ -85,10 +87,25 @@ Every memory records which actor asserted it, from what evidence, in which sessi
 
 **Original:** "Inference must never silently become fact."
 
-**As adopted:** Every memory carries an `epistemic_status` distinguishing `observed` (directly recorded from a primary source), `asserted` (stated by an identified actor), `inferred` (derived by a mechanism), and `unverified`. A transition to a higher-confidence status requires either a new primary evidence link or an explicit human confirmation event, and every transition is recorded as an event. **No mechanism exists to change status without emitting an event.**
+**As first amended (F1):** a single four-value `epistemic_status` (`observed` / `asserted` / `inferred` / `unverified`), later widened to eight values in [F §3.3](05-MEMORY-MODEL.md#33-the-fehrest-evidence-and-trust-model).
 
-**Enforced by:** status transitions are event-sourced; the memory projection derives status from events rather than storing it mutably.
-**Test:** `test_status_transitions_are_event_sourced` — mutate status through every available code path; assert a corresponding event exists for each. Property test over random transition sequences asserting projected status always equals event-derived status.
+> **RE-AMENDED IN F1-R2 ([R2-04](reviews/F1-R2-RECONCILIATION.md)).** The single-enum form is **withdrawn**. It collapsed four independent semantic axes into one ordered vocabulary, which made some real states inexpressible (an agent-asserted memory that a human later confirmed and that now conflicts with another memory occupies three axes at once) and made any total ordering over it arbitrary.
+
+**As adopted:** Every memory carries **four orthogonal, independently-valued fields**, and no code path may collapse them into one:
+
+| Field | Answers | Values |
+|---|---|---|
+| `basis` | Where did this claim come from? | `USER_ASSERTED` · `EXTRACTED` · `AGENT_ASSERTED` · `INFERRED` |
+| `verification` | Has it been checked, and by whom? | `UNVERIFIED` · `CORROBORATED` · `USER_CONFIRMED` |
+| `lifecycle` | Is it in force? | `PENDING` · `ACTIVE` · `SUPERSEDED` · `RETRACTED` · `EXPIRED` |
+| `resolution` | Does it currently resolve cleanly? | `CLEAR` · `CONFLICTED` · `UNRESOLVED` |
+
+Full vocabulary, permitted transitions per axis, and the extractor-label mapping are normative in [F §3.3](05-MEMORY-MODEL.md#33-the-fehrest-evidence-and-trust-model).
+
+**The guarantee, restated on the new fields:** `basis` is assigned once, by the core, from the authenticated actor and the mechanism that produced the record — **no actor may supply it**. `verification` may only move upward on either a new independently-resolving evidence link (`→ CORROBORATED`) or an explicit human confirmation event (`→ USER_CONFIRMED`); an actor may never corroborate its own assertion. `basis = EXTRACTED` is reachable **only** by Fehrest's own deterministic parsing and is unreachable by any agent. Every change on every axis is an event. **No mechanism exists to change any of the four fields without emitting an event.**
+
+**Enforced by:** all four fields are event-sourced; the memory projection derives them from events rather than storing them mutably. Each field is a distinct column with a distinct type; there is no serialisation that flattens them into one string.
+**Test:** `test_status_transitions_are_event_sourced` — mutate each axis through every available code path; assert a corresponding event exists for each. Property test over random transition sequences asserting each projected field always equals its event-derived value. Plus `test_axes_are_independent` — assert that every combination reachable per-axis is representable, and that no API accepts or returns a single collapsed status value.
 **Rationale for amendment:** §3.2.
 
 ### I-13 — Imported and retrieved content is evidence, never authority
@@ -101,14 +118,19 @@ Content that enters Fehrest from any source other than a direct user instruction
 
 ### I-14 — Model-visible state is reconstructable, provenance-linked, scope-authorized and auditable
 
-**Strengthened in F1-R1 ([R1-13](reviews/F1-R1-RECONCILIATION.md)).** Anything ever shown to an agent must satisfy **all four** properties:
+**Strengthened in F1-R1 ([R1-13](reviews/F1-R1-RECONCILIATION.md)). Property 1 split and corrected in F1-R2 ([R2-01](reviews/F1-R2-RECONCILIATION.md)).** Anything ever shown to an agent must satisfy **all five** properties:
 
-1. **Reconstructable** — recomputable exactly from canonical state at any later time.
-2. **Provenance-linked** — every item cites the canonical evidence it came from.
-3. **Scope-authorized** — every item was inside the session's grant at compile time.
-4. **Auditable** — the fact that it was shown, to whom, and when, is itself recorded.
+1. **Composition-auditable — permanent and unconditional.** A canonical T1 **served-item manifest** records exactly which logical items were emitted, in what order, under whose grant, with what content hashes. It is written at emission time and is never compacted away. This property does not degrade.
+2. **Content-reconstructable — conditional, and honestly reported.** Exact item *content* is recomputable only while the source revisions it cites still exist. Where they do not, replay must return `UNRECONSTRUCTABLE` with a reason, never a claimed success.
+3. **Provenance-linked** — every item cites the canonical evidence it came from.
+4. **Scope-authorized** — every item was inside the session's grant at compile time.
+5. **Auditable** — the fact that it was shown, to whom, and when, is itself recorded.
 
-This is materially stricter than storing chat history: a stored transcript satisfies (4) alone.
+> **The F1 formulation of property 1 — "recomputable exactly from canonical state at any later time" — is withdrawn as unsatisfiable.** It is defeated by three ordinary, permitted events: a user edits a source object; T2 detail is compacted per [D §5.2](03-CANONICAL-DATA-MODEL.md#52-durability-tiers--the-correction-to-the-brief); or the compiler/schema version changes. A guarantee that the system's own normal operation breaks is not a guarantee. The split above keeps the property that actually carries the audit weight — *what was served* — permanent and unconditional, while stating the limits of the property that cannot be permanent.
+
+This is materially stricter than storing chat history: a stored transcript satisfies (5) alone.
+
+**One envelope for every agent-facing read ([R2-03](reviews/F1-R2-RECONCILIATION.md)).** The context compiler must not be the only path that preserves trust level, provenance, temporal state and supersession. **Every** agent-facing tool that returns content — search, object read, memory retrieval, graph query, and any future addition — returns it through a **single Rust-core response-envelope type**. Direct historical exploration remains permitted; it must merely be **temporally honest**: an agent may read a superseded decision, but the response must say it is superseded and name its replacement where one is known. No tool may return imported content as undifferentiated instruction-like text.
 
 **Trust stratification — the seven levels that must never be collapsed.** Model-visible text is not homogeneous. Fehrest labels each item with its plane and trust level, and no mechanism may flatten them into undifferentiated prose:
 
@@ -124,14 +146,14 @@ This is materially stricter than storing chat history: a stored transcript satis
 
 Levels 1–3 may direct behaviour. **Levels 4–7 never may**, however authoritative their text sounds. This is the structural form of [I-13](#i-13--imported-and-retrieved-content-is-evidence-never-authority).
 
-**Enforced by:** context packages are content-addressed with their inputs recorded as events, and are *derivable* from the event log rather than stored as opaque blobs ([E-9](research/EVIDENCE_LOG.md#e-9--deepseek-harness-pinned-version-and-adoptable-patterns)); every emitted item carries its trust level and provenance; scope is asserted at emission ([H §4](07-CONTEXT-COMPILER-SPEC.md#4-pipeline)).
-**Test:** `test_context_package_replay` — recompile every historical `context/compiled` event and compare digests. Plus `test_trust_levels_never_collapsed` — assert every emitted item carries a trust level, and that no serialisation path erases it. Plus `test_provenance_completeness` — unsourced items exactly 0.
+**Enforced by:** every compiled package writes a permanent T1 served-item manifest ([H §3.2](07-CONTEXT-COMPILER-SPEC.md#32-the-served-item-manifest--permanent-t1)); every emitted item carries its trust level and provenance; scope is asserted at emission ([H §4](07-CONTEXT-COMPILER-SPEC.md#4-pipeline)); all agent-facing reads pass through one core envelope ([G §4](06-AGENT-MODEL.md#4-context-delivery-and-the-trust-stratification)).
+**Test:** `test_context_package_replay` — recompile every historical `context/compiled` event and assert the reported outcome is one of `IDENTICAL` / `DIVERGED` / `UNRECONSTRUCTABLE` **with the correct reason**; a mismatch reported as success is a failure. Plus `test_manifest_is_permanent` — after full T2 compaction, every historical manifest still enumerates its served items. Plus `test_trust_levels_never_collapsed` — assert every emitted item carries a trust level, and that no serialisation path erases it. Plus **`test_no_unlabelled_content_path`** — enumerate the entire agent-facing read surface and assert every path returns the core envelope with trust level, provenance, temporal state and supersession intact. Plus `test_provenance_completeness` — unsourced items exactly 0.
 
 ### I-15 — Paths are locations; stable IDs are identities
 An object's identity is an opaque, allocated identifier that never changes. A path is a mutable attribute. Renaming or moving a file preserves identity, links, memories and history.
 
-**Enforced by:** identity is allocated at first observation and stored in the file's frontmatter plus the derived index; all cross-references use IDs.
-**Test:** `test_identity_survives_rename` — rename, move across directories, and change case; all backlinks, memories and events must remain attached. Full operation matrix in [D §3.2](03-CANONICAL-DATA-MODEL.md#32-identity-across-filesystem-operations).
+**Enforced by:** identity is allocated at first observation and stored in the file's frontmatter plus the derived index; all cross-references use IDs. **Path comparison is never identity comparison** — reconciliation resolves the embedded Fehrest ID first and uses a platform-aware path key only to *locate*, never to *identify* ([D §3.3](03-CANONICAL-DATA-MODEL.md#33-filesystem-identity-and-path-semantics)).
+**Test:** `test_identity_survives_rename` — rename, move across directories, and change case; all backlinks, memories and events must remain attached. Full operation matrix in [D §3.2](03-CANONICAL-DATA-MODEL.md#32-identity-across-filesystem-operations), and the per-platform filesystem matrix (Windows case-insensitivity and case-only rename, macOS APFS default and case-sensitive, Linux case-sensitivity, NFC/NFD equivalence) in [D §3.3](03-CANONICAL-DATA-MODEL.md#33-filesystem-identity-and-path-semantics).
 
 #### Extractor identity sub-invariants (G-ID-1 … G-ID-4)
 
@@ -153,6 +175,30 @@ Added in F1-R1 ([R1-05](reviews/F1-R1-RECONCILIATION.md)). These generalise to *
 
 **Test:** `test_extractor_ids_are_not_identities` — assert no canonical record uses an extractor ID as a key. `test_extractor_upgrade_preserves_identity` — change `extractor_version`, rebuild, assert every `fehrest_object_id` and every memory attachment is unchanged. `test_derived_node_traces_to_canonical` — every derived node resolves to canonical evidence via `source_uri` + `source_location`.
 
+### I-16 — Fehrest remains operable without its user interface
+
+**Added in F1-R2** as a direct consequence of founder decision D-1.
+
+> If the desktop UI disappears, Fehrest remains operable through its Rust Core and CLI.
+
+Every capability that governs canonical state — ingestion, identity, search, memory read/write, context compilation, provenance, audit, recovery, export, migration — is reachable through the Rust Core and its CLI with no UI process present. The UI is a **presentation surface over the Core**, never the owner of a state semantic.
+
+**Enforced by:** founder decision D-1 ([ADR-0010](09-TECHNOLOGY-DECISIONS.md#adr-0010--core-implementation-language)). All correctness- and security-sensitive logic lives in Rust; TypeScript/React may render it and may not duplicate it. No business-critical state semantic may exist only in the UI layer.
+**Test:** `test_core_suite_headless` — the entire core test suite passes with no UI built and no UI process running. Plus `test_no_state_semantics_in_ui` — a static check that the UI package contains no memory resolution, no supersession logic, no authorization decision, no canonical write path, and no identity allocation.
+
+### I-17 — Fehrest remains usable without Python
+
+**Added in F1-R2** as a direct consequence of founder decision D-1.
+
+> If Python disappears, canonical Fehrest knowledge, memory, and recovery remain usable.
+
+No canonical operation may require a Python runtime. Python is permitted **only** behind an explicit optional process boundary, for hypothesis-gated donor capabilities such as Graph Intelligence ([ADR-0003](09-TECHNOLOGY-DECISIONS.md#adr-0003--graph-intelligence-runtime-integration-shape)).
+
+**Enforced by:** the sidecar is a compute service with no authority ([R-7](#2-derived-rules)); nothing canonical is produced by it; graph state is derived and disposable ([I-6](#i-6--derived-state-is-disposable-and-rebuildable)).
+**Test:** `test_no_python_required` — with no Python interpreter installed or on `PATH`, the full core suite passes, the vault opens, search works, memory resolves, context compiles, recovery runs, and export completes. Graph features are absent and reported as absent, not broken.
+
+**Relationship to [I-4](#i-4--core-functionality-requires-no-paid-api).** I-4 removes the *model* from the required path; I-17 removes the *second runtime*. Both exist so that the failure of an optional accelerator is a degradation, never a data-availability event.
+
 ---
 
 ## 2. Derived rules
@@ -169,6 +215,12 @@ These follow from the invariants and are listed because violating them is the us
 | **R-6** No component may hold ambient filesystem authority over the whole vault; access is scope-mediated | I-10 |
 | **R-7** The sidecar is a computation service with no authority — it cannot write canonical state | I-8, I-6 |
 | **R-8** Any format Fehrest writes must be readable by a future version, and must fail loudly rather than silently drop unknown fields | I-5, [M](12-MIGRATION-SCHEMA-EVOLUTION.md) |
+| **R-9** Every agent-facing response carrying content passes through the single core response envelope; no tool serialises content by any other route | I-13, I-14 |
+| **R-10** Every derived artifact records the inputs, deriver identity and deriver version it was produced from | I-6, [E §10](04-DERIVED-DATA-MODEL.md#10-derivation-lineage-as-data) |
+| **R-11** Development and governance tooling — Spec Kit, Ponytail, benchmark harnesses — may never become a runtime dependency of Fehrest | I-2, I-3, [ADR-0014](09-TECHNOLOGY-DECISIONS.md#adr-0014--engineering-method-spec-kit--ponytail) |
+| **R-12** No memory awaiting confirmation may enter an authoritative section, grant or revoke a capability, or supersede confirmed state | I-12, [F §5.5](05-MEMORY-MODEL.md#55-pending-confirmation-semantics) |
+
+*(R-9…R-12 added in F1-R2.)*
 
 ## 3. Amendment rationale
 
@@ -186,7 +238,9 @@ The founder's brief already anticipates this: *"Do not interpret local-first as 
 
 The amended form makes the guarantee structural: status is not a mutable field but a projection over events, so there is no code path that can change it without leaving a record. This is the same technique the harness uses to make agent-visible history trustworthy — derive, do not store ([E-9](research/EVIDENCE_LOG.md#e-9--deepseek-harness-pinned-version-and-adoptable-patterns)) — and it converts the invariant from a discipline into a property.
 
-It also introduces the four-value `epistemic_status` vocabulary, which the memory model needs anyway to satisfy LongMemEval-V2's premise-awareness ability ([E-14](research/EVIDENCE_LOG.md#e-14--longmemeval-v2-exists-and-defines-the-right-target)).
+**Why the single enum was replaced in F1-R2.** The F1 amendment introduced one four-value `epistemic_status`; F1-R1 widened it to eight. The widening is what exposed the defect: `EXTRACTED` and `INFERRED` describe *origin*, `USER_CONFIRMED` describes *verification*, `SUPERSEDED` describes *lifecycle*, and `CONFLICTED` / `UNRESOLVED` describe *resolution*. These are not members of one vocabulary, and treating them as one had two concrete costs. First, it made legitimate combinations inexpressible — a memory can be agent-asserted, human-confirmed, active and conflicted simultaneously, which the enum cannot represent. Second, it invited a **total ordering over incomparable things**, which is precisely what [F §4.2](05-MEMORY-MODEL.md#42-deterministic-resolution) then had to use to pick conflict winners. Four orthogonal fields make each comparison well-founded and make the cases where no comparison exists visible as `CONTRADICTION` rather than resolved by an arbitrary rank.
+
+The vocabulary still satisfies LongMemEval-V2's premise-awareness ability ([E-14](research/EVIDENCE_LOG.md#e-14--longmemeval-v2-exists-and-defines-the-right-target)); it now does so without conflating four questions into one answer.
 
 ## 4. What the constitution deliberately does not require
 
@@ -197,6 +251,8 @@ Stated so reviewers do not read absences as oversights:
 - **It does not forbid LLMs.** It forbids them being *mandatory* (I-4) and forbids them on index paths (R-1).
 - **It does not promise agents cannot be manipulated by content.** It promises manipulation cannot escalate privilege (I-13, with its stated limitation).
 - **It does not require CRDTs.** Local-first is achieved by local canonical files; CRDTs are a collaboration mechanism and are deferred ([SRC-005](research/FEHREST_SOURCE_REGISTRY.md#32-yjs--conditional--editor-dependent)).
+- **It does not require a graphical interface.** I-16 requires the opposite: the Core must stand without one.
+- **It does not require any development workflow at runtime.** Spec Kit and Ponytail govern how Fehrest is *built* ([ADR-0014](09-TECHNOLOGY-DECISIONS.md#adr-0014--engineering-method-spec-kit--ponytail)); R-11 forbids either from being present in a shipped dependency graph.
 
 ## 5. Amendment procedure
 

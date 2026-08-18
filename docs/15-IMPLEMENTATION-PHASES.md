@@ -9,6 +9,8 @@
 
 ## 1. Structure
 
+> **PHASE ORDER CORRECTED IN F1-R2 ([R2-10](reviews/F1-R2-RECONCILIATION.md)).** F1's ordering built the whole architecture and then, at Phase 6, ran the experiment that decides whether the product should exist. **[Phase T](#phase-t--headless-rust-thesis-proof-slice) is inserted immediately after Phase 0** as the first authorized implementation: a headless Rust slice that tests the smallest version of the thesis before the expensive architecture is built.
+
 The plan builds **one vertical slice, end to end, before any horizontal expansion**:
 
 ```
@@ -17,7 +19,11 @@ local Markdown file → stable identity → deterministic ingestion → graph re
 → source provenance → restart → deterministic reconstruction
 ```
 
-Phases 0–6 build that slice **CLI-first, with no UI**. UI begins at Phase 7, only after the slice is proven.
+Phases 0–6 build that slice **CLI-first, with no UI**. UI begins at Phase 7, only after the slice is proven. **This is now a constitutional property, not merely a sequencing preference** — [I-16](01-ARCHITECTURE-CONSTITUTION.md#i-16--fehrest-remains-operable-without-its-user-interface) requires the Core to remain fully operable without a UI at every point, permanently.
+
+**Language is decided.** Founder decision D-1 makes **Rust the canonical implementation language for Fehrest Core** ([ADR-0010](09-TECHNOLOGY-DECISIONS.md#adr-0010--core-implementation-language) — `ACCEPTED`). Every phase below implements in Rust. TypeScript/React appear only at Phase 7 and only as presentation. Python appears only behind the optional sidecar boundary ([I-17](01-ARCHITECTURE-CONSTITUTION.md#i-17--fehrest-remains-usable-without-python)).
+
+**Method is decided.** Every phase's production work passes the Spec Kit → Ponytail → implement → verify → converge → review loop specified in [S — Engineering Method](19-ENGINEERING-METHOD.md) ([ADR-0014](09-TECHNOLOGY-DECISIONS.md#adr-0014--engineering-method-spec-kit--ponytail)). Neither is a runtime dependency ([R-11](01-ARCHITECTURE-CONSTITUTION.md#2-derived-rules)).
 
 Two rules govern the whole plan:
 
@@ -40,22 +46,82 @@ Rule 2 is what prevents the failure the brief names: downstream work starting wh
 - Measure Docling's installed weight to settle its optional/required classification.
 - Obtain LongMemEval-V2; reproduce at least one published baseline locally ([E-14](research/EVIDENCE_LOG.md#e-14--longmemeval-v2-exists-and-defines-the-right-target)).
 - Prototype sidecar IPC and confinement (read-only, path-confined, no egress) on all three platforms.
-- Decide [ADR-0010](09-TECHNOLOGY-DECISIONS.md#adr-0010--core-implementation-language) (language) and [ADR-0011](09-TECHNOLOGY-DECISIONS.md#adr-0011--desktop-shell) (shell).
+- **[B-0](10-BENCHMARK-PLAN.md#b-0--event-volume-measurement) — measure real multi-agent event volume by class ([R2-12](reviews/F1-R2-RECONCILIATION.md)).** Capture or reconstruct representative traces; count potential events per class per active day. No event-tiering, retention, compaction or checkpoint-cadence parameter may be frozen before this reports.
+- Decide [ADR-0011](09-TECHNOLOGY-DECISIONS.md#adr-0011--desktop-shell) (shell). *([ADR-0010](09-TECHNOLOGY-DECISIONS.md#adr-0010--core-implementation-language) is closed by founder decision D-1 — Rust.)*
 - Stand up CI: the four dependency scanners, CodeQL, Semgrep with the custom rules from [L §2.1](11-SECURITY-VERIFICATION-PLAN.md#21-custom-semgrep-rules--the-invariants-that-decay-silently).
+- **Stand up the Spec Kit + Ponytail development workflow** ([S](19-ENGINEERING-METHOD.md)) as CI/governance tooling, outside the product dependency graph ([R-11](01-ARCHITECTURE-CONSTITUTION.md#2-derived-rules)).
 - Build C-SMALL and C-TEMPORAL corpora.
 
 **Non-goals.** Any product code. Any UI. Any schema commitment.
 
-**Deliverables.** Cross-platform measurement report; H-2 verdict; ADR-0010 and ADR-0011 accepted; sidecar confinement prototype; CI skeleton; two corpora; **Research Freeze declared** ([registry §12](research/FEHREST_SOURCE_REGISTRY.md#12-research-freeze)).
+**Deliverables.** Cross-platform measurement report; H-2 verdict; **B-0 event-volume report**; ADR-0011 accepted; sidecar confinement prototype; CI skeleton; development workflow in place; two corpora; **Research Freeze declared** ([registry §12](research/FEHREST_SOURCE_REGISTRY.md#12-research-freeze)).
 
 **Exit criteria.**
 1. Measurements reproduced on all three platforms, with deviations documented.
 2. H-2 answered: linear, or the superlinear term quantified.
-3. ADR-0010 and ADR-0011 moved from OPEN to ACCEPTED.
-4. `test_sidecar_no_egress` passes on all three platforms, **or** the platform gap is documented as an accepted risk with the compensating control named.
-5. CI green on an empty repository.
+3. **B-0 reports measured event volume by class**, replacing the unvalidated 500/day assumption.
+4. ADR-0011 moved from OPEN to ACCEPTED.
+5. `test_sidecar_no_egress` passes on all three platforms, **or** the platform gap is documented as an accepted risk with the compensating control named.
+6. CI green on an empty repository.
 
 **Rollback.** None — nothing built.
+
+---
+
+## Phase T — Headless Rust thesis-proof slice
+
+> **ADDED IN F1-R2 ([R2-10](reviews/F1-R2-RECONCILIATION.md)).** This is **the first authorized implementation** — after Phase 0, and after every review gate and explicit founder authorization. **It is defined here, not built here.**
+
+**Objective.** Prove or falsify **the smallest version of the Fehrest thesis before building the expensive architecture.** Nothing in this phase exists to be impressive; it exists to make [B-7a](10-BENCHMARK-PLAN.md#b-7a--early-headless-thesis-pilot) runnable at the earliest possible moment.
+
+**Scope — deliberately minimal, and every line of it Rust:**
+
+- Rust CLI. No UI, no shell, no webview.
+- Ordinary local Markdown / open files as the corpus.
+- Fehrest UUID identity in frontmatter ([D §3](03-CANONICAL-DATA-MODEL.md#3-object-identity)).
+- SQLite as the derived store.
+- FTS5 candidate retrieval.
+- **Minimal deterministic temporal / supersession model** — valid time, recorded time, supersession, and the §4.2 resolver ladder. Not the full memory taxonomy.
+- **Explicit durable memory writes only.** No candidate extraction, no triage, no promotion pipeline, no classification.
+- **Only the T1 audit events the proof itself requires.** Not the full vocabulary.
+- **Context-package served-item manifest** ([H §3.2](07-CONTEXT-COMPILER-SPEC.md#32-the-served-item-manifest--permanent-t1)) — included because it is what makes the experiment auditable and because [T-3](02-THREAT-MODEL.md#t-3--forged-provenance) has no mechanism without it.
+- Deterministic bounded Context Compiler.
+- Baseline harnesses: plain agent, repository-native docs, raw stuffing, BM25, and the **Karpathy-style maintained LLM Wiki** ([§3.1 ladder](10-BENCHMARK-PLAN.md#31-the-baseline-ladder)).
+
+**Explicitly NOT in this phase** — and none of it may be added for convenience:
+
+```
+desktop UI · editor · Graphify production sidecar · vectors
+automatic memory promotion · T2/T3 compaction engine · cloud · sync
+mobile · marketplace · plugins · Spark · DuckDB · TimesFM
+```
+
+An item leaves this list **only** if it becomes strictly required to run the experiment, and only with that requirement written down first.
+
+**Relationship to Phases 1–5.** Phase T is a **thin vertical cut through** them, not a parallel implementation. Its components are the genuine beginnings of the production Core, built to production correctness standards for the narrow surface they cover; Phases 1, 2, 4 and 5 then broaden that surface. **It is not a throwaway prototype and must not be rewritten from scratch** — Ponytail's first two questions ([S §2](19-ENGINEERING-METHOD.md#2-the-ponytail-necessity-gate)) apply to Fehrest's own code before they apply to anyone else's.
+
+**Dependencies.** Phase 0. Explicit founder implementation authorization.
+
+**Acceptance criteria.**
+1. `test_identity_survives_rename` on the narrow surface, including the [D §3.3](03-CANONICAL-DATA-MODEL.md#33-filesystem-identity-and-path-semantics) per-platform cases.
+2. `test_nuke_and_rebuild_equivalence` ([B-9](10-BENCHMARK-PLAN.md#b-9--nuke-and-rebuild-equivalence)) green.
+3. **[B-12](10-BENCHMARK-PLAN.md#b-12--fts5-rebuild-and-ranking-stability)** green, or its measured drift characterised and the remedy chosen before the digest is depended on.
+4. `test_bitemporal_resolution_deterministic` on the minimal model.
+5. `test_manifest_is_permanent` and `test_context_determinism`.
+6. `test_no_python_required` ([I-17](01-ARCHITECTURE-CONSTITUTION.md#i-17--fehrest-remains-usable-without-python)) and `test_core_suite_headless` ([I-16](01-ARCHITECTURE-CONSTITUTION.md#i-16--fehrest-remains-operable-without-its-user-interface)) — both trivially satisfiable here, and both must stay green forever after.
+7. **[B-7a](10-BENCHMARK-PLAN.md#b-7a--early-headless-thesis-pilot) executed and a verdict reported.**
+
+**Exit criteria.** All of the above, **plus a written verdict of `SIGNAL` / `NO SIGNAL` / `INCONCLUSIVE`** with the evidence.
+
+**The decision this phase forces.**
+
+| B-7a verdict | Consequence |
+|---|---|
+| `SIGNAL` | Proceed to Phase 1. The production architecture is worth its cost |
+| `INCONCLUSIVE` | **A legitimate outcome.** Proceed with the reason recorded, or extend the pilot. It does **not** falsify the thesis ([R2-10](reviews/F1-R2-RECONCILIATION.md)) |
+| `NO SIGNAL` on a well-powered contrast | **Stop and reconsider the product before building the expensive architecture.** This is the entire reason the phase exists |
+
+**Rollback.** The slice is small and additive; nothing downstream depends on it yet.
 
 **Redesign trigger.** If H-2 is falsified badly (10K extraction > 3× projection), reopen [ADR-0003](09-TECHNOLOGY-DECISIONS.md#adr-0003--graph-intelligence-runtime-integration-shape) before writing any code that assumes the graph is affordable.
 
@@ -77,7 +143,7 @@ Rule 2 is what prevents the failure the brief names: downstream work starting wh
 
 **Non-goals.** Search. Graph. Memory. Agents. UI. Sidecar.
 
-**Dependencies.** Phase 0.
+**Dependencies.** Phase 0, **Phase T** (which already establishes identity, the frontmatter round-trip and a minimal event log; Phase 1 broadens them rather than reimplementing them).
 
 **Acceptance criteria.**
 1. `test_identity_survives_rename` — rename, move, case change; identity and history intact.
@@ -115,11 +181,19 @@ Rule 2 is what prevents the failure the brief names: downstream work starting wh
 4. `test_read_hash_consistency` — hash reflects the bytes actually read, under concurrent mutation ([T-9](02-THREAT-MODEL.md#t-9--filesystem-race-conditions)).
 5. `test_sqlite_corruption_recovery` — corrupt the DB; automatic rebuild; zero canonical loss.
 
-**Benchmarks.** [B-1](10-BENCHMARK-PLAN.md), [B-2](10-BENCHMARK-PLAN.md), [B-9](10-BENCHMARK-PLAN.md). D1 incremental **< 200 ms p95** at C-MED; D1 full index **< 60 s** at C-MED.
+**Added in F1-R2.** The **derivation registry** ([E §10](04-DERIVED-DATA-MODEL.md#10-derivation-lineage-as-data)) — artifact / inputs / `deriver_id` / `deriver_version` — lands here, because it is what makes the incremental path in this phase provably equivalent to the rebuild path. **Projection checkpoints** ([E §11](04-DERIVED-DATA-MODEL.md#11-projection-checkpoints)) land here with their validity and discard rules.
 
-**Security gates.** C-PATH passes on all platforms. `no-derived-to-canonical` rule active.
+**Benchmarks.** [B-1](10-BENCHMARK-PLAN.md), [B-2](10-BENCHMARK-PLAN.md), [B-9](10-BENCHMARK-PLAN.md), **[B-12](10-BENCHMARK-PLAN.md#b-12--fts5-rebuild-and-ranking-stability)**. D1 incremental **< 200 ms p95** at C-MED; D1 full index **< 60 s** at C-MED.
 
-**Exit criteria.** B-9 green in CI and **kept green from here to the end of the project**; D1 budgets met; C-PATH zero escapes.
+**Security gates.** C-PATH passes on all platforms. `no-derived-to-canonical` rule active. **`no-canonical-ref-to-disposable`** active ([D §5.5](03-CANONICAL-DATA-MODEL.md#55-spilled-locators-have-a-declared-durability-class)).
+
+**Additional acceptance criteria (F1-R2).**
+6. **`test_incremental_equals_full`** — a mutation sequence applied incrementally yields the same observable result as a rebuild from the identical final state, within documented tolerances ([R2-07](reviews/F1-R2-RECONCILIATION.md)).
+7. **`test_invalidation_completeness`** — every artifact whose recorded inputs include a mutated identity is invalidated.
+8. **`test_checkpoint_is_disposable`** — deleting every checkpoint loses nothing; an invalid checkpoint is discarded and recovery falls back correctly ([R2-08](reviews/F1-R2-RECONCILIATION.md)).
+9. **`test_filesystem_identity_matrix`** — the [D §3.3](03-CANONICAL-DATA-MODEL.md#33-filesystem-identity-and-path-semantics) per-platform matrix, including Windows case-only rename and macOS NFC/NFD equivalence ([R2-09](reviews/F1-R2-RECONCILIATION.md)).
+
+**Exit criteria.** B-9 green in CI and **kept green from here to the end of the project**; B-12 green or its remedy chosen on measurement; D1 budgets met; C-PATH zero escapes; the filesystem identity matrix green on all three platforms.
 
 **Rollback.** Derived state is disposable by construction — rollback is deleting a directory.
 
@@ -129,11 +203,27 @@ Rule 2 is what prevents the failure the brief names: downstream work starting wh
 
 **Objective.** Structural understanding as strictly optional derived state, and proof that its absence degrades nothing but recall.
 
+> **PHASE 3 IS NOW TWO STAGES ([R2-15](reviews/F1-R2-RECONCILIATION.md)).** F1 built the sidecar, IPC, packaging, Python lifecycle and incremental pipeline **and then** measured whether the graph helps ([B-3](10-BENCHMARK-PLAN.md#b-3--retrieval-quality-by-stage)). Under that ordering, [F-3](17-FAILURE-CONDITIONS.md#f-3--graph-intelligence-does-not-deliver-material-benefit-at-acceptable-cost)'s "remove the capability" branch could only ever fire after its full cost had been paid — which makes an explicitly falsifiable hypothesis expensive to falsify, and therefore unlikely to be.
+
+### Phase 3A — Capability experiment (throwaway)
+
+**Scope.** [B-13 — GI-CAP](10-BENCHMARK-PLAN.md#b-13--gi-cap--graph-intelligence-capability-experiment). A **static, offline, hand-run** graph extraction into a flat artifact, used to compare `FTS + structured + temporal memory` against the same plus static graph expansion, on a **code-heavy** and a **Markdown/knowledge-heavy** corpus.
+
+**Explicitly NOT built in 3A:** supervisor, IPC, packaging, Python lifecycle management, incremental graph pipeline, graph explorer. None of it is needed to answer the question, and building it first is what made the question expensive.
+
+**Exit.** GI-CAP reports measured retrieval quality and, where feasible, continuation outcome.
+
+**Decision.** If the capability does not materially improve outcomes at acceptable cost, **v1 removes it here** — before the integration exists ([F-3](17-FAILURE-CONDITIONS.md#f-3--graph-intelligence-does-not-deliver-material-benefit-at-acceptable-cost)). Removal touches no canonical record.
+
+### Phase 3B — Production integration
+
+**Entry criterion — hard.** GI-CAP reported, and the capability was retained on that evidence.
+
 **Scope.** Sidecar lifecycle: lazy start, supervision, backoff, idle shutdown, resource caps; confinement (read-only, path-confined, no network, no credentials); IPC and schema validation of every response; graph ingestion and the **rebuildable** `graph_node_map`; incremental update via graph diff; communities; CLI `graph`, `related`.
 
 **Non-goals.** Vectors. Memory. Agents. UI. Re-exporting any Graphify tool.
 
-**Dependencies.** Phase 2.
+**Dependencies.** Phase 2, then Phase 3A.
 
 **Acceptance criteria.**
 1. `test_graphify_ids_are_not_identities` — no canonical record keys on a Graphify node ID.
@@ -194,7 +284,7 @@ Rule 2 is what prevents the failure the brief names: downstream work starting wh
 
 **Objective.** Bitemporal memory with deterministic resolution, provenance, and promotion.
 
-**Scope.** Memory JSONL log; the record schema ([F §3](05-MEMORY-MODEL.md#3-the-memory-record)); event-sourced `epistemic_status`; deterministic bitemporal resolution ([F §4.2](05-MEMORY-MODEL.md#42-deterministic-resolution)); supersession; the promotion pipeline (deterministic stages only in this phase); memory projection into SQLite; CLI `remember`, `recall`, `memory audit`, `memory as-of`.
+**Scope.** Memory JSONL log; the record schema ([F §3](05-MEMORY-MODEL.md#3-the-memory-record)); **the four event-sourced semantic axes** ([F §3.3](05-MEMORY-MODEL.md#33-the-fehrest-evidence-and-trust-model)); **orthogonal scope selectors** ([F §3.4](05-MEMORY-MODEL.md#34-scope-is-orthogonal-dimensions-not-an-ordered-lattice)); deterministic bitemporal resolution ([F §4.2](05-MEMORY-MODEL.md#42-deterministic-resolution)); supersession; **`PENDING` lifecycle semantics** ([F §5.5](05-MEMORY-MODEL.md#55-pending-confirmation-semantics)); the promotion pipeline (deterministic stages only in this phase) with the **AI-OFF safe classification default** ([F §5.1](05-MEMORY-MODEL.md#51-which-stages-are-deterministic)); memory projection into SQLite; CLI `remember`, `recall`, `memory audit`, `memory as-of`, `memory pending`.
 
 **Non-goals.** Model-assisted promotion (Phase 6). Agents. UI. Vectors.
 
@@ -204,11 +294,15 @@ Rule 2 is what prevents the failure the brief names: downstream work starting wh
 1. `test_memory_requires_provenance` — rejected at the **storage layer**, not the UI.
 2. `test_bitemporal_resolution_deterministic` — property test vs a naive reference over random histories.
 3. `test_resolution_monotone_and_order_stable` — monotone in `recorded_at`; stable under input reordering.
-4. `test_status_transitions_are_event_sourced` — projected status always equals event-derived status.
+4. `test_status_transitions_are_event_sourced` + `test_axes_are_independent` — each of the four axes is projected from events, and no API returns a collapsed status.
 5. `test_supersession_retains_original` — superseded memories remain queryable.
 6. `test_abstention` — no matching memory returns `NO_ANSWER`, never a guess.
-7. `test_contradiction_surfaced` — unresolvable conflicts are returned as contradictions.
-8. `test_provenance_cannot_be_spoofed` — evidence must be a subset of what the session was served.
+7. `test_contradiction_surfaced` — unresolvable conflicts are returned as contradictions, **including incomparable-scope conflicts**.
+8. **`test_provenance_cannot_be_spoofed`** — evidence must be a subset of what the session's **served-item manifests** record as served, **including the in-grant-but-not-served negative case** ([R2-02](reviews/F1-R2-RECONCILIATION.md)).
+9. **`test_confidence_is_not_truth_authority`** — mutating `confidence_diagnostic` across its full range never changes a resolution result ([R2-04](reviews/F1-R2-RECONCILIATION.md)).
+10. **`test_pending_never_authoritative`**, `test_pending_is_visible`, `test_pending_cannot_supersede` ([R2-06](reviews/F1-R2-RECONCILIATION.md)).
+11. **`test_scope_cross_project_poisoning`**, `test_scope_incomparable_yields_contradiction`, `test_vault_global_requires_user_authority` ([R2-05](reviews/F1-R2-RECONCILIATION.md)).
+12. **`test_ai_off_does_not_auto_type`** — with AI off, unclassified prose is queued as `PENDING`, never auto-promoted ([R2-16](reviews/F1-R2-RECONCILIATION.md)).
 
 **Benchmarks.** [B-4](10-BENCHMARK-PLAN.md) on C-TEMPORAL: current-state accuracy must be **100%** (this is resolution, not retrieval — anything less is a bug). [B-5](10-BENCHMARK-PLAN.md) rules-only promotion quality.
 
@@ -226,7 +320,7 @@ Rule 2 is what prevents the failure the brief names: downstream work starting wh
 
 **Objective.** The defining feature, plus the boundary that makes it safe to expose.
 
-**Scope.** The ten-stage deterministic pipeline ([H §4](07-CONTEXT-COMPILER-SPEC.md#4-pipeline)); RRF fusion; budget allocation with mandatory omission reporting; package digests and `context/compiled` events; capability grants; the single authorization chokepoint; scope filtering **during** retrieval including graph expansion; approval flow with branded ids; the MCP server with the tool surface from [G §3](06-AGENT-MODEL.md#3-tools); the evidence envelope; CLI `fehrest context`.
+**Scope.** The ten-stage deterministic pipeline ([H §4](07-CONTEXT-COMPILER-SPEC.md#4-pipeline)); RRF fusion; budget allocation with mandatory omission reporting; package digests, the **permanent served-item manifest** and `context/compiled` events; **three-outcome replay** ([H §3.3](07-CONTEXT-COMPILER-SPEC.md#33-replay-outcomes-are-explicit--three-results-never-two)); capability grants over orthogonal scope dimensions; the single authorization chokepoint; scope filtering **during** retrieval including graph expansion; approval flow with branded ids; **spilled-locator durability classes** ([D §5.5](03-CANONICAL-DATA-MODEL.md#55-spilled-locators-have-a-declared-durability-class)); the MCP server with the tool surface from [G §3](06-AGENT-MODEL.md#3-tools); **the single core response envelope across every read path** ([G §4.1](06-AGENT-MODEL.md#41-one-envelope-every-read-path)); CLI `fehrest context`.
 
 **Non-goals.** UI. Model-assisted stages. Sync. Plugins.
 
@@ -239,10 +333,13 @@ Rule 2 is what prevents the failure the brief names: downstream work starting wh
 4. `test_scope_isolation` — zero cross-project leakage, including via graph expansion, on deliberately entangled projects.
 5. `test_no_path_from_agent` — no agent-facing tool accepts a path ([ADR-0009](09-TECHNOLOGY-DECISIONS.md#adr-0009--agents-address-objects-by-id-never-by-path)).
 6. `test_context_determinism` — 100 runs on unchanged state produce one digest.
-7. `test_context_package_replay` — every historical package recompiles to its recorded digest, or reports the changed high-water mark.
+7. **`test_context_package_replay`** — every historical package reports `IDENTICAL` / `DIVERGED` / `UNRECONSTRUCTABLE` **with the correct reason**; a divergent replay reported as success fails the build ([R2-01](reviews/F1-R2-RECONCILIATION.md)).
 8. `test_omission_honesty` — `omitted` counts match reality.
 9. `test_provenance_completeness` — unsourced items **exactly 0**.
 10. `test_subagent_subset` — property test over random delegation trees.
+11. **`test_no_unlabelled_content_path`** — the **full** agent-facing read surface returns the core envelope with trust level, provenance, the four axes and supersession intact ([R2-03](reviews/F1-R2-RECONCILIATION.md)).
+12. **`test_manifest_is_permanent`** — after full T2 compaction, every historical manifest still enumerates its served items.
+13. **`test_canonical_never_references_disposable`** — no T1 or T2 event references a `DERIVED_DISPOSABLE` locator ([R2-11](reviews/F1-R2-RECONCILIATION.md)).
 
 **Benchmarks.** [B-6](10-BENCHMARK-PLAN.md): latency budgets, ≥ 20× compression, 100% determinism.
 
@@ -258,14 +355,14 @@ Rule 2 is what prevents the failure the brief names: downstream work starting wh
 
 **Objective.** Prove the thesis. This is the phase that decides whether Fehrest should exist.
 
-**Scope.** Build C-PROJECT (a real multi-month project history) and the held-out task set — **written before the compiler is tuned**; implement all baseline arms as adapters in one shared harness; run [B-7](10-BENCHMARK-PLAN.md); optional model-assisted promotion and compiler stages, measured against the deterministic baseline; full recovery and chaos testing; scale testing at C-LARGE and 10-year simulated growth.
+**Scope.** Build C-PROJECT (a real multi-month project history) and the held-out task set — **written before the compiler is tuned**; **pre-register the [B-7b](10-BENCHMARK-PLAN.md#b-7b--confirmatory-powered-benchmark) statistical design and its derived sample size before any data is collected**; implement the full [baseline ladder](10-BENCHMARK-PLAN.md#31-the-baseline-ladder) as adapters in one shared harness; run B-7b with **both Fehrest arms** (compiled-context-only and as-shipped); optional model-assisted promotion and compiler stages, measured against the deterministic baseline; full recovery and chaos testing; scale testing at C-LARGE and **measured** 10-year growth ([B-0](10-BENCHMARK-PLAN.md#b-0--event-volume-measurement)-derived, not assumption-derived).
 
 **Non-goals.** UI. New features of any kind.
 
-**Dependencies.** Phase 5.
+**Dependencies.** Phase 5. Phase T's B-7a verdict, which this study confirms or overturns.
 
 **Acceptance criteria.**
-1. **[B-7](10-BENCHMARK-PLAN.md): Fehrest beats the plain-agent-with-file-tools arm by a margin exceeding the confidence interval.**
+1. **[B-7b](10-BENCHMARK-PLAN.md#b-7b--confirmatory-powered-benchmark): Fehrest beats the plain-agent-with-file-tools arm by the pre-registered margin, at the pre-registered power — and beats the [maintained-LLM-Wiki baseline](10-BENCHMARK-PLAN.md#31-the-baseline-ladder), which is the strongest simple alternative.**
 2. Zero constraint violations where the constraint was present in the package.
 3. Repeated-known-failure rate below the plain-agent arm.
 4. [B-8](10-BENCHMARK-PLAN.md) recovery: every [N](13-RECOVERY-MODEL.md) scenario recovers automatically or with one guided step, zero canonical loss.
@@ -305,8 +402,8 @@ Not scheduled. Each requires its own ADR and a demonstrated need: canvas (JSON C
 
 ## 2. Cross-phase requirements
 
-**Continuous from Phase 1:** B-9 nuke-and-rebuild green in CI; all four dependency scanners green; Semgrep custom rules green; the provenance ledger complete and CI-verified; every donor-derived file carrying a provenance header.
+**Continuous from Phase T:** B-9 nuke-and-rebuild green in CI; all four dependency scanners green; Semgrep custom rules green; the provenance ledger complete and CI-verified; every donor-derived file carrying a provenance header; **`test_no_python_required` and `test_core_suite_headless` green** ([I-16](01-ARCHITECTURE-CONSTITUTION.md#i-16--fehrest-remains-operable-without-its-user-interface), [I-17](01-ARCHITECTURE-CONSTITUTION.md#i-17--fehrest-remains-usable-without-python)).
 
-**Every phase must satisfy:** all prior phases' tests still pass; `AI OFF` passes the full core suite; the vault remains readable by the previous version for minor changes; and the residual-risk statement is updated.
+**Every phase must satisfy:** all prior phases' tests still pass; `AI OFF` passes the full core suite; the vault remains readable by the previous version for minor changes; the residual-risk statement is updated; and **every production change passes the Spec Kit → Ponytail → implement → verify → converge → review loop** ([S](19-ENGINEERING-METHOD.md)).
 
-The `AI OFF` requirement repeated every phase is deliberate. It is the invariant most likely to erode gradually — one convenient model call at a time — and the only defence is testing it continuously rather than at the end.
+The `AI OFF` requirement repeated every phase is deliberate. It is the invariant most likely to erode gradually — one convenient model call at a time — and the only defence is testing it continuously rather than at the end. **The same argument now applies to I-16 and I-17**, for the same reason: a UI-only affordance and a Python-only code path are each added one convenience at a time.

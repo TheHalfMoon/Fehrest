@@ -581,6 +581,34 @@ Extrapolated in [E-5](#e-5--graphify-measured-extraction-throughput-preliminary)
 ### H-5 — A single sidecar process is sufficient isolation for the extraction path
 The sidecar spawns 12 worker processes ([E-5](#e-5--graphify-measured-extraction-throughput-preliminary)) and parses untrusted files. **Status:** unproven. **Falsified if** parser fuzzing yields memory-unsafe crashes reachable from vault content.
 
+### H-6 — FTS5 ranking is stable across rebuild histories *(added F1-R2)*
+An index reached by heavy incremental `insert`/`update`/`delete`/`replace` ranks a logically identical corpus the same as one built fresh. **Status: unproven, and it was previously not even stated as an assumption** — [H §5](../07-CONTEXT-COMPILER-SPEC.md#5-determinism) treated explicit tie-breaking as sufficient, which addresses the compiler's *use* of a candidate list and not the list's stability. A load-bearing deterministic digest sits downstream. **Falsified if** [B-12](../10-BENCHMARK-PLAN.md#b-12--fts5-rebuild-and-ranking-stability) shows differing candidate membership, ranking, or package digest between routes.
+
+### H-7 — Incremental derived maintenance converges to full rebuild *(added F1-R2)*
+[E §6](../04-DERIVED-DATA-MODEL.md#6-incremental-maintenance) makes incremental the normal path because rebuild is minutes to hours; [I-6](../01-ARCHITECTURE-CONSTITUTION.md#i-6--derived-state-is-disposable-and-rebuildable) makes rebuild the correctness reference. **Both hold only if they agree**, which F1 asserted with no mechanism able to test it. **Status:** unproven. **Falsified if** `test_incremental_equals_full` diverges outside documented tolerances, or `test_invalidation_completeness` finds artifacts that should have been invalidated and were not ([E §10](../04-DERIVED-DATA-MODEL.md#10-derivation-lineage-as-data)).
+
+### H-8 — Deterministic rules can type memory candidates well enough to gate promotion *(added F1-R2)*
+[R2-16](../reviews/F1-R2-RECONCILIATION.md) makes unclassified prose queue rather than auto-promote with AI off. That is safe by construction; whether it is *usable* depends on how much real material deterministic rules can type. **Status:** unproven. **Falsified if** [B-5](../10-BENCHMARK-PLAN.md#b-5--memory-promotion-quality) shows the `PENDING` queue accumulating faster than any plausible review rate — in which case the auto-promote boundary widens on measured type-assignment precision, **never** by lowering the confirmation requirement for `decision` / `constraint` / `preference`.
+
+### H-9 — A permanent per-item manifest is affordable at realistic volume *(added F1-R2)*
+[H §3.2](../07-CONTEXT-COMPILER-SPEC.md#32-the-served-item-manifest--permanent-t1) records identity, ordinal, source revision and two hashes per served item, forever. **Status:** unproven, and it is projected against an event volume that is itself unmeasured ([R2-12](../reviews/F1-R2-RECONCILIATION.md)) — an assumption resting on an assumption. **Falsified if** [B-0](../10-BENCHMARK-PLAN.md#b-0--event-volume-measurement) and [B-6](../10-BENCHMARK-PLAN.md#b-6--context-compiler) show manifest cost dominating canonical storage. Response is to record less **per item**, never less per package ([F-22](../17-FAILURE-CONDITIONS.md#f-22--the-served-item-manifest-is-unaffordable)).
+
+---
+
+## Unmeasured quantities recorded as such (F1-R2)
+
+> **Added so no reader mistakes an assumption for a measurement.** [R2-12](../reviews/F1-R2-RECONCILIATION.md) found that a load-bearing number had propagated through four documents without ever appearing in this log — which is precisely the failure this log exists to prevent, since a figure not recorded here cannot be attacked.
+
+| Quantity | Status | Where it propagated | Resolved by |
+|---|---|---|---|
+| **Events per active day** | **UNVALIDATED ASSUMPTION** — 500/day. A reviewer proposed 10K–100K/day; **also unmeasured, and not adopted** | [O §8–9](../14-PERFORMANCE-BUDGETS.md#8-disk), [D §5.2](../03-CANONICAL-DATA-MODEL.md#52-durability-tiers--the-correction-to-the-brief), [F §8](../05-MEMORY-MODEL.md#8-growth-and-forgetting), [B-10](../10-BENCHMARK-PLAN.md#b-10--scale-and-growth) | [B-0](../10-BENCHMARK-PLAN.md#b-0--event-volume-measurement), Phase 0 |
+| **Memories per active day** | **UNVALIDATED ASSUMPTION** — 50/day | [F §8](../05-MEMORY-MODEL.md#8-growth-and-forgetting), [O §9](../14-PERFORMANCE-BUDGETS.md#9-growth-over-time) | B-0 |
+| **Tolerable confirmations per active day** | **UNVALIDATED ASSUMPTION** — "< 5", an assumption about human behaviour made without observing a human | [O §10](../14-PERFORMANCE-BUDGETS.md#10-human-factor-budgets), [F §9](../05-MEMORY-MODEL.md#9-falsification-criteria), [F-17](../17-FAILURE-CONDITIONS.md#f-17--confirmation-fatigue) | [B-5](../10-BENCHMARK-PLAN.md#b-5--memory-promotion-quality) dogfooding |
+| **Degraded startup after checkpoint loss** | **DELIBERATELY UNSET.** Depends on three unmeasured quantities; a plausible figure would be a guess later cited as a requirement | [E §11](../04-DERIVED-DATA-MODEL.md#11-projection-checkpoints), [O §9](../14-PERFORMANCE-BUDGETS.md#9-growth-over-time) | Measurement after Phase 0 + Phase 1 |
+| **Confirmatory benchmark sample size** | **DERIVED, NOT CHOSEN.** No fixed n is stated anywhere; `n ≈ 300+` was proposed and **not adopted** | [B-7b](../10-BENCHMARK-PLAN.md#b-7b--confirmatory-powered-benchmark) | Pre-registered power analysis, Phase 6 |
+
+**The rule this table enforces:** a number that decides something belongs in this log with a status label, or it does not belong in the package.
+
 ---
 
 ## Measurement environment

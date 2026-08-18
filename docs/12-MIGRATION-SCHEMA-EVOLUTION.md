@@ -51,6 +51,12 @@ Three different strategies appear here deliberately, matched to the data's prope
 - Removing an event type is forbidden. It is deprecated: no longer emitted, still readable, upcast forever.
 - The upcast chain is permanent. Deleting an old upcaster makes historical logs unreadable, which is data loss.
 
+> **The permanence of the chain is REOPENED as a question in F1-R2 ([R2-17](reviews/F1-R2-RECONCILIATION.md)) — see [ADR-0015](09-TECHNOLOGY-DECISIONS.md#adr-0015--long-term-canonical-schema-compatibility).** "Support every historical schema forever, in the running binary" creates an **unbounded maintenance and security surface**: each upcaster is rarely-exercised parsing code, operating on old and potentially attacker-influenced data, that can never be deleted — inside the one component whose corruption is unrecoverable ([L §4](11-SECURITY-VERIFICATION-PLAN.md#4-fuzzing)).
+>
+> **The obvious fix is also wrong.** Bounding the window and dropping old upcasters abandons old-vault readability, which contradicts *the user's knowledge must survive Fehrest itself*. **Both horns are real**, so ADR-0015 frames a study — bounded live runtime window, separate versioned migration tooling, permanently published historical format specifications, mandatory pre-migration backup, migration epochs at major boundaries — and **deliberately does not freeze a policy on R2 evidence**, which consists of no implementation and no schema history.
+>
+> **The property that must survive whatever is chosen:** a user-owned old vault must not become unreadable *merely because Fehrest evolved*. "Readable via a documented migration tool" is an acceptable narrowing; "readable only if you kept a five-year-old binary" is not.
+
 **Compaction interaction.** Compaction ([D §5.2](03-CANONICAL-DATA-MODEL.md#52-durability-tiers--the-correction-to-the-brief)) writes new segments and marks old ones superseded while retaining their digests. Compacted-away T2 records are gone by design, but T1 records are never compacted, so the schema-evolution guarantee applies in full to everything permanent.
 
 ---
@@ -69,6 +75,8 @@ fehrest_schema: 2       # absent means 1
 Rationale: a 100K-file eager migration is a multi-minute rewrite of the user's entire vault — slow, risky under crash, catastrophic for any sync tool watching the directory, and it touches `mtime` on files the user did not edit. Lazy migration means the vault is immediately usable after upgrade and files migrate as they are touched.
 
 **Cost, stated:** a vault can contain multiple schema versions indefinitely. Readers must therefore support **every** historical version forever. This is the deliberate trade — permanent reader complexity in exchange for never blocking on a bulk rewrite. An explicit "migrate all now" command exists for users who prefer uniformity.
+
+**Whether "forever" means "in the running binary" is now an open question** ([ADR-0015](09-TECHNOLOGY-DECISIONS.md#adr-0015--long-term-canonical-schema-compatibility)). The lazy strategy itself is unaffected either way; what ADR-0015 decides is where the reading capability *lives* once the chain is long.
 
 ---
 

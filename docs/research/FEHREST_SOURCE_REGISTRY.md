@@ -14,9 +14,11 @@ Fehrest must never become an untraceable amalgamation of external implementation
 
 ## Legend
 
-**Classes:** `CODE_DONOR` · `ARCHITECTURE_DONOR` · `PRODUCT_REFERENCE` · `RESEARCH` · `STANDARD` · `BENCHMARK` · `SECURITY_REFERENCE`
+**Classes:** `CODE_DONOR` · `ARCHITECTURE_DONOR` · `PRODUCT_REFERENCE` · `RESEARCH` · `STANDARD` · `BENCHMARK` · `SECURITY_REFERENCE` · `DEVELOPMENT_GOVERNANCE_DONOR` *(F1-R2)* · `DEVELOPMENT_AGENT_DISCIPLINE` *(F1-R2)*
 
-**Dispositions:** `USE` (direct dependency / substantially reused) · `ADAPT` (reuse but materially change) · `STUDY` (evidence only, never a dependency) · `BENCHMARK` (evaluate experimentally) · `DEFER` (useful, out of current phase) · `REJECT` (investigated, intentionally excluded)
+**Dispositions:** `USE` (direct dependency / substantially reused) · `ADAPT` (reuse but materially change) · `STUDY` (evidence only, never a dependency) · `BENCHMARK` (evaluate experimentally) · `DEFER` (useful, out of current phase) · `REJECT` (investigated, intentionally excluded) · `FOUNDATIONAL_STUDY` *(F1-R2 — shapes the product's framing and supplies a benchmark baseline; never a dependency)*
+
+> **A `USE` disposition on a `DEVELOPMENT_*` class means "used to build Fehrest", never "shipped in Fehrest."** Development tooling is forbidden from any runtime dependency graph by [R-11](../01-ARCHITECTURE-CONSTITUTION.md#2-derived-rules). The distinction is recorded in the legend because the word `USE` would otherwise carry a meaning it does not have for those entries.
 
 **Fehrest layers:** `KNOWLEDGE` (canonical files) · `EVENT` (canonical activity log) · `DERIVED` (rebuildable indexes) · `MEMORY` · `AGENT` · `SECURITY` · `INGEST` · `UI` · `SHELL` · `EVAL`
 
@@ -460,6 +462,63 @@ constraint: Do not combine with Yjs in the initial editing architecture absent d
 
 **Registry-level invariant:** no entry in this section may become required for core function except SQLite and FTS5. Vectors and alternative engines are accelerators.
 
+### 4.14 Apache Spark — STUDY / DEFER
+
+> **ADDED IN F1-R2 ([R2-07](../reviews/F1-R2-RECONCILIATION.md)).** Recorded because a concept was taken from it, and the registry's purpose is that every material external influence is attributable. **Fehrest takes concepts from Spark and none of its machinery.**
+
+```yaml
+id: SRC-100
+name: Apache Spark
+class: [ARCHITECTURE_DONOR, SCALE_REFERENCE]
+repository_or_url: https://github.com/apache/spark
+upstream_owner: The Apache Software Foundation
+exact_commit_or_version: UNPINNED
+  # STUDY only. Concepts are read from published design documentation, not from
+  # source. Section 11 CI rule 2 forbids any transition to ADAPT/USE without
+  # pinning first -- and no such transition is anticipated.
+date_verified: 2026-08-17
+decision: STUDY / DEFER
+fehrest_layer: DERIVED
+adopt_concepts:
+  - "Lineage as DATA: a derived artifact records what it was derived FROM and
+     by WHICH deriver version. Fehrest's derivation registry (E section 10) is
+     this idea and nothing else."
+  - "A checkpoint as truncation of RECOMPUTATION DEPTH, not as a source of
+     truth. This is exactly why Fehrest checkpoints are derived,
+     non-authoritative and disposable (E section 11)."
+  - "Bounded batch and backpressure lessons WHERE JUSTIFIED -- applicable to
+     resumable background rebuilds, not adopted wholesale."
+reject_for_v1:
+  - Spark runtime
+  - JVM requirement
+  - driver/executor architecture
+  - cluster execution
+  - RDD / DataFrame as a runtime dependency
+  - Structured Streaming runtime
+  - GraphX / Pregel dependency
+  - DAG scheduler
+  - lazy distributed recomputation
+why_not_more: >
+  Fehrest is a single-user local-first desktop system whose largest v1 target is
+  100K files on one machine (O section 2). Spark solves distributed execution over
+  cluster-scale data. The scale mismatch is several orders of magnitude, and the
+  governing principle -- "the user's knowledge must survive Fehrest itself" --
+  is directly contradicted by acquiring a JVM and a cluster computing framework
+  as load-bearing dependencies. This is the same argument that rejected Cordis
+  (ADR-0005): elegance is not a reason to take a dependency.
+architectural_lesson:
+  - "A system can be an excellent source of ONE idea and a catastrophic source of
+     an architecture. Adopting a concept is not adopting a runtime, and the
+     registry must record which of the two happened."
+overstatement_guard: >
+  No claim is made that Spark's designers endorse this use, that Fehrest
+  implements Spark semantics, or that lineage-as-data originates with Spark.
+  Fehrest takes a framing, credits where it read it, and implements its own
+  minimal Rust-native version.
+license: Apache-2.0
+evidence: []
+```
+
 ---
 
 ## 5. Ingestion
@@ -526,6 +585,144 @@ Papers are evidence, not authority. Each entry states what Fehrest takes and wha
 | SRC-067 | **Cognee** | ARCHITECTURE_DONOR | — | **STUDY** | Graph-oriented memory patterns | — |
 | SRC-068 | **Microsoft GraphRAG** | ARCHITECTURE_DONOR | `microsoft/graphrag` | **STUDY** | Hierarchical communities, local vs global query modes, claims | LLM-heavy indexing — deterministic extraction satisfies the requirement at zero cost (E-8) |
 | SRC-069 | **Cordis** | ARCHITECTURE_DONOR | `cordiverse/cordis`, MIT, pushed 2026-08-13 | **STUDY — explicitly not a dependency** | Plugin composition, reversible effects, scoped services, effect-scoped disposal | Cordis itself. Making an external meta-framework load-bearing contradicts "the user's knowledge must survive Fehrest itself." | E-13 |
+
+### 8.2 Andrej Karpathy — LLM Wiki
+
+> **ADDED IN F1-R2.** The original "LLM Wiki" gist. Added to the research canon as a **FOUNDATIONAL_STUDY**: it names the distinction Fehrest's thesis rests on, and it supplies the strongest *simple* baseline the benchmark plan has.
+
+```yaml
+id: SRC-101
+name: Andrej Karpathy -- LLM Wiki (original gist)
+class: [RESEARCH, ARCHITECTURE_DONOR, PRODUCT_REFERENCE]
+upstream_owner: Andrej Karpathy
+exact_commit_or_version: PIN AT RESEARCH FREEZE
+  # Registry pinning rule: a specific gist revision must be pinned before the
+  # baseline harness is built (Phase T). No code is copied from it; the pin
+  # exists so the BASELINE is reproducible, per section 12.
+date_verified: 2026-08-17
+decision: FOUNDATIONAL_STUDY
+fehrest_layer: [KNOWLEDGE, MEMORY, EVAL]
+
+the_lesson:
+  - "RAG repeatedly RECONSTRUCTS understanding from raw sources on every query."
+  - "The LLM-Wiki pattern instead creates a PERSISTENT, MAINTAINED, INTERLINKED
+     knowledge artifact that COMPOUNDS over time."
+  - "That second framing is much closer to Fehrest's thesis than any RAG variant,
+     and it is achievable with a directory of Markdown files and no system."
+
+what_fehrest_takes:
+  - The framing above, which sharpens what Fehrest is actually claiming.
+  - A benchmark baseline: raw sources + a maintained Markdown wiki + explicit
+    links + ordinary agent search/read (K section 3.1, baseline 5).
+
+what_fehrest_must_therefore_prove:
+  # This is the obligation the baseline creates. Beating a plain agent while
+  # tying a maintained wiki would mean the value is in HAVING a maintained
+  # artifact -- a materially smaller product than the one described in A.
+  - measurable value from temporal state
+  - measurable value from supersession
+  - measurable value from provenance
+  - measurable value from deterministic context compilation
+  - measurable value from the agent experience
+  - measurable value from optional Graph Intelligence
+
+what_fehrest_does_not_claim:
+  - >
+    NO ENDORSEMENT IS CLAIMED OR IMPLIED. Karpathy has not endorsed Fehrest,
+    Graphify, Graph Intelligence, or any architectural position in this package.
+    No such endorsement is established, and none may be asserted anywhere in
+    this repository. The pattern is used as a BASELINE and a FRAMING -- as
+    something to beat and to think with -- never as an authority.
+
+architectural_lesson:
+  - "The strongest competitor to a complex system is often a simple discipline
+     practised consistently. A benchmark plan whose baselines are all weak
+     measures only that they were weak."
+license: not applicable -- no code reused
+evidence: []
+```
+
+---
+
+## 8A. Development and governance tooling
+
+> **ADDED IN F1-R2** for founder decisions D-2 and D-3. **Everything in this section is used to BUILD Fehrest and ships in nothing.** [R-11](../01-ARCHITECTURE-CONSTITUTION.md#2-derived-rules) makes that a build-breaking rule rather than an intention. Full method: [S — Engineering Method](../19-ENGINEERING-METHOD.md); decision: [ADR-0014](../09-TECHNOLOGY-DECISIONS.md#adr-0014--engineering-method-spec-kit--ponytail).
+
+### 8A.1 GitHub Spec Kit
+
+```yaml
+id: SRC-102
+name: GitHub Spec Kit
+class: DEVELOPMENT_GOVERNANCE_DONOR
+repository_or_url: https://github.com/github/spec-kit
+upstream_owner: GitHub
+exact_commit_or_version: PIN AT PHASE 0
+  # Pinned when the workflow is stood up. Not installed during F1-R2.
+date_verified: 2026-08-17
+decision: USE                    # as DEVELOPMENT tooling only
+fehrest_layer: not applicable -- development workflow, no runtime layer
+runtime_dependency: NO           # R-11: build fails if it reaches a shipped graph
+what_we_use:
+  - The specification-driven lifecycle:
+    constitution -> specify -> clarify -> plan -> checklist -> tasks
+                 -> analyze -> implement -> converge
+  - Full production lifecycle where appropriate; a justified reduced workflow
+    for small bounded work, with the justification recorded on the change.
+what_we_do_not_use:
+  - Spec Kit as runtime architecture. It is a development workflow; treating it
+    as architecture is a category error.
+  - Its constitution stage as a SECOND source of invariants. Fehrest's
+    invariants live in B (01-ARCHITECTURE-CONSTITUTION.md) and nowhere else;
+    the Spec Kit constitution is derived from them.
+why: >
+  Fehrest is built largely by AI coding agents against a specification-heavy
+  planning package. Without an artifact binding code to specification, drift is
+  detected only at review -- the most expensive point. See ADR-0014.
+not_yet_done: >
+  NOT installed, NOT initialized, and NO implementation workflow executed during
+  F1-R2. Stood up at Phase 0.
+license: MIT
+```
+
+### 8A.2 Ponytail
+
+```yaml
+id: SRC-103
+name: Ponytail
+class: DEVELOPMENT_AGENT_DISCIPLINE
+repository_or_url: https://github.com/DietrichGebert/ponytail
+upstream_owner: DietrichGebert
+exact_commit_or_version: PIN AT PHASE 0
+date_verified: 2026-08-17
+decision: USE                    # as DEVELOPMENT agent discipline only
+fehrest_layer: not applicable -- development discipline, no runtime layer
+runtime_dependency: NO           # R-11; and never installed as runtime code
+what_we_use:
+  - The implementation-minimisation / reuse-first necessity gate:
+    1 does this need to exist?  2 does Fehrest already implement it?
+    3 Rust std/core or a platform primitive?  4 an approved dependency?
+    5 a smaller implementation?  6 then the minimum correct solution.
+what_ponytail_must_never_minimise:      # the list IS the decision
+  - authorization boundaries
+  - canonical-data integrity
+  - security controls
+  - recovery correctness
+  - provenance
+  - privacy
+  - data-loss prevention
+  - required accessibility
+  - invariant tests
+why_the_exclusions_are_load_bearing: >
+  A minimisation discipline applied by an agent optimising for less code will,
+  given the chance, argue that an authorization chokepoint "does not need to
+  exist" -- answering the gate's own question 1 in the affirmative. Each such
+  argument is locally plausible and globally catastrophic. On excluded paths the
+  answer to question 1 is FIXED by the constitution; the gate governs only HOW.
+not_yet_done: >
+  NOT installed into the project, and specifically NOT installed as runtime code.
+  Stood up at Phase 0 as development tooling.
+license: verify at pin time before any adoption
+```
 
 ---
 
@@ -607,6 +804,8 @@ Requirement 3 is what prevents the ledger from decaying into fiction as files mo
 
 ## 12. Research freeze
 
+> **NOW BINDING AND TIGHTENED — see [§14.9](#149-research-freeze--now-binding).** F1-R2's [donor discovery addendum](#14-f1-r2-final-donor-discovery-addendum) is the **last planned broad discovery round**. `FEHREST BROAD DONOR DISCOVERY: FROZEN`. The clauses below remain the admission rule; §14.9 states the discipline that makes them enforceable — research becomes **question-driven, not collection-driven**.
+
 The architecture discovery phase closes when [P Phase 0](../15-IMPLEMENTATION-PHASES.md) exits. After that, a new source may enter this registry **only** if it:
 
 1. closes a documented gap in this registry; or
@@ -616,6 +815,17 @@ The architecture discovery phase closes when [P Phase 0](../15-IMPLEMENTATION-PH
 5. is required for security or interoperability.
 
 Each admission requires a registry entry, a named displaced or closed item, and an ADR if it changes a decision. CodeMirror 6 (SRC-003) is admitted under clause 2, displacing BlockSuite.
+
+**Admissions in F1-R2**, each under a named clause:
+
+| id | Source | Clause | Justification |
+|---|---|---|---|
+| SRC-100 | Apache Spark | **3** — falsifies an existing assumption | F1 asserted incremental-vs-rebuild equivalence with no mechanism that could test it; lineage-as-data supplies one ([R2-07](../reviews/F1-R2-RECONCILIATION.md)) |
+| SRC-101 | Karpathy — LLM Wiki | **1** — closes a documented gap | The benchmark plan had no *maintained-knowledge-artifact* baseline, only RAG variants and a plain agent. That was the missing strong simple alternative |
+| SRC-102 | GitHub Spec Kit | **1** — closes a documented gap | No specification-to-code binding existed; founder decision D-2 |
+| SRC-103 | Ponytail | **1** — closes a documented gap | No implementation-minimisation discipline existed; founder decision D-3 |
+
+None displaces an incumbent, because none had one. SRC-102 and SRC-103 are development tooling and change no runtime disposition.
 
 ---
 
@@ -630,3 +840,736 @@ Stated openly rather than discovered by a reviewer:
 5. **Docling's ML dependency weight is unmeasured.** Its optional-vs-required classification depends on that measurement.
 6. **Tauri is not yet confirmed as the shell.** Listed `STUDY → likely USE`; a genuine ADR is owed at Phase 3 rather than an assumption inherited from the brief.
 7. **No third-party replication exists for any retrieval claim in this registry.** Every comparative number is either vendor-reported or self-measured.
+8. **SRC-101 (Karpathy — LLM Wiki) is unpinned.** Acceptable under gap 1's rule while it is `FOUNDATIONAL_STUDY` and no code is reused, but the **baseline harness must pin an exact gist revision before Phase T**, or baseline 5 is not reproducible and the comparison it supports is not admissible ([K §1 principle 6](../10-BENCHMARK-PLAN.md#1-principles)).
+9. **SRC-102 and SRC-103 are unpinned and their licenses unverified.** Both are pinned and license-checked at Phase 0, before either is stood up. Ponytail's license in particular is unverified at the time of writing and must be confirmed before adoption.
+10. **SRC-100 (Spark) is deliberately unpinned and must stay that way.** Concepts are read from published design documentation; a pin would imply a code relationship that does not exist and is not anticipated.
+11. **Every source in [§14](#14-f1-r2-final-donor-discovery-addendum) is `PIN_PENDING_EXTERNAL_VERIFICATION`** — 17 entries. No live upstream verification was performed for them in the F1-R2 session, and **no commit was guessed**. None may transition to `ADAPT` or `USE` until pinned and license-verified; §11 CI rule 2 enforces this once implementation begins.
+12. **Every license in §14 is `UNVERIFIED_IN_THIS_SESSION`**, recorded as stated by the project. Two require *per-repository* review rather than per-project: **any-sync / Anytype** (SRC-134 — do not infer uniform permissive licensing across `anyproto` components) and **AFFiNE** (SRC-121 — split license, per-file provenance required before vendoring).
+13. **`OpenPencil` and `Flint` are named but unidentified.** Carried forward from the founder donor map; no repository, license or capability claim is asserted. They enter their respective gates only after identification and verification ([§14.7](#147-data-analytics-and-view-engines)).
+14. **SRC-161 (MemOra), SRC-162 (EvoMemBench) and SRC-163 ("Total Recall at What Cost?") are named only.** Exact identifiers, versions and venues are unverified, and **no figure from any of them may be cited until they are**.
+
+---
+
+## 14. F1-R2 final donor discovery addendum
+
+> **ADDED IN F1-R2, and this is the LAST planned broad donor-discovery round.** Every entry below closes a **documented gap** revealed by G2 or by the Rust-first founder decision (D-1). None was added for completeness. After this section, [§12 Research Freeze](#12-research-freeze) becomes binding in its stricter form (§14.9).
+>
+> ```
+> THE DONOR REGISTRY IS EVIDENCE. IT IS NOT THE IMPLEMENTATION PLAN.
+> ```
+>
+> **The presence of a source here authorizes nothing** — not dependency adoption, not code copying, not runtime integration, not porting, not feature implementation. Every future adoption still passes Spec Kit → Ponytail → rights/provenance → benchmark/security → implementation ([S](../19-ENGINEERING-METHOD.md)).
+
+### 14.0 Pinning status for this addendum
+
+**No exact commit in this section was verified in this session.** Live upstream verification was not performed for these sources, so **every entry is marked `PIN_PENDING_EXTERNAL_VERIFICATION` rather than carrying a guessed revision.** Fabricating a plausible-looking commit hash would be worse than having none: it would pass a reviewer's eye and fail at the moment it mattered.
+
+Per the [pinning rule](#legend), no entry below may transition to `ADAPT` or `USE` until an exact revision is pinned and its license verified. §11 CI rule 2 enforces this mechanically once implementation begins.
+
+**Licenses are recorded as stated by the projects and are `UNVERIFIED_IN_THIS_SESSION`.** Each requires confirmation at pin time, per source, before any code is imported.
+
+---
+
+### 14.1 Rust platform and standard implementations
+
+These close the gap opened by D-1: a Rust Core needs Rust answers to filesystem, Git, watching and protocol problems that F1 had specified only abstractly.
+
+#### SRC-110 — gitoxide (`gix`)
+
+```yaml
+id: SRC-110
+name: gitoxide / gix
+class: [CODE_DONOR, ARCHITECTURE_DONOR, PLATFORM_REFERENCE]
+repository_or_url: https://github.com/GitoxideLabs/gitoxide
+exact_commit_or_version: PIN_PENDING_EXTERNAL_VERIFICATION
+date_verified: not verified in this session
+decision: STUDY / BENCHMARK / LIKELY_SELECTIVE_USE
+fehrest_layer: [KNOWLEDGE, DERIVED]
+gap_closed: >
+  G2-H6 / R2-09 and N section 3.11 require correct handling of Git operations on the
+  vault -- checkout, switch, reset, merge, case-changing checkouts. F1 specified
+  the BEHAVIOUR and never named a mechanism for reading repository state.
+what_we_may_use:
+  - Repository detection; refs; index; worktrees; status; diffs
+  - Merge semantics inspection; ignore rules; attributes; pathspecs
+  - Git object identity as a READ-ONLY input to reconciliation
+what_we_will_not_use:
+  - Git as Fehrest storage or as the event log (ADR-0001 already rejected this)
+  - Any code path that makes Git MANDATORY. Fehrest must work for an ordinary
+    non-Git local folder, and most vaults will be exactly that.
+architectural_question_to_answer: >
+  Should Fehrest read correctness-sensitive repository state through gix APIs
+  rather than by parsing shell `git` output? Parsing porcelain output is a
+  documented source of locale, version and encoding defects, and this is a
+  correctness-sensitive path -- N section 3.11 treats a missed bulk change as
+  indistinguishable from an index-suppression attack (T-16).
+risks:
+  - Large dependency surface for a capability that is optional to the product.
+  - Ponytail question 3 applies first: how much of this is answered by a
+    reconciliation scan that ignores Git entirely?
+license: MIT OR Apache-2.0 (UNVERIFIED_IN_THIS_SESSION)
+evidence: []
+```
+
+#### SRC-111 — notify-rs
+
+```yaml
+id: SRC-111
+name: notify
+class: [CODE_DONOR, PLATFORM_REFERENCE]
+repository_or_url: https://github.com/notify-rs/notify
+exact_commit_or_version: PIN_PENDING_EXTERNAL_VERIFICATION
+date_verified: not verified in this session
+decision: LIKELY_IMPLEMENTATION_CANDIDATE -- SUBJECT TO PHASE 1/2 PROTOTYPE
+fehrest_layer: DERIVED
+gap_closed: >
+  E section 6 and N section 3A require filesystem watching with debounce, storm
+  escalation and hostile-environment tolerance, with no named mechanism.
+what_we_may_use:
+  - Cross-platform notification backends (Windows, macOS, Linux) and polling fallback
+  - Debouncing ecosystem conventions
+binding_invariant:
+  - |
+    FILESYSTEM WATCH EVENTS ARE HINTS. THEY ARE NOT CANONICAL TRUTH.
+
+    Correct:   watch event -> schedule reconciliation -> scan + identity
+               reconciliation -> canonical conclusion
+    Forbidden: watch event -> blind canonical mutation
+
+    This is already Fehrest's position (E section 6: "detected by hash comparison on
+    a scan, not by trusting the watcher"), and adopting a watcher library must not
+    quietly invert it. A watcher is a LATENCY OPTIMISATION; reconciliation is the
+    CORRECTNESS MECHANISM.
+evaluation_gate: >
+  Must be evaluated against the hostile filesystem cases in N section 3A -- sharing
+  violations, watcher storms, cloud placeholder files, sync-driven reverts.
+license: CC0-1.0 / Artistic-2.0 (UNVERIFIED_IN_THIS_SESSION)
+evidence: []
+```
+
+#### SRC-112 — cap-std
+
+```yaml
+id: SRC-112
+name: cap-std
+class: [SECURITY_DONOR, CODE_DONOR, ARCHITECTURE_DONOR]
+repository_or_url: https://github.com/bytecodealliance/cap-std
+exact_commit_or_version: PIN_PENDING_EXTERNAL_VERIFICATION
+date_verified: not verified in this session
+decision: STUDY / SECURITY_BENCHMARK / ADOPTION_CANDIDATE
+fehrest_layer: SECURITY
+status_note: >
+  NOT marked as an accepted runtime dependency in F1-R2. GLM-5.3 evaluates whether
+  this or another Rust-native capability strategy materially improves the boundary.
+gap_closed: >
+  T-7 and T-8 are currently defended by validation-plus-discipline inside core.
+  ADR-0009 removes agent-supplied paths at the INTERFACE, which is strong; it does
+  not reduce core's own AMBIENT filesystem authority.
+architecture_to_study: |
+  Wanted:    agent request -> Fehrest authorization -> vault capability
+                           -> filesystem operation
+  Not this:  agent request -> arbitrary PathBuf -> ambient filesystem authority
+what_we_may_use:
+  - Capability-oriented filesystem access; directory-rooted authority
+  - Traversal-resistant filesystem APIs
+  - Alignment with WASI/Wasmtime capability models (SRC-043), which keeps the
+    deferred plugin-isolation seam coherent
+boundary_discipline:
+  - "A capability-oriented API is CONFINEMENT. It is not authorization (Cedar,
+     SRC-113), not a process sandbox, and not prompt-injection resistance. These
+     are four separate controls and Fehrest must not let one be cited as another."
+license: Apache-2.0 WITH LLVM-exception / Apache-2.0 / MIT (UNVERIFIED_IN_THIS_SESSION)
+evidence: []
+```
+
+#### SRC-113 — Cedar for Agents *(extends [SRC-042](#7-agent-protocol-authorization-isolation))*
+
+```yaml
+id: SRC-113
+name: Cedar for Agents
+class: [SECURITY_DONOR, CODE_DONOR, AUTHORIZATION_REFERENCE]
+repository_or_url: https://github.com/cedar-policy/cedar-for-agents
+also_retained: https://github.com/cedar-policy/cedar   # SRC-042
+exact_commit_or_version: PIN_PENDING_EXTERNAL_VERIFICATION
+date_verified: not verified in this session
+decision: STUDY / ADAPT / STRONG_IMPLEMENTATION_CANDIDATE
+fehrest_layer: SECURITY
+gap_closed: >
+  SRC-042 adopted Cedar's DECISION SHAPE and deferred the engine, on the argument
+  that v1's policy space is small enough for a hand-written evaluator. Cedar for
+  Agents is specifically about AGENT and MCP TOOL authorization, which is exactly
+  Fehrest's chokepoint (G section 2). It is evidence that the deferral should be
+  re-examined -- not evidence that it was wrong.
+what_we_may_use:
+  - principal + action + resource + context, already adopted as the shape
+  - Schema generation and policy modelling around agent tool surfaces
+  - Deny-by-default policy formulation
+  - An explicit ALLOW / DENY / ASK layer -- ASK matters to Fehrest because
+    F section 5.5 PENDING items and G section 3.2 approvals both need a third outcome
+what_we_will_not_use:
+  - Cedar as a SANDBOX. It answers "is this permitted?", never "can this process
+    reach that file?"
+boundary_discipline:
+  - |
+    authorization  !=  filesystem confinement  !=  process sandbox
+                   !=  prompt-injection resistance
+    Four controls. Fehrest maintains them explicitly and never cites one as another.
+open_question: >
+  Whether embedding a policy engine beats an auditable hand-written evaluator for
+  v1's policy space. Decided at Phase 5, not here. Ponytail question 5 applies: an
+  auditable 200-line evaluator may still be the right answer.
+license: Apache-2.0 (UNVERIFIED_IN_THIS_SESSION)
+evidence: [E-13]
+```
+
+#### SRC-114 — Official MCP Rust SDK
+
+```yaml
+id: SRC-114
+name: Model Context Protocol -- official Rust SDK
+class: [STANDARD_IMPLEMENTATION, CODE_DONOR, INTEROPERABILITY_REFERENCE]
+repository_or_url: https://github.com/modelcontextprotocol/rust-sdk
+exact_commit_or_version: PIN_PENDING_EXTERNAL_VERIFICATION
+date_verified: not verified in this session
+decision: PREFERRED_IMPLEMENTATION_CANDIDATE
+fehrest_layer: AGENT
+gap_closed: >
+  D-1 makes the Core Rust and G section 5 makes MCP-over-stdio a v1 transport. F1
+  named the protocol (SRC-040) without naming an implementation, which under a Rust
+  Core silently implied writing one.
+architectural_direction: |
+  Official MCP Rust SDK
+        -> Fehrest MCP adapter
+        -> Fehrest authorization + trust envelope   (G section 2, G section 4.1)
+        -> Fehrest Core
+what_we_may_use:
+  - Native Rust MCP server; client where needed; tools; resources; protocol types;
+    transport handling
+what_we_will_not_use:
+  - A proprietary Fehrest MCP protocol stack, UNLESS the official SDK fails a
+    documented requirement. Ponytail question 4 applies directly.
+unchanged_invariant:
+  - "MCP IS A TRANSPORT, NOT AN AUTHORIZATION BOUNDARY (T-13). Adopting the official
+     SDK changes the implementation and changes nothing about the boundary: the
+     adapter sits BELOW Fehrest authorization in the diagram above, never beside it."
+license: MIT (UNVERIFIED_IN_THIS_SESSION)
+evidence: [E-7]
+```
+
+#### SRC-115 — CommonMark specification and Rust parsers
+
+```yaml
+id: SRC-115
+name: CommonMark specification + Rust Markdown parsers
+class: [STANDARD, CODE_DONOR, INTEROPERABILITY_REFERENCE]
+standard: https://spec.commonmark.org/          # specification + conformance tests
+candidates:
+  - https://github.com/raphlinus/pulldown-cmark
+  - https://github.com/kivikakk/comrak
+exact_commit_or_version: PIN_PENDING_EXTERNAL_VERIFICATION
+date_verified: not verified in this session
+decision: USE_STANDARD / BENCHMARK_PARSERS
+fehrest_layer: KNOWLEDGE
+gap_closed: >
+  D section 4.1 declares "CommonMark + GFM" canonical with the note "external spec"
+  and names no parser and no conformance obligation. Under a Rust Core that is an
+  unmade decision on the single most load-bearing format in the product.
+binding_rule:
+  - "FEHREST MARKDOWN SEMANTICS MUST BE SPECIFICATION-BACKED. Fehrest does not
+     invent undocumented Markdown behaviour, and any deviation from CommonMark/GFM
+     is documented in the format registry (I-5) or it is a defect."
+evaluation_criteria:                            # by measurement, not popularity
+  - CommonMark conformance against the official test suite
+  - GFM requirements actually used by the corpus (tables, task lists, strikethrough)
+  - Frontmatter coexistence -- must not consume or mangle YAML frontmatter
+  - SOURCE OFFSETS -- required by D section 4.4 sidecar anchors and by the
+    `link.line` provenance column in E section 4
+  - AST shape adequate for link extraction and heading-path anchors
+  - Incremental parsing needs, if any
+  - Malformed and hostile input behaviour (C-MALFORMED, T-17)
+  - Performance at the O section 4.2 incremental budget
+  - Round-trip / source preservation -- R-8, and the Editor Gate's test 18
+    (a one-word change must produce a minimal reviewable diff)
+what_we_will_not_use:
+  - Popularity as a selection criterion
+license: CommonMark spec CC-BY-SA; parsers MIT / BSD-2-Clause (UNVERIFIED_IN_THIS_SESSION)
+evidence: []
+```
+
+#### SRC-116 — Tantivy *(same source as [SRC-014](#4-storage-and-retrieval); this entry adds the R2 trigger)*
+
+```yaml
+id: SRC-116
+name: Tantivy
+class: [CODE_DONOR, SEARCH_REFERENCE, BENCHMARK_CANDIDATE]
+repository_or_url: https://github.com/quickwit-oss/tantivy
+decision: BENCHMARK / DEFER
+status: >
+  SQLITE FTS5 REMAINS THE DEFAULT FEHREST CORE HYPOTHESIS. Unchanged by D-1.
+becomes_relevant_only_if:                       # a documented FAILURE, not a preference
+  - "B-12 shows FTS5 ranking is unstable across rebuild histories and no FTS5
+     configuration fixes it (F-18)"
+  - "B-9 equivalence cannot be achieved with FTS5"
+  - "Large-vault latency misses the O section 5 budgets"
+  - "Indexing throughput misses the O section 4 budgets"
+  - "Language/tokenisation capability proves genuinely insufficient for the corpus"
+ponytail_note:
+  - "DO NOT introduce Tantivy simply because it is Rust-native. Ponytail requires
+     SQLite FTS5 to FAIL A DOCUMENTED REQUIREMENT FIRST. 'Written in our language'
+     is not a requirement; it is a preference wearing one's clothes."
+license: MIT
+evidence: [E-12]
+```
+
+---
+
+### 14.2 Visual, canvas and editing surfaces
+
+These feed two gates: the existing [Editor Gate](../18-EDITOR-GATE.md) and the new **Visual/Canvas Engine Gate** ([T §2](../20-FUTURE-GATES.md#2-visualcanvas-engine-gate)).
+
+#### SRC-120 — Penpot
+
+```yaml
+id: SRC-120
+name: Penpot
+class: [CODE_DONOR, ARCHITECTURE_DONOR, INTEROPERABILITY_REFERENCE, PRODUCT_REFERENCE]
+repository_or_url: https://github.com/penpot/penpot
+exact_commit_or_version: PIN_PENDING_EXTERNAL_VERIFICATION
+date_verified: not verified in this session
+decision: STUDY / BENCHMARK / SELECTIVE_ADAPT
+fehrest_layer: UI
+gate: Visual/Canvas Engine Gate (T section 2) -- Phase 8+, not v1
+what_we_study:
+  - Open-standard visual document architecture
+  - SVG / CSS / HTML / JSON interoperability
+  - Visual object and scene semantics
+  - Design tokens; components and variants
+  - Layout / grid / flex behaviour
+  - Plugin architecture; API architecture; MCP integration
+  - Inspect / design-to-code workflow
+  - Collaboration correctness
+  - Large-canvas performance and mutation handling
+  - Security lessons from a mature collaborative editor
+what_we_will_not_do:
+  - Adopt the Penpot server or runtime wholesale
+  - Turn Fehrest into a Figma clone. Fehrest is not a design tool; a canvas is one
+    projection over the object model (A section 5), never the product
+  - Add server infrastructure because Penpot uses it. Penpot is a hosted
+    collaborative application; Fehrest is local-first with ZERO MANDATORY SERVICES
+    (I-2, I-3). Their infrastructure follows from a requirement Fehrest does not have.
+most_transferable_lesson: >
+  Open-standard visual interchange (SVG/JSON) as the canonical artifact rather than
+  a proprietary scene format -- the visual-surface form of I-5.
+license: MPL-2.0 (UNVERIFIED_IN_THIS_SESSION)
+evidence: []
+```
+
+#### SRC-121 — AFFiNE / BlockSuite, extended scope *(extends [SRC-004](#31-blocksuite--candidate-b-in-the-editor-gate), [SRC-006](#33-affine--study--source-of-candidate-b))*
+
+```yaml
+id: SRC-121
+name: AFFiNE / BlockSuite -- extended scope
+class: [CODE_DONOR, ARCHITECTURE_DONOR, PRODUCT_REFERENCE, LOCAL_FIRST_REFERENCE]
+repository_or_url: https://github.com/toeverything/AFFiNE
+exact_commit_or_version: see SRC-006 (canary b4c8548c, 2026-08-17); PIN AT PHASE 3E
+decision: STUDY / BENCHMARK / SELECTIVE_ADAPT
+maintenance_status_restated:                    # R1-02, reaffirmed in F1-R2
+  - |
+    THE STANDALONE HISTORICAL BlockSuite REPOSITORY DOES NOT REPRESENT THE
+    MAINTENANCE STATUS OF THE IMPLEMENTATION.
+
+    The maintained AFFiNE monorepo contains:
+        blocksuite/affine
+        blocksuite/framework
+        blocksuite/integration-test
+        blocksuite/playground
+    and related BlockSuite code.
+
+    F1 measured the mirror and concluded the editor was dead. That error is
+    corrected and stays corrected (E-10.1).
+relevant_to:
+  - Local-first knowledge workspace architecture
+  - Docs + edgeless canvas integration; page <-> canvas transitions
+  - Block / object model; linked pages
+  - Database / multi-view blocks
+  - Journals; local-first persistence; collaboration
+  - Import / export; rich object editing
+gates:
+  - "Text Editor Gate: FIRST-CLASS CANDIDATE (Candidate B, 18-EDITOR-GATE)"
+  - "Visual/Canvas Engine Gate: BlockSuite Edgeless is a candidate (T section 2)"
+  - "Unified Surface Test: the primary evidence FOR a shared substrate (T section 3)"
+unresolved_issue:                               # unchanged from SRC-004 / SRC-006
+  - Split license -- MIT applies outside packages/backend and packages/common/native.
+    Per-file provenance required before any vendoring.
+  - 446 MB monorepo; extraction cost and coupling depth unmeasured.
+  - No independent release channel for the editor subtree.
+independence_invariant:
+  - "THE CANONICAL FEHREST CORE REMAINS RUST-OWNED AND INDEPENDENT of AFFiNE,
+     BlockSuite, Electron, and any cloud/server runtime. Whatever wins the Editor
+     Gate is a SURFACE over the Core (I-16), never the Core."
+license: Split -- MIT outside packages/backend and packages/common/native
+evidence: [E-10, E-10.1]
+```
+
+#### SRC-122 — OctoBase and y-octo
+
+```yaml
+id: SRC-122
+name: OctoBase / y-octo
+class: [ARCHITECTURE_DONOR, CODE_DONOR]
+repository_or_url:
+  - https://github.com/toeverything/OctoBase
+  - https://github.com/toeverything/y-octo
+exact_commit_or_version: PIN_PENDING_EXTERNAL_VERIFICATION
+date_verified: not verified in this session
+decision: STUDY / DEFER
+fehrest_layer: KNOWLEDGE
+studied_separately_from_affine: true             # deliberately -- these are Rust upstreams
+relevance:
+  - Rust local-first storage
+  - CRDT engine architecture
+  - Collaborative persistence
+  - Native/web synchronisation boundaries
+  - Thread-safe Yjs-compatible semantics
+hard_constraint:
+  - |
+    DO NOT INTRODUCE CRDT OR COLLABORATION INTO THE THESIS-PROOF MVP.
+    Yjs / y-octo / OctoBase remain CONDITIONAL until a collaboration or editor
+    requirement EMPIRICALLY requires them (ADR-0012). Collaboration must never be
+    added to the MVP in order to justify a CRDT (R1-09) -- and now, equally, a
+    Rust-native CRDT must not be adopted merely because it is Rust-native.
+gate: Collaboration/CRDT Gate (T section 4)
+license: verify per repository at pin time (UNVERIFIED_IN_THIS_SESSION)
+evidence: []
+```
+
+---
+
+### 14.3 Local-first and CRDT candidates
+
+All feed the **Collaboration/CRDT Gate** ([T §4](../20-FUTURE-GATES.md#4-collaborationcrdt-gate)). **No CRDT is authorized for the Headless Thesis-Proof.**
+
+| id | Source | Class | Decision | What Fehrest studies | Explicitly not taken |
+|---|---|---|---|---|---|
+| SRC-130 | **Loro** — `loro-dev/loro` | CODE_DONOR / ARCHITECTURE_DONOR / LOCAL_FIRST_REFERENCE | **STUDY / BENCHMARK / DEFER** | Rust-native collaborative structures; text and rich text; map/list/tree state; version and history inspection; sync; local-first operation | Adoption on the grounds of being Rust-native. Collaboration introduced because a donor supports it |
+| SRC-131 | **Automerge** — `automerge/automerge` *(extends [SRC-007](#34-automerge--study))* | ARCHITECTURE_DONOR / CODE_DONOR / LOCAL_FIRST_REFERENCE | **STUDY / BENCHMARK / DEFER** | Local-first document semantics; sync protocol; durable collaborative state; version/history concepts; Rust implementation lessons | **No automatic preference.** F1 listed Automerge alone; R2 makes it one candidate among four |
+| SRC-132 | **Yrs / Yjs** *(see [SRC-005](#32-yjs--conditional--editor-dependent))* | CODE_DONOR / RESEARCH | **CONDITIONAL — editor-dependent** | Reference semantics; arrives with Candidate B if it wins the Editor Gate | Adoption independent of the Editor Gate |
+| SRC-133 | **AppFlowy-Collab** — `AppFlowy-IO/AppFlowy-Collab` | CODE_DONOR / ARCHITECTURE_DONOR / LOCAL_FIRST_REFERENCE / PRODUCT_REFERENCE | **STUDY / SELECTIVE_ADAPT / DEFER** | A Rust collaborative substrate shared across **document, database and folder/workspace** object types; persistence plugins; history; import/export; Yrs integration | AppFlowy's product architecture wholesale. Exact license/provenance review required before any code import |
+| SRC-134 | **any-sync / Anytype** — `anyproto/any-sync` | ARCHITECTURE_DONOR / LOCAL_FIRST_REFERENCE / P2P_REFERENCE / PRODUCT_REFERENCE | **STUDY** | Local-first object architecture; P2P sync; encrypted collaboration; offline-first knowledge workspace; object-oriented knowledge UX | **Licenses must be treated PER REPOSITORY.** Do not infer that all Anytype code is permissively licensed because some anyproto components are. Source-specific rights review before any reuse |
+| SRC-135 | **iroh** — `n0-computer/iroh` | ARCHITECTURE_DONOR / CODE_DONOR / P2P_REFERENCE | **STUDY / DEFER** | Rust P2P networking; content-addressed transfer; QUIC; NAT traversal; gossip; local-first device sync | Any sync infrastructure before the core thesis passes. **Fehrest v1 remains local and single-device capable** ([I-7](../01-ARCHITECTURE-CONSTITUTION.md#i-7--sync-is-optional)) |
+
+**All pins `PIN_PENDING_EXTERNAL_VERIFICATION`; all licenses `UNVERIFIED_IN_THIS_SESSION`.**
+
+**SRC-133 is the most decision-relevant entry in this table, and not for its CRDT.** AppFlowy-Collab is direct evidence about whether **one shared collaborative substrate across several object types** is maintainable in practice — which is the [Unified Surface Test](../20-FUTURE-GATES.md#3-unified-surface-test) question, and the practical form of Fehrest's own *"Everything is an Object; views are projections"* ([D §1](../03-CANONICAL-DATA-MODEL.md#1-the-object-model-decision)).
+
+---
+
+### 14.4 Temporal, history and lineage
+
+#### SRC-140 — Jujutsu
+
+```yaml
+id: SRC-140
+name: Jujutsu (jj)
+class: [ARCHITECTURE_DONOR, CODE_DONOR, PRODUCT_REFERENCE]
+repository_or_url: https://github.com/jj-vcs/jj
+exact_commit_or_version: PIN_PENDING_EXTERNAL_VERIFICATION
+date_verified: not verified in this session
+decision: STUDY / SELECTIVE_ADAPT
+fehrest_layer: EVENT
+gap_closed: >
+  N section 3 specifies recovery from FAILURES. It does not specify durable
+  user-visible UNDO, nor how a user asks "how did the system reach this state?" --
+  and D section 5.3 causation exists precisely to make audit narratable, with no
+  model of what a user does with that narrative.
+what_we_study:
+  - Operation-log concepts as distinct from content history
+  - Historical state inspection
+  - Undo semantics that survive restart
+  - Concurrent operation handling
+  - Git coexistence
+principle_to_study:
+  - |
+    CONFLICT != CORRUPTION
+
+    A conflict may be VALID REPRESENTABLE STATE that stays visible until resolved.
+    Fehrest already holds this position in three places, and arrived at it
+    independently each time:
+      - F section 3.3: CONFLICTED is a first-class resting state, not an error
+      - D section 3.2: duplicate IDs are retained and surfaced, never silently resolved
+      - N section 3.10: concurrent edits present both versions rather than merging
+    Jujutsu is prior art for making that representable rather than exceptional, and
+    is worth studying for how a system STORES a conflict, not how it reports one.
+what_we_will_not_do:
+  - Use Jujutsu as Fehrest storage
+  - Require jj to operate Fehrest
+  - Turn Fehrest into a VCS
+  - Copy Git/Jujutsu semantics into MEMORY without validating domain fit. A memory
+    conflict and a text merge conflict are not the same object - F section 4.2
+    resolves by evidence, not by three-way merge.
+license: Apache-2.0 (UNVERIFIED_IN_THIS_SESSION)
+evidence: []
+```
+
+#### SRC-141 — OpenLineage
+
+```yaml
+id: SRC-141
+name: OpenLineage
+class: [STANDARD_REFERENCE, ARCHITECTURE_DONOR, LINEAGE_REFERENCE]
+repository_or_url: https://github.com/OpenLineage/OpenLineage
+exact_commit_or_version: PIN_PENDING_EXTERNAL_VERIFICATION
+date_verified: not verified in this session
+decision: STUDY
+fehrest_layer: EVENT
+what_we_study:
+  - The separation - Run / Job / Dataset / Event / Facets
+  - Possible mapping onto Fehrest Agent Experience -
+        Session / Task / Tool invocation / Artifact / Event / Metadata facets
+  - "EXTENSIBLE FACETS AS AN ALTERNATIVE TO AN EVER-GROWING MONOLITHIC EVENT SCHEMA"
+why_this_matters_now: >
+  D section 5.2 vocabulary is already 20+ event types across three tiers, R2-12
+  leaves the tiering unfrozen pending B-0, and M section 5 forbids ever removing an
+  event type. A facet model is the alternative to a schema that can only grow, and
+  it interacts directly with the ADR-0015 unbounded-upcaster-chain concern.
+what_we_will_not_use:
+  - OpenLineage runtime dependencies
+  - Data-pipeline terminology imported into a human knowledge product without
+    checking that the concepts transfer
+license: Apache-2.0 (UNVERIFIED_IN_THIS_SESSION)
+evidence: []
+```
+
+#### SRC-142 — in-toto attestations
+
+```yaml
+id: SRC-142
+name: in-toto attestation framework
+class: [STANDARD_REFERENCE, SECURITY_REFERENCE, PROVENANCE_REFERENCE]
+repository_or_url: https://github.com/in-toto/attestation
+exact_commit_or_version: PIN_PENDING_EXTERNAL_VERIFICATION
+date_verified: not verified in this session
+decision: STUDY / SELECTIVE_ADAPT
+fehrest_layer: [SECURITY, MEMORY]
+what_we_study:
+  - Authenticated claims; subject digests; typed predicates
+  - Actor/tool evidence; cryptographically verifiable provenance concepts
+possible_future_shape:
+  - "subject / claim / actor / evidence hashes / optional signature - as an eventual
+     extension of the Fehrest provenance envelope and the served-item manifest
+     (H section 3.2), both of which already carry subject identity, actor and content
+     hashes and lack only the attestation framing"
+what_we_will_not_do:
+  - "Impose software-supply-chain terminology blindly on human knowledge and memory.
+     A memory is an ASSERTION BY AN ACTOR (F section 2), not a build artifact, and the
+     analogy fails at the point where a build is reproducible and a human judgement
+     is not. Adopt only the transferable provenance PROPERTIES."
+relationship_to_t4:
+  - "T-4 states plainly that Fehrest provides TAMPER-EVIDENCE, not tamper-resistance,
+     because key material would live on the same machine. Signatures do not change
+     that for a local single-user system; they would matter for a future multi-device
+     or shared-vault case."
+license: Apache-2.0 (UNVERIFIED_IN_THIS_SESSION)
+evidence: []
+```
+
+#### SRC-143 — DoltLite
+
+```yaml
+id: SRC-143
+name: DoltLite
+class: [ARCHITECTURE_DONOR, VERSIONING_REFERENCE]
+repository_or_url: https://github.com/dolthub/doltlite
+exact_commit_or_version: PIN_PENDING_EXTERNAL_VERIFICATION
+date_verified: not verified in this session
+decision: STUDY / DEFER
+fehrest_layer: DERIVED
+what_we_study:
+  - Content-addressed structured storage
+  - Branching structured state; historical queries; merge/versioning semantics
+what_we_will_not_do:
+  - "Make the Fehrest SQLite store a Git-like database. ADR-0006 confines SQLite to
+     DERIVED state precisely so that its corruption is an availability problem;
+     versioning a derived store would be versioning something that is rebuilt by
+     definition."
+license: Apache-2.0 (UNVERIFIED_IN_THIS_SESSION)
+evidence: []
+```
+
+---
+
+### 14.5 Retrieval, graph and semantic interoperability
+
+| id | Source | Class | Decision | Gate / trigger | Explicitly not taken |
+|---|---|---|---|---|---|
+| SRC-150 | **petgraph** — `petgraph/petgraph` | CODE_DONOR / GRAPH_REFERENCE | **BENCHMARK / DEFER** | **Only if the Graph Intelligence capability gate passes** ([B-13 GI-CAP](../10-BENCHMARK-PLAN.md#b-13--gi-cap--graph-intelligence-capability-experiment)) | Selection before Graph Intelligence earns inclusion. Premature Graphify porting — [ADR-0003](../09-TECHNOLOGY-DECISIONS.md#adr-0003--graph-intelligence-runtime-integration-shape) still forbids it |
+| SRC-151 | **Oxigraph** — `oxigraph/oxigraph` | INTEROPERABILITY_REFERENCE / CODE_DONOR / SEMANTIC_WEB_REFERENCE | **STUDY / DEFER** | Future RDF / SPARQL / JSON-LD export and import | **RDF as the canonical internal model.** [SRC-060](#8-research-canon) already takes W3C PROV vocabulary while refusing to become an RDF system; this entry does not reopen that |
+| SRC-152 | **Salsa** — `salsa-rs/salsa` | ARCHITECTURE_DONOR / RUST_INCREMENTAL_COMPUTATION_REFERENCE | **STUDY / DEFER** | Lessons for parsing, link extraction, FTS and graph projections | **Salsa as a v1 runtime dependency** — see the note below |
+
+**All pins `PIN_PENDING_EXTERNAL_VERIFICATION`; all licenses `UNVERIFIED_IN_THIS_SESSION`.**
+
+**On petgraph — the possible future separation:**
+
+```
+Graphify       ->  extraction / donor capability        (Python, optional, gated)
+Fehrest Rust   ->  graph representation and traversal   (if native suffices)
+```
+
+That split is only worth evaluating **after** GI-CAP retains the capability. Choosing a graph library for a capability that has not earned inclusion is work spent on a hypothesis.
+
+**On Salsa — the temptation this entry exists to name.** Its model (canonical inputs → derived queries → memoized outputs → selective invalidation) is a **superset** of what [R2-07](../reviews/F1-R2-RECONCILIATION.md) actually validated, which is the much smaller:
+
+```
+derivation manifest  +  incremental == full-rebuild property testing
+```
+
+**Do not replace a static dependency manifest with a generic incremental-computation framework** unless measured complexity requires it. The manifest is four fields ([E §10](../04-DERIVED-DATA-MODEL.md#10-derivation-lineage-as-data)); a framework is an architecture. Ponytail question 5 applies with unusual force here, precisely because the framework is genuinely elegant and would be genuinely easy to justify after the fact.
+
+---
+
+### 14.6 Memory research and benchmarks
+
+| id | Source | Class | Decision | What Fehrest takes | Discipline |
+|---|---|---|---|---|---|
+| SRC-160 | **Hindsight** — `vectorize-io/hindsight` | RESEARCH / ARCHITECTURE_DONOR / BENCHMARK_REFERENCE / MEMORY_REFERENCE | **STUDY / BENCHMARK** | World knowledge vs agent experience; entity/state summaries; evolving beliefs; **retain / recall / reflect** lifecycle; structured memory beyond vector snippets | Benchmark claims are **`UPSTREAM_CLAIM`** until independently validated — the same rule that governs [E-8](EVIDENCE_LOG.md#e-8--graphifys-self-reported-retrieval-benchmarks) and [E-14](EVIDENCE_LOG.md#e-14--longmemeval-v2-exists-and-defines-the-right-target) |
+| SRC-161 | **MemOra** | BENCHMARK / RESEARCH | **BENCHMARK** | Memory updates; invalid and obsolete memory; forgetting; avoiding influence from superseded state | Tests the Fehrest question directly: **can it avoid using a memory that was once true and no longer is?** — [B-4](../10-BENCHMARK-PLAN.md#b-4--temporal-and-supersession-correctness)'s stale-memory metric, sourced externally rather than self-authored |
+| SRC-162 | **EvoMemBench** | BENCHMARK / RESEARCH | **BENCHMARK** | Episodic vs cross-episode memory; knowledge vs execution experience; comparison against long-context strategies | Used deliberately as **contrary evidence** against assuming one memory strategy wins every workload |
+| SRC-163 | **"Total Recall at What Cost?"** | RESEARCH / BENCHMARK_REFERENCE | **STUDY** | Memory systems must be compared on **more than accuracy** | Expands evaluation to correctness **plus** context tokens, latency, CPU, disk growth, model-call count and provider cost ([K §5](../10-BENCHMARK-PLAN.md#5-harness-requirements)) |
+| SRC-062 | **AgentDojo** *(existing entry, scope extended)* | SECURITY_BENCHMARK / RESEARCH / ATTACK_REFERENCE | **STUDY / BENCHMARK** | Indirect prompt injection; malicious tool content; adversarial retrieved evidence; agent manipulation | Extended with **Fehrest-specific attack classes** — [L §6](../11-SECURITY-VERIFICATION-PLAN.md#6-adversarial-corpora) |
+
+**SRC-161, SRC-162 and SRC-163 are identified by name in the founder addendum only.** Exact identifiers, versions and venues are `PIN_PENDING_EXTERNAL_VERIFICATION`, and **no figure from any of them may be cited in this package until verified.**
+
+**A standing rule for this table, and it has already cost this project once:** benchmark conclusions are not copied without checking methodology. [E-8](EVIDENCE_LOG.md#e-8--graphifys-self-reported-retrieval-benchmarks) is the worked example — a 76% vs 76% "result" at n=50 whose 95% interval is roughly ±12 points, which means it distinguishes nothing.
+
+---
+
+### 14.7 Data, analytics and view engines
+
+#### SRC-170 — Apache Superset
+
+```yaml
+id: SRC-170
+name: Apache Superset
+class: [ARCHITECTURE_DONOR, CODE_DONOR, PRODUCT_REFERENCE, ANALYTICS_REFERENCE]
+repository_or_url: https://github.com/apache/superset
+exact_commit_or_version: PIN_PENDING_EXTERNAL_VERIFICATION
+date_verified: not verified in this session
+decision: STUDY / DEFER / SELECTIVE_ADAPT
+fehrest_layer: UI                          # a future View Engine, not v1
+supersedes_entry: SRC-080                  # promotes a one-line reference to a full record
+what_we_study:
+  - Separation of SEMANTIC DATA DEFINITIONS from VISUAL PRESENTATION
+  - Reusable metrics and dimensions; dataset abstraction
+  - Chart/view PLUGIN ARCHITECTURE, including the separate chart plugin packages,
+    as a donor for a future Fehrest View Engine
+  - Dashboard composition; SQL and data exploration UX
+  - Caching concepts; programmatic API boundaries
+  - Permission-aware analytics; broad data-source abstraction
+future_fehrest_principle_it_supports:
+  - |
+    CANONICAL OBJECTS  !=  VIEWS
+
+    A dashboard, chart, table or timeline is a PROJECTION over canonical or derived
+    data, never the canonical knowledge itself. This is the D section 1 position
+    (views are projections) extended to the analytics surface, and it is why an
+    analytics layer can be added later without touching a canonical record.
+distinguished_from_data_formulator:        # SRC-079 - different problems, both deferred
+  - "Data Formulator: AGENTIC EXPLORATORY analysis - branching investigations, Data Threads"
+  - "Superset: DURABLE SEMANTIC analytics - reusable metrics/dimensions, charts, dashboards"
+what_we_will_not_do:
+  - Superset as a Fehrest runtime dependency
+  - Introduce Python because of Superset (I-17 forbids it being required at all)
+  - Introduce Redis / Celery / server infrastructure
+  - Introduce a mandatory database server
+  - Introduce DuckDB into the MVP because analytics products use it
+  - Build dashboards before the Headless Rust Thesis-Proof passes
+  - Create a plugin marketplace in v1
+constraints_any_future_analytics_layer_must_preserve:
+  - ZERO MANDATORY SERVICES
+  - LOCAL-FIRST
+  - RUST-OWNED CORE
+  - OPEN DATA
+  - REBUILDABLE DERIVED VIEWS
+deferred_until: >
+  A MEASURED user or product requirement justifies a Data/Analytics layer. Not a
+  founder intuition, and not because the architecture would accommodate it.
+license: Apache-2.0 (UNVERIFIED_IN_THIS_SESSION)
+evidence: []
+```
+
+**Two names carried forward from the founder donor map are NOT identified here.** `OpenPencil` (visual) and `Flint` (data/research) are recorded as **named by the founder and not identified or verified in this session**. No repository, license, maintenance status or capability claim is asserted for either. They enter the Visual/Canvas Engine Gate and the View Engine candidate list respectively **only after identification and verification** — listing an unidentified project as a candidate would be exactly the collection-driven research this addendum closes.
+
+---
+
+### 14.8 JSON Canvas — visual interchange *(promotes [SRC-071](#9-product-references))*
+
+```yaml
+id: SRC-171
+name: JSON Canvas
+class: [STANDARD, INTEROPERABILITY_REFERENCE, PRODUCT_REFERENCE]
+repository_or_url: https://github.com/obsidianmd/jsoncanvas
+exact_commit_or_version: PIN AT PHASE 8    # SRC-071 verified MIT and active at E-13
+decision: ADOPT_AS_VISUAL_INTERCHANGE_CANDIDATE
+fehrest_layer: KNOWLEDGE
+role: >
+  The open interoperability baseline for visual and canvas documents. EVEN IF
+  another engine wins the Visual/Canvas Engine Gate - Penpot, AFFiNE Edgeless,
+  tldraw, Excalidraw or an unidentified candidate - Fehrest preserves an open
+  portable representation wherever the format can express the required semantics.
+  This is I-5 applied to the visual surface: the ENGINE is replaceable, the
+  CANONICAL FORMAT must stay open and specified.
+honest_limit:
+  - "DO NOT force all advanced visual semantics into JSON Canvas if doing so would
+     DESTROY INFORMATION. Lossy canonicalisation is worse than an honest sidecar."
+  - "If richer semantics are later required, document extension and sidecar rules
+     under the D section 4.4 sidecar discipline: the sidecar carries references and
+     metadata, never content, and deleting it loses annotations rather than the
+     document."
+license: MIT
+evidence: [E-13]
+```
+
+---
+
+### 14.9 Research freeze — now binding
+
+```
+FEHREST BROAD DONOR DISCOVERY:  FROZEN
+```
+
+**This addendum is the last planned broad discovery round.** From here a new source may be admitted **only** through a documented gap trigger — [§12](#12-research-freeze), tightened:
+
+| # | Admission trigger |
+|---|---|
+| 1 | Closes a documented architectural, security or product gap |
+| 2 | Materially replaces a weaker existing candidate, with the comparison recorded |
+| 3 | Falsifies an existing assumption |
+| 4 | Supplies missing primary evidence, a standard, or a benchmark |
+| 5 | Is required to address a validated security or recovery problem |
+
+**Research becomes question-driven, not collection-driven.**
+
+| Acceptable future research | Unacceptable |
+|---|---|
+| *"FTS5 failed B-12; benchmark Tantivy."* | *"Search for 100 more knowledge apps."* |
+| *"GLM-5.3 found a path-confinement weakness; evaluate cap-std."* | *"Add another framework because it looks interesting."* |
+| *"GI-CAP passed; investigate the minimum Rust graph runtime."* | *"Copy a subsystem before its requirement exists."* |
+| *"Collaboration became a ratified requirement; execute the CRDT Gate."* | *"Add a donor because a competitor uses it."* |
+
+**This does not mean Fehrest stops learning.** It means every future source arrives attached to a question that already exists.
+
+**Ponytail applies to the registry itself:** prefer fewer proven dependencies and smaller interfaces. A registry entry is not a plan, and a long candidate list is not thoroughness — it is deferred decision-making with better formatting.
+
+---
+
+### 14.10 What this addendum did NOT change
+
+Stated explicitly, because a large donor round is exactly where scope creep enters disguised as diligence:
+
+| Unchanged | Still true after §14 |
+|---|---|
+| **First future build** | [Phase T — Headless Rust Thesis-Proof](../15-IMPLEMENTATION-PHASES.md#phase-t--headless-rust-thesis-proof-slice). No donor in this section moves into it |
+| **Runtime dependency set** | **Zero donors were adopted as runtime dependencies by this round.** Every entry is STUDY, BENCHMARK, DEFER, or a CANDIDATE pending a gate |
+| **The v1 scope exclusions** | UI, canvas, editor, CRDT, sync, production graph sidecar, vectors, automatic promotion, analytics, dashboards, plugins, cloud, mobile — all still excluded ([A §9](../00-PRODUCT-THESIS.md#9-scope-commitments)) |
+| **Constitutional invariants** | None amended. I-16 and I-17 in particular bound every UI-adjacent and Python-adjacent entry above |
+| **The Core** | **Rust-owned, and independent of AFFiNE, BlockSuite, Electron, Penpot, Superset, and any cloud or server runtime** |

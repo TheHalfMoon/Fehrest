@@ -142,7 +142,7 @@ updated: 2026-08-17T14:22:03Z
 | Rename | **Preserved** | Path is an attribute |
 | Move across directories | **Preserved** | Same |
 | Folder restructuring | **Preserved** | Bulk path update via reconciliation scan |
-| Case-only rename | **Preserved** | Case-insensitive filesystems need explicit handling |
+| Case-only rename | **Preserved** | Platform-specific; fully specified in [§3.3](#33-filesystem-identity-and-path-semantics) |
 | `git checkout` (branch switch) | **Preserved** where frontmatter survives | Bulk external modification ([N §3.11](13-RECOVERY-MODEL.md#311-git-operations-on-the-vault)) |
 | `git checkout` to pre-Fehrest commit | **Lost, then re-associated** | Reported, never silently guessed |
 | Copy | **New identity for the copy** | Original unaffected |
@@ -157,6 +157,44 @@ updated: 2026-08-17T14:22:03Z
 
 1. **Path hashing does not solve identity** and is not used. Two files with identical content are not the same object; one file at two paths over time is. Only an embedded allocated id distinguishes these.
 2. **Ambiguity is surfaced, never guessed.** Copy-vs-move and restore-vs-new are genuinely ambiguous from the filesystem alone. Silently guessing wrong merges two objects' histories — an unrecoverable corruption of exactly the provenance Fehrest exists to protect.
+
+### 3.3 Filesystem identity and path semantics
+
+> **ADDED IN F1-R2 ([R2-09](reviews/F1-R2-RECONCILIATION.md)).** §3.2 said "case-insensitive filesystems need explicit handling" and stopped there. That is a gap, not a specification: without a defined comparison, a case-only rename on Windows or an NFC/NFD difference on macOS can present as *"a path I have never seen"*, and the ordinary consequence of that is **allocating a second identity for an object that already has one** — a silent split of a file's history, links and memories.
+>
+> **A universal `casefold(path) + NFC(path)` normalisation is NOT accepted as the design.** It is a plausible-looking answer that is wrong on real systems: filesystem equality is a property of the *filesystem and its configuration*, not of the operating system, and not of the string. Linux is case-sensitive; macOS APFS is case-insensitive **by default but can be formatted case-sensitive**; Windows NTFS is case-insensitive by default **but supports per-directory case sensitivity**. Normalising everything to casefolded NFC would merge two genuinely distinct files on a case-sensitive volume — a data-integrity failure worse than the one it prevents.
+
+**The ordering that resolves this: identity first, path second.**
+
+```
+Fehrest identity  =  embedded Fehrest UUID       ≠   path
+```
+
+On reconciliation, for every observed file:
+
+1. **Parse the embedded Fehrest identity from the canonical object** where one is present.
+2. **Reconcile that stable identity against its observed location.** The path is updated to match reality; identity, links, memories and history are untouched.
+3. **Never allocate a new object solely because the path string differs in case or Unicode representation.** A new identity is allocated only when there is no embedded identity *and* no content match — never as a consequence of a string comparison.
+4. **Detect duplicate identities as explicit identity conflicts** (§3.2), surfaced for resolution, never silently resolved.
+
+The path comparison is therefore a **locator optimisation, not an identity decision**. It answers "is this probably the same location I recorded?" so reconciliation can skip work; it never answers "is this the same object?".
+
+**A platform-aware path key, defined per platform and per volume.** Fehrest defines a comparison abstraction whose behaviour is determined by the filesystem it is running against — probed, not assumed — with the conservative default being **case-sensitive, normalisation-sensitive comparison**, because a false *difference* costs a reconciliation scan while a false *equality* costs a merged history.
+
+**The original user-visible path spelling is preserved, always.** Fehrest stores the path exactly as the filesystem reports it and never rewrites a user's chosen capitalisation or Unicode form. The comparison key is derived for matching and is never displayed, exported, or written back to disk.
+
+**Path is never hashed into an identity.** Restated here because it is the tempting shortcut at exactly this point in the design: a path hash is a fast comparison key and an unusable identity, and the two must not be conflated. This is [I-15](01-ARCHITECTURE-CONSTITUTION.md#i-15--paths-are-locations-stable-ids-are-identities) and [G-ID-1](01-ARCHITECTURE-CONSTITUTION.md#i-15--paths-are-locations-stable-ids-are-identities).
+
+**Required test matrix** — each cell asserts identity, links, memories and history survive, and that no duplicate object is allocated:
+
+| Platform | Cases |
+|---|---|
+| **Windows** | default case-insensitive volume · **case-only rename** (`Notes.md` → `notes.md`) · per-directory case-sensitive volume where available · `git checkout` across a commit that changes only case |
+| **macOS** | default (case-insensitive) APFS · **case-sensitive APFS** where feasible in CI · NFC/NFD-equivalent paths, including a filename typed as NFC and returned by the OS as NFD |
+| **Linux** | case-sensitive behaviour · NFC/NFD distinct paths treated as distinct files |
+| **Cross-platform** | rename · move · copy · duplicate UUID · backup restore · `git switch` / `reset` / `merge` |
+
+**A vault authored on one platform and opened on another is a first-class case, not an edge case** — it is the ordinary consequence of the vault being the user's own portable directory ([I-1](01-ARCHITECTURE-CONSTITUTION.md#i-1--user-knowledge-exists-locally-by-default)). Two files that differ only in case are a *legal vault* on Linux and an *impossible vault* on default Windows; the reconciliation must report that as a conflict rather than silently discarding one.
 
 ---
 
@@ -175,6 +213,10 @@ updated: 2026-08-17T14:22:03Z
 | Memory JSONL | Assertions | In-repo | v1 |
 
 Every entry has a specification and a lossless exporter, per [I-5](01-ARCHITECTURE-CONSTITUTION.md#i-5--canonical-artifacts-are-open-local-and-inspectable-amended).
+
+> **Markdown semantics are specification-backed, added in F1-R2 ([SRC-115](research/FEHREST_SOURCE_REGISTRY.md#src-115--commonmark-specification-and-rust-parsers)).** F1 wrote "External spec" against CommonMark + GFM and named no parser and no conformance obligation — an unmade decision on the most load-bearing format in the product, and one that a Rust Core now has to make. **Fehrest does not invent undocumented Markdown behaviour**; any deviation from CommonMark/GFM is recorded in the format registry or it is a defect.
+>
+> The parser is chosen by measurement against Fehrest's own requirements — conformance to the official test suite, frontmatter coexistence, **source offsets** (required by §4.4 sidecar anchors and by the `link.line` provenance column), AST adequacy for link extraction, malformed-input behaviour, incremental performance, and round-trip fidelity under [R-8](01-ARCHITECTURE-CONSTITUTION.md#2-derived-rules). `pulldown-cmark` and `comrak` are the candidates. **Popularity is not a selection criterion.**
 
 ### 4.2 Frontmatter schema
 
@@ -257,6 +299,8 @@ Three tiers:
 | **T2 — Canonical, compactable** | Full detail for N days, then summarised into T1 with the detail dropped | Session mechanics |
 | **T3 — Ephemeral** | Never written to the canonical log | Stream chunks, keystrokes, UI state, telemetry |
 
+> **The tier ASSIGNMENTS below are not frozen ([R2-12](reviews/F1-R2-RECONCILIATION.md)).** The three-tier *structure* is sound and is retained. Which event types belong in which tier, what `N` is, and whether T2 is needed at all depend on **measured event volume by class**, which does not exist. The 500 events/day figure in [O §9](14-PERFORMANCE-BUDGETS.md#9-growth-over-time) is an **unvalidated planning assumption**, and no counter-estimate has been accepted in its place. A Phase 0 measurement task captures or reconstructs representative real multi-agent usage and counts potential events by class; retention window, compaction policy, disk budget and checkpoint cadence are set from that. Until then the lists below are a **starting proposal**, not a commitment.
+
 **T1 — permanent:**
 ```
 object/created      object/updated      object/renamed      object/deleted
@@ -265,7 +309,8 @@ decision/recorded
 agent/session-start agent/session-end
 capability/granted  capability/revoked
 tool/approval-asked tool/approval-decided
-context/compiled            # inputs + digest, NOT the package body
+context/compiled            # inputs + digest + SERVED-ITEM MANIFEST (R2-01),
+                            #   NOT the package body
 import/ingested             # source, content hash, extractor, version
 schema/migrated
 ```
@@ -283,9 +328,15 @@ user/message
 
 **Compaction rule:** compaction is itself an event (`log/compacted`) recording what was summarised and the digest of what was removed. Compaction never deletes a T1 event and never breaks the hash chain — it writes a new segment and marks the old one superseded, retaining its digest. So the log remains verifiable after compaction, which naive truncation would destroy.
 
-**Why `context/compiled` stores inputs and a digest rather than the package body:** storing every package body means storing the vault repeatedly. Storing inputs plus a digest satisfies [I-14](01-ARCHITECTURE-CONSTITUTION.md#i-14--model-visible-state-is-reconstructable-provenance-linked-scope-authorized-and-auditable) by *recomputation*, and the digest proves the recomputation matches. This is the harness's derive-don't-store principle applied to context.
+**Why `context/compiled` stores a manifest and a digest rather than the package body** — *corrected in F1-R2 ([R2-01](reviews/F1-R2-RECONCILIATION.md))*:
 
-**The honest cost:** recomputation requires that canonical state has not changed. When it has, the package is not reproducible byte-for-byte and Fehrest must say so rather than pretend. `context/compiled` therefore records the canonical high-water mark (event sequence number) it was compiled against, so a failed reproduction is explainable rather than mysterious.
+Storing every package body means storing the vault repeatedly, and that objection stands. But F1's answer — inputs plus a digest, satisfying [I-14](01-ARCHITECTURE-CONSTITUTION.md#i-14--model-visible-state-is-reconstructable-provenance-linked-scope-authorized-and-auditable) *by recomputation* — was insufficient, for a reason the next paragraph of the F1 text already conceded and then did not follow through: **recomputation requires that canonical state has not changed, and canonical state changing is normal.** A digest proves a match when one occurs; it says nothing at all when the match fails, which is precisely when an auditor needs an answer.
+
+`context/compiled` therefore carries a **permanent T1 served-item manifest** ([H §3.2](07-CONTEXT-COMPILER-SPEC.md#32-the-served-item-manifest--permanent-t1)): per emitted item, its identity, section, ordinal, source revision, source content hash, rendered fragment hash, trust level and semantic axes — **not** its body. The cost is a small constant per served item rather than a copy of the content, and it converts "what did this session see?" from a recomputation attempt into a lookup.
+
+**The honest cost, restated correctly:** *content* recomputation still requires that the cited source revisions survive. When they do not, replay returns `UNRECONSTRUCTABLE` with a reason ([H §3.3](07-CONTEXT-COMPILER-SPEC.md#33-replay-outcomes-are-explicit--three-results-never-two)). `context/compiled` records the canonical high-water mark and per-plane source marks it was compiled against, so divergence is explainable rather than mysterious — and the manifest keeps the audit answer available regardless.
+
+**The manifest is never compacted.** It is T1 by definition; a compaction policy that removed it would silently delete the record of what agents were shown, which is the one thing [I-14](01-ARCHITECTURE-CONSTITUTION.md#i-14--model-visible-state-is-reconstructable-provenance-linked-scope-authorized-and-auditable) makes unconditional.
 
 ### 5.3 Event record
 
@@ -315,6 +366,26 @@ Adopted directly from the donor ([E-9](research/EVIDENCE_LOG.md#e-9--deepseek-ha
 
 - A torn final record is truncated to the last complete record; its bytes are preserved in a quarantine file rather than discarded.
 - An **unterminated session is never truncated.** It is closed with a synthetic `agent/session-end { reason: interrupted }` — a reason no normal producer ever emits, so a repaired session is always distinguishable from a clean one. The donor's rationale applies verbatim: a single long-horizon session may contain enormous durably-written work, and truncating it to restore balance would destroy real history to satisfy a bookkeeping property.
+
+### 5.5 Spilled locators have a declared durability class
+
+> **ADDED IN F1-R2 ([R2-11](reviews/F1-R2-RECONCILIATION.md)).** Oversized tool output is replaced by an opaque locator ([G §3.2](06-AGENT-MODEL.md#32-execution-pipeline), adopted from [E-9](research/EVIDENCE_LOG.md#e-9--deepseek-harness-pinned-version-and-adoptable-patterns)). F1 never said **where the spilled payload lives or how long it lasts**. If a `tool/result` payload spills into derived state, then `fehrest doctor --reset-derived` — a *supported, documented, harmless* recovery instruction ([E §1](04-DERIVED-DATA-MODEL.md#1-two-classes-of-state-inside-fehrest)) — silently destroys the substance of audit records that the event log still claims to hold. The user is told they are deleting a cache; they are also deleting evidence.
+
+**Rule: every locator referenced by a canonical event carries an explicit durability class, recorded with the reference.**
+
+| Class | Lives in | Lifetime | Permitted referrer |
+|---|---|---|---|
+| `CANONICAL_PERMANENT` | canonical store | Same as the referring T1 event | T1 events |
+| `CANONICAL_COMPACTABLE` | canonical store | Full detail for the T2 window, then removed with its digest retained | T2 events |
+| `DERIVED_DISPOSABLE` | derived store | May vanish on any derived reset | **T3 only — never referenced by a canonical event** |
+
+**The binding constraint:** a canonical event may reference only a locator whose class guarantees a lifetime **at least as long as the event's own tier**. A T1 event may not point at `DERIVED_DISPOSABLE` storage. This is the [R-2](01-ARCHITECTURE-CONSTITUTION.md#2-derived-rules) rule ("no canonical write depends on a derived read") extended to references, which F1 had not covered.
+
+**Missing or compacted locator semantics.** Resolving a locator returns one of `PRESENT`, `COMPACTED` (with the retained digest), or `MISSING` (an integrity anomaly, recorded as an event). A reader is never left to infer which. `COMPACTED` is an expected outcome and is not an error; `MISSING` on a `CANONICAL_PERMANENT` locator is a corruption signal handled per [N](13-RECOVERY-MODEL.md).
+
+**Backup and reset behaviour follow from the class, not from the directory.** `CANONICAL_*` locators are included in backup and are untouched by a derived reset. `DERIVED_DISPOSABLE` is excluded from backup and freely discarded.
+
+**Kept minimal deliberately.** Three classes, one constraint, three resolution outcomes. This is not a general storage-tiering framework and must not grow into one; it exists to close one specific gap — a canonical record pointing at disposable bytes.
 
 ---
 
@@ -404,6 +475,7 @@ Whatever wins, the constitution binds it: canonical artifacts stay open, specifi
 | Markdown files + frontmatter | **Yes** | No |
 | Attachments | **Yes** | No |
 | Event journal (T1/T2) | **Yes** | No |
+| **Context-package served-item manifests** ([§5.2](#52-durability-tiers--the-correction-to-the-brief)) | **Yes** — T1, never compacted | No |
 | Memory assertions | **Yes** | No |
 | Sidecars (annotations, block ids, provenance) | **Yes** | No |
 | `vault.json` | **Yes** | No |
@@ -413,6 +485,6 @@ Whatever wins, the constitution binds it: canonical artifacts stay open, specifi
 | Embeddings / communities / summaries / thumbnails | No | Yes |
 | Memory current-state projection | No | Yes |
 | Event SQLite mirror | No | Yes |
-| Context packages | No | Yes (from inputs + digest, §5.2) |
+| Context package **bodies** | No | **Conditionally** — only while the cited source revisions survive (§5.2, [H §3.3](07-CONTEXT-COMPILER-SPEC.md#33-replay-outcomes-are-explicit--three-results-never-two)) |
 
 **One documented exception to "derived is always rebuildable":** extracted text from a *deleted* source attachment. If a user deletes the original PDF, its extracted text can no longer be regenerated. Resolution: extracted text is stored in `derived/` and is genuinely lost on rebuild — Fehrest does **not** silently promote it to canonical. The user is warned at deletion time that derived extractions will be lost. Making it canonical would mean Fehrest quietly retaining content the user tried to delete, which is worse than the data loss.

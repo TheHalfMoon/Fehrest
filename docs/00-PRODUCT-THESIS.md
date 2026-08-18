@@ -161,9 +161,30 @@ Fehrest's thesis is falsifiable by a single experiment, specified as [B-7](10-BE
 
 > Agent A works a project over a long period. Agent A is destroyed. Agent B receives **no chat history** — only a Fehrest-compiled context package — and must continue the project correctly.
 
-Fehrest must beat: raw chat-history stuffing, BM25, dense RAG, hybrid RAG, graph-only retrieval, existing memory systems, and — the bar that actually matters — **a competent agent with ordinary file tools and no memory system at all.**
+Fehrest must beat: raw chat-history stuffing, BM25, dense RAG, hybrid RAG, graph-only retrieval, existing memory systems, **a maintained Karpathy-style LLM Wiki**, and — the bar that actually matters — **a competent agent with ordinary file tools and no memory system at all.**
 
 If Fehrest cannot beat the last baseline, it does not deserve to exist. That is stated here deliberately, before any code is written.
+
+### 8.1 The maintained-wiki baseline, and what it demands *(added in F1-R2)*
+
+> **RAG repeatedly reconstructs understanding from raw sources on every query. A maintained LLM Wiki instead creates a persistent, interlinked knowledge artifact that compounds over time** ([SRC-101](research/FEHREST_SOURCE_REGISTRY.md#82-andrej-karpathy--llm-wiki)).
+
+That second pattern is a far closer relative of Fehrest's thesis than any RAG variant — and it needs **no system at all**: raw sources, a maintained Markdown wiki, explicit links, and an ordinary agent that can search and read.
+
+Adding it to the baseline ladder ([K §3.1](10-BENCHMARK-PLAN.md#31-the-baseline-ladder)) sharpens the claim this document is making. Fehrest is not claiming that *having durable, linked, maintained knowledge* helps an agent — a directory of Markdown files already delivers that. **Fehrest is claiming that the following add measurable value on top of it:**
+
+| Claim | Why a maintained wiki cannot supply it |
+|---|---|
+| **Temporal state** | A wiki says what is written now. It cannot answer "what was true in March" |
+| **Supersession** | A wiki edit destroys the reasoning and keeps the conclusion |
+| **Provenance** | A wiki page is authored, not sourced; nothing links a claim to the evidence that produced it |
+| **Deterministic context compilation** | A wiki is read by search and judgement, not compiled to a bounded, reproducible, budgeted package |
+| **The agent experience** | A wiki has no capability boundary, no audit, and no record of what any agent was shown |
+| **Graph intelligence** *(optional, falsifiable)* | A wiki's links are the ones a human remembered to write |
+
+**Beating a plain agent while merely tying a maintained wiki would be a real result with an uncomfortable reading**: that the value is in *having a maintained artifact*, not in Fehrest's architecture — a materially smaller product than the one this document describes. That is why the baseline is in the ladder rather than left out of it.
+
+**No endorsement is claimed or implied.** Karpathy has not endorsed Fehrest, Graphify, or Graph Intelligence, and no such endorsement is established. The pattern is used as a baseline and a framing — as something to beat and to think with — never as an authority.
 
 ## 9. Scope commitments
 
@@ -171,7 +192,9 @@ If Fehrest cannot beat the last baseline, it does not deserve to exist. That is 
 
 **Explicitly deferred:** rich block editing, CRDT collaboration, canvas, sync, vectors, graph explorer UI, plugins, mobile, analytics, forecasting, OCR, transcription, multi-user, marketplace.
 
-**Explicitly forbidden in v1:** mandatory cloud, hosted auth, opaque telemetry, mandatory LLM, mandatory vector DB, mandatory graph DB, unrestricted agent filesystem or network access.
+**Explicitly forbidden in v1:** mandatory cloud, hosted auth, opaque telemetry, mandatory LLM, mandatory vector DB, mandatory graph DB, unrestricted agent filesystem or network access, **a mandatory Python runtime** ([I-17](01-ARCHITECTURE-CONSTITUTION.md#i-17--fehrest-remains-usable-without-python)), **and a mandatory graphical interface** ([I-16](01-ARCHITECTURE-CONSTITUTION.md#i-16--fehrest-remains-operable-without-its-user-interface)).
+
+**Implementation language: Rust** ([ADR-0010](09-TECHNOLOGY-DECISIONS.md#adr-0010--core-implementation-language), founder decision D-1). The Core owns every correctness- and security-sensitive semantic; TypeScript/React is presentation only; Python sits behind an optional process boundary.
 
 ## 10. Why this is buildable by a small team
 
@@ -185,7 +208,8 @@ The remaining novel work — bitemporal memory, promotion, context compilation, 
 
 | Finding | Consequence |
 |---|---|
-| Context compilation cannot beat a competent agent with plain file tools ([B-7](10-BENCHMARK-PLAN.md)) | **Thesis falsified.** The product has no reason to exist |
+| Context compilation cannot beat a competent agent with plain file tools ([B-7b](10-BENCHMARK-PLAN.md#b-7b--confirmatory-powered-benchmark)) | **Thesis falsified.** The product has no reason to exist. Indicated early by [B-7a](10-BENCHMARK-PLAN.md#b-7a--early-headless-thesis-pilot) at [Phase T](15-IMPLEMENTATION-PHASES.md#phase-t--headless-rust-thesis-proof-slice); **only the powered study may fire it** |
+| Fehrest beats a plain agent but only ties a maintained LLM Wiki ([§8.1](#81-the-maintained-wiki-baseline-and-what-it-demands-added-in-f1-r2)) | The value is in *having a maintained artifact*, not in temporal state, supersession, provenance or compilation. A **materially smaller product**; this thesis is restated, not defended |
 | Deterministic promotion captures little durable value ([H-3](research/EVIDENCE_LOG.md#h-3--deterministic-promotion-rules-capture-most-durable-memory-value)) | Memory requires a model; the `AI OFF` mode degrades from "full function" to "read-only knowledge base" — a materially weaker product |
 | Markdown plus sidecars proves insufficient for real knowledge work ([H-4](research/EVIDENCE_LOG.md#h-4--a-markdown-native-canonical-format-is-sufficient-for-v1-knowledge-work)) | Editor decision reopens; either a maintained rich substrate must be found or Fehrest owns one permanently |
 | Users do not value local ownership enough to accept the feature cost | Thesis is technically sound but commercially wrong. Not resolvable by architecture |

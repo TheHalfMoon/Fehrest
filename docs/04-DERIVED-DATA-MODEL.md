@@ -31,6 +31,7 @@ The rest of this document concerns the **derived** class only.
 
 | Artifact | Store | Rebuild source | Rebuild cost (10K files) | Required? |
 |---|---|---|---|---|
+| Projection checkpoints (§11) | `derived/checkpoints/` | Canonical event log | Replay-bound | No — accelerator |
 | Object index | `index.sqlite` | Frontmatter + file stat | ~1 min | Yes |
 | Link/backlink index | `index.sqlite` | Markdown link parse | ~1 min | Yes |
 | FTS5 index | `index.sqlite` | Object bodies | ~2 min | Yes |
@@ -224,6 +225,18 @@ file change (watch, debounced)
 - Rebuild progress is durable, so an interrupted rebuild resumes rather than restarting ([N](13-RECOVERY-MODEL.md)).
 - External modification (git checkout, sync, editor outside Fehrest) is detected by hash comparison on a scan, not by trusting the watcher — watchers miss events, and a missed event that silently drops a file from the index is a suppression bug indistinguishable from [T-16](02-THREAT-MODEL.md#t-16--corrupted-derived-indexes).
 
+> **The watcher invariant, stated as a rule because a library will not enforce it** ([SRC-111](research/FEHREST_SOURCE_REGISTRY.md#src-111--notify-rs)):
+>
+> ```
+> FILESYSTEM WATCH EVENTS ARE HINTS. THEY ARE NOT CANONICAL TRUTH.
+>
+> Correct:    watch event → schedule reconciliation → scan + identity
+>                           reconciliation → canonical conclusion
+> Forbidden:  watch event → blind canonical mutation
+> ```
+>
+> **A watcher is a latency optimisation; reconciliation is the correctness mechanism.** `notify-rs` is the likely implementation candidate for the cross-platform backends and polling fallback, subject to a Phase 1–2 prototype and to the hostile-environment cases in [N §3A](13-RECOVERY-MODEL.md#3a-hostile-filesystem-and-sync-environments) — but adopting any watcher library must not quietly invert the ordering above.
+
 **Reconciliation:** a periodic full scan compares the canonical inventory to the index, reporting objects present on disk but missing from the index and vice versa. This is both a correctness check and the detector for index-suppression attacks.
 
 ---
@@ -247,6 +260,8 @@ When enabled, embeddings are stored with the model identifier and dimension. A m
 **Determinism requirement:** rebuilding must produce *functionally identical* query results, not byte-identical files. Byte-identical is unachievable (SQLite page layout, insertion order, parallel extraction ordering) and demanding it would create a permanently failing test.
 
 `test_nuke_and_rebuild_equivalence` therefore compares a fixed query set's results — ordered result IDs, scores within tolerance, memory resolutions, context package digests — rather than file bytes. This is the most important test in the suite because it is the guarantee that every decision in this document is reversible.
+
+> **One assumption inside this test is now an explicit empirical gate ([R2-14](reviews/F1-R2-RECONCILIATION.md)).** "Rebuild produces the same query results" quietly assumes **FTS5 ranks a logically identical corpus identically regardless of the write history that produced the index.** That has not been measured, and SQLite makes no such guarantee. An index reached through heavy incremental `insert`/`update`/`delete`/`replace` may differ from one built fresh — in candidate membership, in relative ranking, or in scores — and `context package digests` in the comparison list sit directly downstream of it. [B-12](10-BENCHMARK-PLAN.md#b-12--fts5-rebuild-and-ranking-stability) measures this before the digest is depended on. **No load-bearing deterministic digest may rest on an engine-internal ranking property that has not passed that test.**
 
 **Cost, extrapolated from measurement** ([E-5](research/EVIDENCE_LOG.md#e-5--graphify-measured-extraction-throughput-preliminary), linear assumption flagged as [H-2](research/EVIDENCE_LOG.md#h-2--extraction-scales-linearly-in-file-count)):
 
@@ -273,3 +288,63 @@ The 100K graph figure is the number that shapes the architecture: it must be a r
 | Disk full during rebuild | Write error | Abort cleanly, retain previous index | Rebuild deferred |
 
 **The design rule across every row: derived-state failure degrades retrieval quality and never blocks core function.** A user with a corrupt graph, a dead sidecar and no embeddings must still be able to open the app, search their notes, read and write, record memories, and compile context. If any derived-state failure can prevent that, the tiering in §2 has been violated.
+
+---
+
+## 10. Derivation lineage as data
+
+> **ADDED IN F1-R2 ([R2-07](reviews/F1-R2-RECONCILIATION.md)).** The useful idea is taken from studying Apache Spark; **Spark itself is not.** No JVM, no Spark runtime, no DAG scheduler, no Pregel, no distributed execution, no cluster, no RDD/DataFrame dependency — see [SRC-100](research/FEHREST_SOURCE_REGISTRY.md#414-apache-spark--study--defer) and [I §5](08-DONOR-MATRIX.md#5-study--mechanisms-not-vibes).
+
+[I-6](01-ARCHITECTURE-CONSTITUTION.md#i-6--derived-state-is-disposable-and-rebuildable) says derived state is rebuildable. §6 says the *normal* path is incremental, because a full rebuild is minutes to hours. **Those two statements are only compatible if incremental maintenance provably converges to the same state as a full rebuild** — and F1 asserted that without a mechanism that could test it.
+
+**A derivation registry makes the dependency explicit and small.** Every derived artifact records:
+
+```
+artifact        # what was produced (index table, graph region, community set, projection)
+inputs          # the canonical identities and revisions it was derived from
+deriver_id      # which deriver produced it
+deriver_version # which version of that deriver
+```
+
+That is the whole model. It is **lineage-as-data, not a workflow engine**: there is no scheduler, no execution plan, no task graph, and no runtime. It is a table that answers two questions — *what is this built from* and *what built it* — which is exactly what invalidation and equivalence testing require and nothing more. Implementation is later, in a Rust-native representation, under [R-10](01-ARCHITECTURE-CONSTITUTION.md#2-derived-rules).
+
+**The two properties it makes testable:**
+
+- **`test_incremental_equals_full`** — apply a sequence of canonical mutations incrementally, then rebuild from the identical final canonical state, and assert the same defined observable result, subject only to **explicitly documented tolerances** (score epsilon, insertion-order-independent comparison). Undocumented divergence is a failure.
+- **`test_invalidation_completeness`** — for every canonical mutation, assert that every artifact whose recorded `inputs` include the mutated identity is invalidated. The bug this catches is the one that is otherwise invisible: an artifact that *should* have been rebuilt and quietly was not, producing stale retrieval that looks like normal retrieval.
+
+**`deriver_version` is what makes staleness detectable rather than inferred** — the same mechanism as `extractor_version` in [§5.3](#53-id-mapping-is-the-critical-seam), generalised from the graph to every derived artifact.
+
+**What is explicitly rejected.** Fehrest does not adopt lazy recomputation, partition semantics, shuffle boundaries, or any execution model. It adopts one idea — that the *provenance of derived state should be data* — because it converts [I-6](01-ARCHITECTURE-CONSTITUTION.md#i-6--derived-state-is-disposable-and-rebuildable) from a claim into a property.
+
+---
+
+## 11. Projection checkpoints
+
+> **SPECIFIED IN F1-R2 ([R2-08](reviews/F1-R2-RECONCILIATION.md)).** [O §9](14-PERFORMANCE-BUDGETS.md#9-growth-over-time) requires that "projections are incremental and checkpointed" so startup does not replay a decade of events. Nothing in F1 said what a checkpoint *is*, what it contains, or what happens when one is invalid — a load-bearing mechanism named only in a performance requirement.
+
+**A checkpoint is DERIVED, NON-AUTHORITATIVE, DISPOSABLE and REBUILDABLE.** It is a memoised projection state, never a source of truth. Deleting every checkpoint costs time and loses nothing, which is what keeps it inside [I-6](01-ARCHITECTURE-CONSTITUTION.md#i-6--derived-state-is-disposable-and-rebuildable) rather than beside it.
+
+**Checkpoint metadata:**
+
+```
+log_sequence_high_water_mark   # the last event folded into this checkpoint
+schema_version                 # canonical record schema it was built against
+deriver_version                # the projection code version
+digest                         # over the checkpointed state
+```
+
+**Validity.** A checkpoint is valid only if its `schema_version` and `deriver_version` match the running system, its `digest` verifies, and its high-water mark is ≤ the canonical log head. **A checkpoint ahead of the log head is a rollback signal, not a usable checkpoint** ([T-15](02-THREAT-MODEL.md#t-15--rollback-and-replay-abuse)).
+
+**Invalid checkpoint → discard → fall back to an older valid checkpoint if one exists → otherwise replay canonical state from the beginning.** Discarding is always safe by construction. Recovery is recorded as an event.
+
+**Two budgets, deliberately separated, and only one of them is set:**
+
+| Path | Status |
+|---|---|
+| **Healthy start** — a valid checkpoint exists; replay only the tail since its high-water mark | Budgeted in [O §3](14-PERFORMANCE-BUDGETS.md#3-startup) |
+| **Degraded recovery** — no valid checkpoint; full replay of canonical state | **Deliberately unbudgeted. Measured first** |
+
+**No degraded-path latency target is invented here.** The temptation is to write a plausible number — the Codex review suggested replay "necessarily takes minutes," which is an unmeasured claim about an unbuilt system on an unmeasured event volume whose own baseline assumption is unvalidated ([R2-12](reviews/F1-R2-RECONCILIATION.md)). Three unknowns multiplied together do not produce a budget. The degraded budget is set after Phase 0 measures real event volume and Phase 1 measures real replay throughput; until then it is stated as unmeasured, which is the honest form of the answer.
+
+**Checkpoint cadence is likewise unset**, for the same reason: cadence trades startup latency against write amplification, and both sides of that trade are currently unmeasured.

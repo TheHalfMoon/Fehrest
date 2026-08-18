@@ -2,14 +2,29 @@
 
 **Date:** 2026-08-17
 **Author role:** Principal Architect
-**Phase:** `F1-R1` reconciliation complete
-**Next gate:** GPT-5.6 Sol delta review → independent model review → GLM-5.3 security review → freeze → founder authorization
+**Phase:** `F1-R2` reconciliation complete
+**Next gate:** GPT-5.6 Sol **R2 delta** review → GLM-5.3 security/cyber review → architecture freeze → founder implementation authorization
 
 ---
 
 ## Verdict
 
-# `F1_R1_RECONCILED_READY_FOR_GPT_REVIEW`
+# `F1_R2_RECONCILED_READY_FOR_GPT_DELTA_REVIEW`
+
+**Read [the R2 delta](reviews/F1-R2-RECONCILIATION.md) first.** It carries the finding-by-finding table; this document is the summary.
+
+**Justification.** The 19 Codex findings, as validated by GPT-5.6 Sol, are reconciled: **13 VALID applied in full, 5 PARTIAL applied in their valid portion with the rejected portion argued, 1 NEEDS_EVIDENCE left open with a measurement task.** Three founder decisions are recorded (D-1 Rust; D-2 Spec Kit; D-3 Ponytail), closing [ADR-0010](09-TECHNOLOGY-DECISIONS.md#adr-0010--core-implementation-language) and adding two invariants that make it testable.
+
+**Four proposed remedies were rejected while their findings were accepted** ([R2 §3](reviews/F1-R2-RECONCILIATION.md#3-substance-not-accepted--recorded-explicitly)): `10K–100K events/day` as fact, `n ≈ 300+` as a universal sample size, universal `casefold+NFC` path normalisation, and a single total order over the eight epistemic states. Each is recorded with its reasoning, because the difference between "the finding was wrong" and "the fix was wrong" matters to the next reviewer.
+
+The verdict is not `F1_R2_BLOCKED_BY_UNRESOLVED_EVIDENCE`: every open item has a named benchmark and a phase. The two largest — event volume and FTS5 ranking stability — are now *scheduled measurements* rather than *unstated assumptions*, which is strictly better than the position G2 reviewed. It is not `F1_R2_MAJOR_REDESIGN_REQUIRED`: the four-layer architecture, constitutional invariants, plane separation, bitemporal memory and the falsification experiment all survive.
+
+**What changed structurally.** Several mechanisms that were *asserted* are now *specified* — the served-item manifest, checkpoints, derivation lineage, filesystem identity, pending semantics. Several vocabularies that were *conflated* are now *separated* — the four memory axes, the scope dimensions. And **the experiment that decides whether the product should exist now runs before the architecture that depends on it** ([Phase T](15-IMPLEMENTATION-PHASES.md#phase-t--headless-rust-thesis-proof-slice)).
+
+---
+
+<details>
+<summary>Prior verdict — <code>F1_R1_RECONCILED_READY_FOR_GPT_REVIEW</code></summary>
 
 > **Two governance corrections applied pre-G2** (after the R1 delta, before GPT-5.6 Sol review):
 > 1. **V1 target wedge** is `PROVISIONALLY_ACCEPTED_FOR_PLANNING` / `FOUNDER_RATIFICATION_REQUIRED` — **not** a closed decision.
@@ -17,13 +32,17 @@
 >
 > No other architecture changes were made. See [reconciliation §10](reviews/F1-R1-RECONCILIATION.md#10-post-r1-governance-corrections-pre-g2).
 
-**Justification.** All 20 validated review findings are reconciled. Three factually incorrect F1 claims are retracted **at source** rather than annotated around: the repository-does-not-exist finding, the "BlockSuite is unmaintained" characterisation, and the citation of fixed upstream Graphify bugs as current defects. Three decisions F1 closed prematurely are reopened with **executable gates** rather than argument. One decision F1 left open (repository identity) is now closed; the v1 wedge is adopted only as a provisional planning assumption pending founder ratification.
+All 20 validated R1 findings were reconciled. Three factually incorrect F1 claims were retracted **at source** rather than annotated around: the repository-does-not-exist finding, the "BlockSuite is unmaintained" characterisation, and the citation of fixed upstream Graphify bugs as current defects. Three decisions F1 closed prematurely were reopened with **executable gates** rather than argument. Repository identity was closed; the v1 wedge was adopted only as a provisional planning assumption pending founder ratification.
 
-The verdict is not `F1_R1_BLOCKED_BY_UNRESOLVED_EVIDENCE`: every remaining unknown has a named benchmark and a phase, and none blocks review. It is not `F1_R1_REDESIGN_REQUIRED`: the corrections narrowed and re-grounded decisions, and the four-layer architecture, constitutional invariants, threat model, memory model and falsification experiment all survived unchanged.
+</details>
 
 **What F1 got wrong, stated plainly.** Two errors shared one root cause — **treating an absence of signal as evidence of absence**. A 404 from an unaffiliated token was read as non-existence. A stale mirror was read as a dead project. Both are now corrected, and the registry has a risk schema that separates current from historical state specifically to prevent recurrence ([R1-20](reviews/F1-R1-RECONCILIATION.md)).
 
 The third error was different in kind: F1 built the identity argument on upstream *bugs* rather than upstream *design*. The bugs were fixed; the argument would have collapsed under review. The reconstructed argument rests on properties no upstream fix can remove.
+
+**What F1-R2 found, and it is a different error class.** R2's corrections cluster around **treating an unmeasured number, or an untested engine property, as though it were a finding**: 500 events/day, "< 5 confirmations per active day", FTS5 ranking stability across rebuild histories, and incremental-equals-rebuild convergence. Each had propagated into real decisions — disk budgets, event tiering, a failure condition, a load-bearing digest — **without ever appearing in the Evidence Log with a status label**, which is exactly the mechanism that was supposed to make such claims attackable. The [unmeasured-quantities table](research/EVIDENCE_LOG.md#unmeasured-quantities-recorded-as-such-f1-r2) now exists so the next round can find this class quickly.
+
+Two further R2 findings were structural rather than evidential, and both are worth naming because they were *invisible while the system was only described*: [T-3](02-THREAT-MODEL.md#t-3--forged-provenance) was a **Boundary control with no implementable mechanism**, and the evidence envelope covered **one of seven agent-facing read paths**. Neither shows up in prose. Both show up immediately when you ask what the test would be.
 
 ---
 
@@ -33,7 +52,9 @@ Ranked by damage if wrong.
 
 | # | Assumption | Risk | Falsified by |
 |---|---|---|---|
-| 1 | **Compiled context beats a competent agent with plain file tools** | **Thesis-fatal.** LongMemEval-V2's own reporting shows the best system beating an off-the-shelf coding agent by only **3.2 points** (72.5% vs 69.3%). The margin is genuinely thin | [B-7](10-BENCHMARK-PLAN.md#b-7--agent-continuation-the-defining-experiment) at Phase 6 |
+| 1 | **Compiled context beats a competent agent with plain file tools — and beats a maintained LLM Wiki** | **Thesis-fatal.** LongMemEval-V2's own reporting shows the best system beating an off-the-shelf coding agent by only **3.2 points** (72.5% vs 69.3%). The margin is genuinely thin, and R2 added a *harder* simple baseline | Indicated by [B-7a](10-BENCHMARK-PLAN.md#b-7a--early-headless-thesis-pilot) at **Phase T**; decided by [B-7b](10-BENCHMARK-PLAN.md#b-7b--confirmatory-powered-benchmark) at Phase 6 |
+| 1a | **Event and memory volume is anywhere near 500/day** | Every disk budget, growth projection and event-tiering decision rests on it. A reviewer proposed a figure **200× larger**; neither is measured | [B-0](10-BENCHMARK-PLAN.md#b-0--event-volume-measurement) at Phase 0 |
+| 1b | **FTS5 ranks a logically identical corpus identically regardless of write history** | A load-bearing deterministic digest sits directly on top of an untested engine property | [B-12](10-BENCHMARK-PLAN.md#b-12--fts5-rebuild-and-ranking-stability) at Phase T / 2 |
 | 2 | **Derived state is genuinely rebuildable** ([I-6](01-ARCHITECTURE-CONSTITUTION.md#i-6--derived-state-is-disposable-and-rebuildable)) | Invalidates the most documents. Index corruption becomes data loss; `synchronous=NORMAL` becomes unsafe; every index decision becomes irreversible | [B-9](10-BENCHMARK-PLAN.md), CI from Phase 2 |
 | 3 | **Deterministic promotion captures most durable memory value** ([H-3](research/EVIDENCE_LOG.md#h-3--deterministic-promotion-rules-capture-most-durable-memory-value)) | `AI OFF` degrades from "full product" to "read-only knowledge base" — a positioning failure, not an architecture one | [B-5](10-BENCHMARK-PLAN.md) at Phase 4 |
 | 4 | **Extraction scales linearly in file count** ([H-2](research/EVIDENCE_LOG.md#h-2--extraction-scales-linearly-in-file-count)) | Every figure in [O](14-PERFORMANCE-BUDGETS.md) is extrapolated from **776 files on one machine**. Cross-file resolution is plausibly superlinear | [B-1](10-BENCHMARK-PLAN.md) at Phase 0 |
@@ -75,10 +96,17 @@ Where I expect the plan to survive attack.
 
 > **Governance correction (pre-G2).** An earlier revision recorded Q-8 as RESOLVED. It is a **planning assumption only** and remains an open founder decision. The wedge wording is **not founder-approved**.
 
+**Closed by R2 — founder decisions:**
+
+| Was blocking | Now |
+|---|---|
+| ~~Q-2 core implementation language~~ | ✅ **CLOSED — Rust** (D-1). [ADR-0010](09-TECHNOLOGY-DECISIONS.md#adr-0010--core-implementation-language) `ACCEPTED`; [I-16](01-ARCHITECTURE-CONSTITUTION.md#i-16--fehrest-remains-operable-without-its-user-interface) and [I-17](01-ARCHITECTURE-CONSTITUTION.md#i-17--fehrest-remains-usable-without-python) make it testable |
+| *(new)* Engineering method | ✅ **CLOSED** — Spec Kit (D-2) + Ponytail (D-3), development governance only ([ADR-0014](09-TECHNOLOGY-DECISIONS.md#adr-0014--engineering-method-spec-kit--ponytail), [S](19-ENGINEERING-METHOD.md)) |
+
 **Still blocking Phase 0 exit:**
 
-- **[Q-2](16-OPEN-QUESTIONS.md#q-2--core-implementation-language) Core language** ([ADR-0010](09-TECHNOLOGY-DECISIONS.md#adr-0010--core-implementation-language) OPEN). Weak recommendation: Rust core + TypeScript UI. **Deliberately not closed** — the review forbids closing it for tidiness.
-- **[Q-3](16-OPEN-QUESTIONS.md#q-3--desktop-shell) Desktop shell** ([ADR-0011](09-TECHNOLOGY-DECISIONS.md#adr-0011--desktop-shell) OPEN). Weak recommendation: Tauri 2. Partly editor-dependent, so genuinely better decided after Phase 3E.
+- **[Q-3](16-OPEN-QUESTIONS.md#q-3--desktop-shell) Desktop shell** ([ADR-0011](09-TECHNOLOGY-DECISIONS.md#adr-0011--desktop-shell) OPEN). Weak recommendation: Tauri 2. **Explicitly not resolved by D-1** — "the core is Rust, therefore the shell is Tauri" is an association, not an argument. Partly editor-dependent, so genuinely better decided after Phase 3E.
+- **[B-0](10-BENCHMARK-PLAN.md#b-0--event-volume-measurement) event-volume measurement** — new in R2, and a gate on freezing any event-tiering, retention, compaction or checkpoint-cadence parameter.
 
 **Opened by R1 — resolved by executable gates, not argument:**
 
@@ -93,6 +121,16 @@ Where I expect the plan to survive attack.
 **Not blockers, but unproven:** hypotheses [H-1](research/EVIDENCE_LOG.md#h-1--fts5--graph-expansion-beats-dense-retrieval-on-personal-vaults) through [H-5](research/EVIDENCE_LOG.md#h-5--a-single-sidecar-process-is-sufficient-isolation-for-the-extraction-path), each scheduled against a named benchmark.
 
 ---
+
+## Documents added in F1-R2
+
+```
+docs/19-ENGINEERING-METHOD.md            # Spec Kit + Ponytail governance (D-2, D-3)
+docs/20-FUTURE-GATES.md                  # Visual/Canvas · Unified Surface · CRDT · View Engine
+docs/reviews/F1-R2-RECONCILIATION.md     # the R2 delta table
+```
+
+Modified in F1-R2: `README.md` and every document under `docs/` except `docs/reviews/F1-R1-RECONCILIATION.md`, which is preserved intact as the R1 audit trail. Full list in [R2 §10](reviews/F1-R2-RECONCILIATION.md#10-files).
 
 ## Documents added in F1-R1
 
@@ -195,10 +233,15 @@ docs/research/EVIDENCE_LOG.md
 
 I confirm that:
 
-- **No product implementation was performed** in F1 or F1-R1. No source file, module, schema, migration, test or scaffold was created. The only artifacts are planning documents.
+- **No product implementation was performed** in F1, F1-R1 or F1-R2. No source file, module, schema, migration, test or scaffold was created. `cargo new` was not run. The only artifacts are planning documents.
 - **No speculative scaffolding was created** to demonstrate progress.
 - **No editor prototype was built.** Phase 3E is specified, not executed.
+- **No headless proof slice was built.** [Phase T](15-IMPLEMENTATION-PHASES.md#phase-t--headless-rust-thesis-proof-slice) is defined, not executed.
+- **Spec Kit was not initialized and Ponytail was not installed.** Both are recorded as decisions and stood up at Phase 0.
 - **No Graphify sidecar was built.** No Graphify port was performed.
+- **No Spark, JVM, or any part of a Spark runtime entered v1.** Concepts only ([SRC-100](research/FEHREST_SOURCE_REGISTRY.md#414-apache-spark--study--defer)).
+- **The final donor-discovery round adopted no runtime dependency.** 24 sources entered the registry as STUDY, BENCHMARK, DEFER or gate-pending; **17 are `PIN_PENDING_EXTERNAL_VERIFICATION` and no commit hash was guessed** ([R2 §9](reviews/F1-R2-RECONCILIATION.md#9-final-donor-discovery-reconciliation)).
+- **Broad donor discovery is now FROZEN.** New sources enter only through a documented gap trigger ([registry §14.9](research/FEHREST_SOURCE_REGISTRY.md#149-research-freeze--now-binding)).
 - **No Yjs, vectors, DuckDB, TimesFM, UI or cloud infrastructure was added.**
 - **Nothing was merged. Nothing was pushed.** The local `origin` was set to the canonical repository so that any future push targets the right remote and can never default to `wepld/Fehrest`; no push occurred.
 - **Implementation is not authorized** and is not claimed to be.
@@ -207,18 +250,20 @@ I confirm that:
 
 ---
 
-## Note to GPT-5.6 Sol
+## Note to GPT-5.6 Sol — R2 delta review
 
-**Read [the delta](reviews/F1-R1-RECONCILIATION.md) first.** It carries the finding-by-finding table; this document is the summary.
+**Read [the R2 delta](reviews/F1-R2-RECONCILIATION.md) first**, and [§3 "Substance NOT accepted"](reviews/F1-R2-RECONCILIATION.md#3-substance-not-accepted--recorded-explicitly) before the delta table. Four proposed remedies were rejected while their findings were accepted; if any of those refusals is wrong, that is the most consequential thing in this round.
 
 The most useful attacks would be on:
 
-1. **[B-7](10-BENCHMARK-PLAN.md#b-7--agent-continuation-the-defining-experiment)'s methodology and its new +10-point threshold.** The corpus is self-authored — the plan's weakest methodological point. Is +10 points defensible, or is it a number chosen to be safely beatable?
-2. **Whether the plain-agent baseline is the right bar.** I argue it is the only honest one.
-3. **Whether the [Editor Gate](18-EDITOR-GATE.md)'s weights are right** — fidelity 30%, maintenance 20%. Weights are fixed before evaluation precisely so they cannot be tuned to a preferred outcome; challenge them now if at all.
-4. **Whether P-6 (sidecar boundedness) is the right discriminator** for the round-trip question, now that F1's impossibility argument is withdrawn.
-5. **Whether promoting Graph Intelligence to CORE reduces falsifiability.** [F-3](17-FAILURE-CONDITIONS.md#f-3--graph-intelligence-does-not-deliver-material-benefit-at-acceptable-cost) now forbids dropping the capability. That is deliberate, but a reviewer could reasonably call it unfalsifiable — the counter-argument is that the *implementation* remains fully falsifiable and replaceable.
-6. **Whether the Event Plane's T1/T2/T3 tiering is over-engineered** for a single-user product.
-7. **Whether bitemporality earns its complexity**, or valid-time-only would serve.
+1. **The four rejected remedies** ([R2 §3](reviews/F1-R2-RECONCILIATION.md#3-substance-not-accepted--recorded-explicitly)). Is refusing `10K–100K events/day` *and* `500/day` the right call, or is deferring to measurement a way of deferring the decision? Is the platform-aware path key actually implementable, or is `casefold+NFC` wrong-but-shippable while the correct answer is wrong-but-unbuildable?
+2. **Whether [Phase T](15-IMPLEMENTATION-PHASES.md#phase-t--headless-rust-thesis-proof-slice) is genuinely the smallest thesis test.** It carries identity, SQLite, FTS5, bitemporal resolution, the served-item manifest and a bounded compiler. Each is argued necessary; the ensemble is still a substantial build for something meant to fail cheaply.
+3. **Whether the four-axis memory model is over-engineered** for a single-user product. [R2-04](reviews/F1-R2-RECONCILIATION.md#4-delta-table) argues the single enum was *invalid*, not merely awkward. If the axes are right but the cost is wrong, what collapses safely?
+4. **Whether removing confidence from resolution will produce an unusable abstention rate** ([F-20](17-FAILURE-CONDITIONS.md#f-20--the-four-axis-memory-model-produces-unusable-abstention-rates)). The plan forbids restoring it and demands more evidence-based rungs instead. Is that a principled position or an unfunded mandate?
+5. **Whether `pending_advisory` is a safety feature or an attack surface.** An adversary who cannot poison memory may still flood the advisory channel and steer an agent toward the wrong questions. Is "can only cause an agent to stop and ask" a strong enough bound?
+6. **[B-7](10-BENCHMARK-PLAN.md#b-7--agent-continuation-the-defining-experiment)'s two-stage design.** Is `INCONCLUSIVE` a genuine safeguard against an underpowered pilot falsely killing the product, or a licence to proceed regardless of what the pilot shows?
+7. **The maintained-LLM-Wiki baseline** ([A §8.1](00-PRODUCT-THESIS.md#81-the-maintained-wiki-baseline-and-what-it-demands-added-in-f1-r2)). It is the hardest simple bar in the plan. Is it hard enough, and is the list of what Fehrest must show *beyond* it complete?
+8. **Whether the [Editor Gate](18-EDITOR-GATE.md#6-scoring) weights should have been changed rather than marked provisional**, and specifically whether agent editability at 5% is double-counted under fidelity or genuinely under-weighted ([Q-16](16-OPEN-QUESTIONS.md#q-16--editor-gate-weights-and-agent-editability)).
+9. **Whether the Event Plane's T1/T2/T3 tiering is over-engineered** for a single-user product — still open, and now explicitly unfrozen pending [B-0](10-BENCHMARK-PLAN.md#b-0--event-volume-measurement).
 
-**Where F1 was wrong, the failure mode is worth attacking directly:** twice, absence of signal was read as evidence of absence. If that pattern survives anywhere else in the package, it is the thing most likely to embarrass the next review.
+**Two failure modes are worth attacking directly.** F1's was reading **absence of signal as evidence of absence**. F1-R2's findings clustered on a different one: **an unmeasured number or an untested engine property propagating into decisions without a status label**. If either pattern survives anywhere else in the package, it is the thing most likely to embarrass the next review — and the second is harder to spot, because an assumption stated confidently reads exactly like a finding.

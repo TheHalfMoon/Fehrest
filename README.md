@@ -16,11 +16,23 @@
 |---|---|
 | F0 Discovery | ✅ Complete |
 | F1 Architecture + Plan | ✅ Complete |
-| **F1-R1 Reconciliation** | ✅ **Complete** — [delta](docs/reviews/F1-R1-RECONCILIATION.md) |
-| GPT-5.6 Sol delta review | ⏳ Next gate |
-| Independent model review → GLM-5.3 security review → freeze → authorization | Pending |
+| F1-R1 Reconciliation | ✅ Complete — [delta](docs/reviews/F1-R1-RECONCILIATION.md) |
+| G2 independent review + GPT-5.6 Sol validation | ✅ Complete — 13 VALID · 5 PARTIAL · 1 NEEDS_EVIDENCE · 0 REJECTED |
+| **F1-R2 Reconciliation** | ✅ **Complete** — [delta](docs/reviews/F1-R2-RECONCILIATION.md) |
+| GPT-5.6 Sol **R2 delta** review | ⏳ Next gate |
+| GLM-5.3 security/cyber review → architecture freeze → founder authorization | Pending |
 
-**Verdict:** `F1_R1_RECONCILED_READY_FOR_GPT_REVIEW` — see [the delta](docs/reviews/F1-R1-RECONCILIATION.md) and [the verdict](docs/VERDICT.md).
+**Verdict:** `F1_R2_RECONCILED_READY_FOR_GPT_DELTA_REVIEW` — see [the R2 delta](docs/reviews/F1-R2-RECONCILIATION.md) and [the verdict](docs/VERDICT.md).
+
+**Founder decisions recorded in F1-R2:**
+
+```
+D-1  Rust is the canonical Fehrest Core language              ACCEPTED
+D-2  GitHub Spec Kit is the specification-driven workflow     ACCEPTED  (development only)
+D-3  Ponytail is the implementation-minimisation discipline   ACCEPTED  (development only)
+```
+
+The desktop shell ([ADR-0011](docs/09-TECHNOLOGY-DECISIONS.md#adr-0011--desktop-shell)) is **deliberately not resolved by D-1** — Tauri 2 remains the leading candidate, and "the core is Rust, therefore the shell is Tauri" is an association, not an argument.
 
 **Canonical repository:** `TheHalfMoon/Fehrest` (private, `main`, size 0). `wepld/Fehrest` is **not** canonical and receives nothing.
 
@@ -30,7 +42,8 @@
 
 **Start here if you are reviewing:**
 
-1. [Evidence Log](docs/research/EVIDENCE_LOG.md) — every measurement this plan rests on, with the exact commands. **Attack this first.** If a measurement is wrong, the decisions it supports are void.
+0. [F1-R2 Reconciliation](docs/reviews/F1-R2-RECONCILIATION.md) — the current delta, and **§3 first**: four proposed remedies were rejected while their findings were accepted, with reasoning.
+1. [Evidence Log](docs/research/EVIDENCE_LOG.md) — every measurement this plan rests on, with the exact commands. **Attack this first.** If a measurement is wrong, the decisions it supports are void. Its [unmeasured-quantities table](docs/research/EVIDENCE_LOG.md#unmeasured-quantities-recorded-as-such-f1-r2) lists the numbers that are *not* measurements and says so.
 2. [Product Thesis](docs/00-PRODUCT-THESIS.md) — what Fehrest is, is not, and the experiment that would falsify it.
 3. [Architecture Constitution](docs/01-ARCHITECTURE-CONSTITUTION.md) — 15 invariants, each with an enforcing mechanism and a detecting test. Two are amended from the founder's draft, with arguments.
 4. [Failure Conditions](docs/17-FAILURE-CONDITIONS.md) — what findings would force redesign. The plan's falsifiability lives here.
@@ -57,9 +70,12 @@
 | [O — Performance Budgets](docs/14-PERFORMANCE-BUDGETS.md) | Measurable envelopes |
 | [P — Implementation Phases](docs/15-IMPLEMENTATION-PHASES.md) | 8 gated phases, CLI-first vertical slice |
 | [Q — Open Questions](docs/16-OPEN-QUESTIONS.md) | Founder decisions and known weaknesses |
+| [S — Engineering Method](docs/19-ENGINEERING-METHOD.md) | Spec Kit + Ponytail — how implementation proceeds after authorization |
+| [T — Future Capability Gates](docs/20-FUTURE-GATES.md) | Visual/Canvas Engine · Unified Surface Test · Collaboration/CRDT · View Engine — **none authorized** |
 | [Editor Gate](docs/18-EDITOR-GATE.md) | Prototype bake-off deciding the editor |
 | [Failure Conditions](docs/17-FAILURE-CONDITIONS.md) | What would force redesign |
-| [F1-R1 Reconciliation](docs/reviews/F1-R1-RECONCILIATION.md) | **The R1 delta — read this first if you reviewed F1** |
+| [F1-R2 Reconciliation](docs/reviews/F1-R2-RECONCILIATION.md) | **The R2 delta — read this first** |
+| [F1-R1 Reconciliation](docs/reviews/F1-R1-RECONCILIATION.md) | The R1 delta — preserved as the earlier audit trail |
 | [Source Registry](docs/research/FEHREST_SOURCE_REGISTRY.md) | Every external source, pinned |
 | [Evidence Log](docs/research/EVIDENCE_LOG.md) | Every measurement |
 | [Verdict](docs/VERDICT.md) | Final assessment |

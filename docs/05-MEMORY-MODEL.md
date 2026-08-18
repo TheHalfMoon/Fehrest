@@ -38,25 +38,38 @@ Forcing these onto Objects would put `valid_from`/`valid_until`/`supersedes`/`co
 
 ## 3. The memory record
 
+> **RESHAPED IN F1-R2 ([R2-04](reviews/F1-R2-RECONCILIATION.md), [R2-05](reviews/F1-R2-RECONCILIATION.md)).** The single `epistemic_status` enum and the single `status` field are replaced by four orthogonal fields (§3.3). `scope` becomes a multi-dimensional selector with valid time removed from it (§3.4). `confidence` is demoted to diagnostic metadata and is no longer a resolution input (§3.1).
+
 ```json
 {
   "id": "0198f2b7-...",                    // UUIDv7, immutable
   "statement": "The project migrated from React to SolidJS.",
   "payload": { "subject": "0198...", "predicate": "uses_framework", "object": "SolidJS" },
   "memory_type": "fact",
-  "epistemic_status": "asserted",
+
+  // --- four orthogonal semantic axes (F1-R2, I-12) ---
+  "basis":        "AGENT_ASSERTED",        // core-assigned, never actor-supplied
+  "verification": "UNVERIFIED",
+  "lifecycle":    "ACTIVE",
+  "resolution":   "CLEAR",
+
   "actor": { "kind": "agent", "id": "agent:claude", "session": "0198..." },
   "evidence": [
-    { "kind": "object", "id": "0198...", "locator": "L42-48", "content_hash": "sha256:..." },
+    { "kind": "object", "id": "0198...", "locator": "L42-48", "content_hash": "sha256:...",
+      "served_in": "0198f4..." },          // context package that served it (R2-02)
     { "kind": "event",  "id": "0198..." }
   ],
   "recorded_at": "2026-08-17T14:22:03Z",   // system-assigned, NEVER actor-supplied
   "valid_from":  "2026-06-03T00:00:00Z",   // actor-supplied, validated
   "valid_until": null,                      // null = still valid
-  "confidence": 0.85,
-  "status": "active",
-  "scope": { "kind": "project", "id": "0198..." },
+  "scope": {                                // orthogonal dimensions; NO time dimension
+    "vault":        "0198...",
+    "project":      "0198...",              // omitted = not project-restricted
+    "objects":      null,                   // omitted = not object-restricted
+    "object_types": null                    // omitted = not type-restricted
+  },
   "supersedes": ["0198f2b0-..."],
+  "confidence_diagnostic": 0.85,            // metadata only; NEVER a resolution input
   "provenance": { "mechanism": "rule:decision-extractor", "mechanism_version": "1.2.0" }
 }
 ```
@@ -69,9 +82,13 @@ Forcing these onto Objects would put `valid_from`/`valid_until`/`supersedes`/`co
 
 **`valid_from` is actor-supplied but validated.** A `valid_from` earlier than the earliest evidence timestamp is flagged. It cannot be forbidden — a user legitimately records in August that a decision was made in June — so the control is visibility, not prohibition.
 
-**`confidence` is a number, and this is a known weakness.** Numeric confidence from an LLM is not calibrated, and reviewers should treat it as an ordering hint only. Fehrest therefore **never uses `confidence` alone to resolve a conflict** — resolution is by the deterministic rules in §4, with confidence only as a final tiebreak. See [Q-6](16-OPEN-QUESTIONS.md).
+**`confidence_diagnostic` has no truth authority ([R2-04](reviews/F1-R2-RECONCILIATION.md)).** F1 kept numeric confidence as the sixth and final tie-break in §4.2, which meant that when every principled rule was exhausted, **an uncalibrated floating-point number produced by a language model decided what Fehrest reported as true.** That is the exact failure the deterministic-resolution thesis exists to prevent, arrived at by the back door.
 
-**`status`** ∈ `active | superseded | rejected | retracted | expired`. Superseded and rejected memories are **retained, never deleted** — this is what makes memory substitution visible ([T-5](02-THREAT-MODEL.md#t-5--memory-supersession-abuse)) and what lets the compiler explain *why* the current answer is current.
+It is now **removed from the resolution path entirely**. The field is retained, renamed, and reclassified as diagnostic metadata: useful for tuning promotion rules and for showing a user how a mechanism rated its own output, and admissible in no comparison that decides an answer. When the deterministic ladder cannot separate two candidates, the result is `CONTRADICTION`, not a coin-flip weighted by a model's self-report. See [Q-6](16-OPEN-QUESTIONS.md).
+
+**`lifecycle`** replaces the former `status` field, and `rejected` leaves it: a rejected *candidate* never becomes a memory, so it is a `memory/rejected` event, not a memory state. Superseded, retracted and expired memories are **retained, never deleted** — this is what makes memory substitution visible ([T-5](02-THREAT-MODEL.md#t-5--memory-supersession-abuse)) and what lets the compiler explain *why* the current answer is current.
+
+**`evidence[].served_in`** names the context package whose manifest contains the item. It is what makes [T-3](02-THREAT-MODEL.md#t-3--forged-provenance) checkable rather than aspirational ([R2-02](reviews/F1-R2-RECONCILIATION.md)).
 
 ### 3.2 Memory types
 
@@ -87,6 +104,7 @@ Forcing these onto Objects would put `valid_from`/`valid_until`/`supersedes`/`co
 | `episodic` | "On 3 June, X happened" | dynamic tracking | rule |
 | `semantic` | Generalised knowledge | static recall | model-assisted |
 | `state` | Current project/task state | dynamic tracking | rule |
+| `unclassified` | Type could not be determined deterministically | — | **never auto-promoted** — queued as `PENDING` (§5.1, [R2-16](reviews/F1-R2-RECONCILIATION.md)) |
 
 `gotcha` and `procedure` are first-class rather than tags because they answer two of the five measured abilities and because they are the memory kinds with the highest value-per-byte: they encode work that cannot be recovered by re-reading the repository.
 
@@ -95,52 +113,141 @@ The three types that most strongly steer future agent behaviour — `preference`
 ### 3.3 The Fehrest evidence and trust model
 
 > **DEFINED NATIVELY IN F1-R1 ([R1-08](reviews/F1-R1-RECONCILIATION.md)).** F1's four-value `epistemic_status` was serviceable but partly shaped by an extractor's vocabulary. **Extractor confidence labels must map into Fehrest's model, never define it** — a label distribution observed on one corpus (`AMBIGUOUS` at 0.0%) says nothing about ambiguity in general.
+>
+> **DECOMPOSED IN F1-R2 ([R2-04](reviews/F1-R2-RECONCILIATION.md)).** R1's **eight-state single enum is withdrawn.** It mixed four independent semantic axes into one vocabulary. The eight states are not replaced by a total ordering over the same list — they are **redistributed onto the four axes they actually belonged to**.
 
-**Eight states**, event-sourced per [I-12](01-ARCHITECTURE-CONSTITUTION.md#i-12--inference-is-never-silently-promoted-to-fact-amended):
+### The four axes
 
-| State | Meaning | Reachable by |
+Each memory carries **one value from each axis**, independently. Every axis is event-sourced per [I-12](01-ARCHITECTURE-CONSTITUTION.md#i-12--inference-is-never-silently-promoted-to-fact-amended).
+
+**Axis 1 — `basis`: where the claim came from.** Core-assigned; **no actor may supply it**.
+
+| Value | Meaning | Reachable by |
 |---|---|---|
-| `EXTRACTED` | Deterministically derived from a primary source Fehrest itself parsed | Deterministic extraction only |
-| `ASSERTED` | An identified actor claims it | Any actor, including agents |
-| `INFERRED` | Derived by a mechanism from other memories | Rules or models |
-| `USER_CONFIRMED` | A human explicitly affirmed it | The user only |
-| `AGENT_CONFIRMED` | An agent affirmed it from independent evidence | Agents, with a second evidence link |
-| `CONFLICTED` | Contradicts another active memory; resolution failed | Contradiction detection |
-| `SUPERSEDED` | Replaced by a later memory; retained | Supersession |
-| `UNRESOLVED` | Recorded but its evidence does not currently resolve | Imports, broken anchors, degraded cases |
+| `USER_ASSERTED` | A human stated it | The user only |
+| `EXTRACTED` | Fehrest's own deterministic parsing derived it from a primary source | Fehrest core only |
+| `AGENT_ASSERTED` | An identified agent stated it | Any authenticated agent session |
+| `INFERRED` | A mechanism (rule or model) derived it from other Fehrest state | Rules or models |
 
-**Permitted transitions** — anything not listed is forbidden, and every transition emits an event:
+**Axis 2 — `verification`: whether it has been checked, and by whom.**
+
+| Value | Meaning | Reached by |
+|---|---|---|
+| `UNVERIFIED` | Default for everything | — |
+| `CORROBORATED` | A **second, independent** evidence link resolves and supports it | Any actor **other than** the asserting session |
+| `USER_CONFIRMED` | A human explicitly affirmed it | The user only |
+
+**Axis 3 — `lifecycle`: whether it is in force.**
+
+| Value | Meaning |
+|---|---|
+| `PENDING` | Recorded and visible, but **not authoritative** — awaiting confirmation (§5.5) |
+| `ACTIVE` | In force |
+| `SUPERSEDED` | Replaced by a later memory; retained and queryable |
+| `RETRACTED` | Withdrawn by its asserter or revoked by provenance; retained |
+| `EXPIRED` | `valid_until` has passed; retained |
+
+**Axis 4 — `resolution`: whether it currently resolves cleanly.**
+
+| Value | Meaning |
+|---|---|
+| `CLEAR` | Its evidence resolves and it does not contend with another candidate |
+| `CONFLICTED` | It contends with another candidate and the deterministic resolver produced no justified winner |
+| `UNRESOLVED` | Its **own** evidence does not currently resolve — broken anchor, deleted source, unrecognised extractor label. It cannot participate in resolution at all |
+
+### Why four axes rather than one enum
+
+The eight R1 states map onto the axes cleanly, which is the demonstration that they were never one vocabulary:
+
+| R1 state | Axis it actually described |
+|---|---|
+| `EXTRACTED`, `INFERRED`, `ASSERTED` | `basis` |
+| `USER_CONFIRMED`, `AGENT_CONFIRMED` | `verification` |
+| `SUPERSEDED` | `lifecycle` |
+| `CONFLICTED`, `UNRESOLVED` | `resolution` |
+
+Two concrete defects follow from the collapse, and both are removed by the split:
+
+1. **Real states were inexpressible.** A memory asserted by an agent, later confirmed by the user, currently active, and now contending with a newer memory occupies one value on each of four axes. The single enum forced a choice among `ASSERTED`, `USER_CONFIRMED` and `CONFLICTED`, destroying two of the three facts.
+2. **It invited an unjustified total ordering.** Ranking `observed > asserted > inferred > unverified` compares an origin against a verification level — a category error that then decided which memory Fehrest reported as true. §4.2 is rewritten accordingly.
+
+**Per-axis transition rules** — anything not listed is forbidden, and every transition emits an event:
 
 ```
-ASSERTED   → USER_CONFIRMED     (human affirmation)
-ASSERTED   → AGENT_CONFIRMED    (independent corroborating evidence)
-ASSERTED   → CONFLICTED         (contradiction detected)
-INFERRED   → ASSERTED           (an actor adopts the inference as a claim)
-INFERRED   → CONFLICTED
-EXTRACTED  → CONFLICTED         (source changed or contradicts)
-EXTRACTED  → UNRESOLVED         (source deleted or anchor broken)
-CONFLICTED → USER_CONFIRMED     (human resolves in this memory's favour)
-CONFLICTED → SUPERSEDED         (resolved against it)
-any        → SUPERSEDED         (a later memory replaces it)
-any        → UNRESOLVED         (evidence stops resolving)
+basis         immutable after allocation.  No transition exists.  (core-assigned)
+
+verification  UNVERIFIED    → CORROBORATED    (second independent resolving evidence link,
+                                               contributed by a session other than the asserter)
+              UNVERIFIED    → USER_CONFIRMED  (explicit human confirmation event)
+              CORROBORATED  → USER_CONFIRMED  (explicit human confirmation event)
+              no downward transition; a withdrawn confirmation is a RETRACTED lifecycle,
+              not a lowered verification
+
+lifecycle     PENDING → ACTIVE       (confirmation, or an auto-promote rule that applies)
+              PENDING → RETRACTED    (rejected at review)
+              ACTIVE  → SUPERSEDED   (a later memory replaces it)
+              ACTIVE  → RETRACTED    (withdrawal or provenance revocation)
+              ACTIVE  → EXPIRED      (valid_until passes)
+              SUPERSEDED/RETRACTED/EXPIRED are terminal; correction is a new memory
+
+resolution    CLEAR      ↔ CONFLICTED   (contention appears or is removed)
+              any        → UNRESOLVED   (its own evidence stops resolving)
+              UNRESOLVED → CLEAR        (evidence resolves again)
 ```
 
 **Three rules that make this a boundary rather than a label:**
 
-1. **No upward transition without new evidence or a human.** `ASSERTED → USER_CONFIRMED` requires a human event; `→ AGENT_CONFIRMED` requires a *second, independent* evidence link. An agent cannot confirm its own assertion.
-2. **`EXTRACTED` is not reachable by any agent.** Only Fehrest's own deterministic parsing produces it. An agent asserting "I read this in the file" produces `ASSERTED`, not `EXTRACTED` — the distinction between *Fehrest parsed it* and *something told us it parsed it* is exactly the boundary [T-2](02-THREAT-MODEL.md#t-2--memory-poisoning) attacks.
+1. **No upward `verification` transition without new evidence or a human.** `→ USER_CONFIRMED` requires a human event; `→ CORROBORATED` requires a *second, independent* evidence link contributed by a different session. **An actor cannot corroborate its own assertion.**
+2. **`basis = EXTRACTED` is unreachable by any agent.** Only Fehrest's own deterministic parsing produces it. An agent asserting "I read this in the file" produces `AGENT_ASSERTED`, not `EXTRACTED` — the distinction between *Fehrest parsed it* and *something told us it parsed it* is exactly the boundary [T-2](02-THREAT-MODEL.md#t-2--memory-poisoning) attacks.
 3. **`CONFLICTED` is a first-class resting state, not an error.** A memory may sit conflicted indefinitely. Forcing resolution is how a memory system starts inventing answers.
 
-**Mapping extractor labels in** — one-way, at ingestion:
+**Mapping extractor labels in** — one-way, at ingestion, and now onto **two** axes rather than one:
 
-| Extractor label | Fehrest state |
-|---|---|
-| `EXTRACTED` | `EXTRACTED` |
-| `INFERRED` | `INFERRED` |
-| `AMBIGUOUS` | `UNRESOLVED` |
-| *(unrecognised label)* | `UNRESOLVED` |
+| Extractor label | `basis` | `resolution` |
+|---|---|---|
+| `EXTRACTED` | `EXTRACTED` | `CLEAR` |
+| `INFERRED` | `INFERRED` | `CLEAR` |
+| `AMBIGUOUS` | `INFERRED` | `UNRESOLVED` |
+| *(unrecognised label)* | `INFERRED` | `UNRESOLVED` |
 
 The last row matters: an unknown label from a future or different extractor degrades to `UNRESOLVED` rather than being trusted or dropped. This is what lets the extractor be replaced ([ADR-0003](09-TECHNOLOGY-DECISIONS.md#adr-0003--graph-intelligence-runtime-integration-shape)) without touching the trust model.
+
+### 3.4 Scope is orthogonal dimensions, not an ordered lattice
+
+> **REDESIGNED IN F1-R2 ([R2-05](reviews/F1-R2-RECONCILIATION.md)).** F1 listed scope kinds as `vault · project · object · type · time` and treated them as a single ordered lattice from broad to narrow. That is wrong twice over: **`time` is not a containment scope at all** — it is temporal validity, and it already has two dedicated axes (§4) — and **`type` is a selector, not a container**: `type: decision` does not sit inside or outside `project: Fehrest`.
+
+**A scope is a selector over independent dimensions.** Each dimension is either *unconstrained* or restricted to a set:
+
+| Dimension | Meaning | Unconstrained means |
+|---|---|---|
+| `vault` | The vault this memory belongs to | — **always required**; there is no cross-vault memory in v1 ([Q-11](16-OPEN-QUESTIONS.md)) |
+| `project` | Restricted to specific projects | Applies across all projects in the vault |
+| `objects` | Restricted to specific object IDs | Not object-restricted |
+| `object_types` | Restricted to specific object types | Not type-restricted |
+| `principal` | *(grants only)* restricted to specific sessions or agents | Not principal-restricted |
+
+**Valid time is not here.** `valid_from` / `valid_until` and the request's `as_of` answer *when* a memory is true. Encoding that as a scope kind conflated "where does this apply" with "when was this true", and would have made a time window compete with a project ID in the same ordering.
+
+**Match.** A memory `M` is a candidate for a request `R` **iff for every dimension, either `M` is unconstrained on it, or `R`'s value for that dimension is in `M`'s admitted set.** A dimension `R` does not specify cannot be matched by an `M` that constrains it.
+
+**Intersection.** Dimension-wise. If any dimension intersects to the empty set, the two scopes are **incompatible** and share no candidate. Grants intersect the same way, so a session's effective scope is the intersection of its grant with the request.
+
+**Specificity is a partial order, deliberately.** `S₁ ≻ S₂` (strictly more specific) iff on every dimension `S₁`'s admitted set is a subset of `S₂`'s, and on at least one it is a proper subset. Otherwise the two are **incomparable**.
+
+Two consequences, and both are the point:
+
+- **A vault-global memory can never silently override a conflicting project-local one.** Vault-global leaves `project` unconstrained; project-local restricts it. Project-local is therefore *strictly more specific*, and §4.2 ranks specificity above nothing else that could invert it. The dangerous direction is structurally unavailable.
+- **Incomparable scopes do not resolve.** `{type: decision}` and `{project: Fehrest}` are incomparable. Two conflicting memories at incomparable scopes produce `CONTRADICTION`, not an invented winner. Silently preferring one would be the same failure as the confidence tie-break, wearing a different name.
+
+**Creation of a vault-global durable memory requires explicit user authority.** It is never a default promotion scope and never an automatic widening. **Default promotion scope is the narrowest selector that covers all of the memory's evidence**: if every evidence item resolves inside one project, the memory is project-scoped; if the evidence spans projects, the candidate is queued for confirmation with the proposed scope shown, never silently promoted to vault-global.
+
+**Enforced at every retrieval stage, never as a post-filter** ([T-6](02-THREAT-MODEL.md#t-6--unauthorized-cross-project-retrieval)) — including graph expansion, which crosses project boundaries by nature.
+
+**Property tests.**
+- `test_scope_cross_project_poisoning` — a memory written under project A, at any scope its author can construct, never becomes a resolution candidate for project B unless the user explicitly authored it vault-global.
+- `test_scope_incomparable_yields_contradiction` — over randomly generated incomparable selector pairs with contradictory payloads, resolution returns `CONTRADICTION` and never a winner.
+- `test_scope_intersection_is_dimensionwise` — property test against a naive reference implementation.
+- `test_vault_global_requires_user_authority` — no agent-reachable path creates a vault-unconstrained durable memory.
 
 ---
 
@@ -174,38 +281,58 @@ The third row is why *both* axes are needed. Valid time alone cannot answer "wha
 
 ### 4.2 Deterministic resolution
 
+> **NORMATIVE RESOLVER SPECIFICATION — rewritten in F1-R2 ([R2-04](reviews/F1-R2-RECONCILIATION.md), [R2-05](reviews/F1-R2-RECONCILIATION.md)).** This is the single authoritative statement of how Fehrest decides what is currently true. Any other document describing resolution defers to this one.
+
 ```
-resolve(subject, predicate, scope, as_of_valid=now, as_of_recorded=now):
+resolve(subject, predicate, request_scope, as_of_valid=now, as_of_recorded=now):
+
+  # ---- ADMISSION -------------------------------------------------------
   candidates = memories where
       payload.subject   == subject
       payload.predicate == predicate
-      scope             ⊇ requested scope
-      status            == 'active'
-      recorded_at       <= as_of_recorded
-      valid_from        <= as_of_valid
-      (valid_until is null or valid_until > as_of_valid)
+      scope_matches(m.scope, request_scope)      # §3.4 match, dimension-wise
+      m.lifecycle       == ACTIVE                # PENDING is NOT authoritative (§5.5)
+      m.resolution      != UNRESOLVED            # own evidence must resolve
+      m.recorded_at     <= as_of_recorded
+      m.valid_from      <= as_of_valid
+      (m.valid_until is null or m.valid_until > as_of_valid)
 
-  if empty:      return NO_ANSWER          # abstain; never fabricate
+  if empty:      return NO_ANSWER                # abstain; never fabricate
   if one:        return it
-  otherwise, order by:
-      1. epistemic_status:  observed > asserted > inferred > unverified
-      2. human-confirmed before machine-asserted
-      3. narrower scope before broader scope
-      4. later valid_from
-      5. later recorded_at
-      6. higher confidence                 # last resort only
-  if the top two are indistinguishable after all six:
-      return CONTRADICTION(top candidates)  # surface, never silently pick
+
+  # ---- DETERMINISTIC EVIDENCE LADDER -----------------------------------
+  # Each rung compares ONE axis. A rung applies only where the comparison
+  # is well-founded; where it is not, the rung is skipped, not guessed.
+
+  1. verification     USER_CONFIRMED > CORROBORATED > UNVERIFIED
+  2. basis            USER_ASSERTED > EXTRACTED > AGENT_ASSERTED > INFERRED
+  3. scope specificity  strictly-more-specific wins
+                        INCOMPARABLE scopes -> rung skipped (§3.4)
+  4. valid_from       later wins
+  5. recorded_at      later wins
+
+  if one candidate strictly dominates after the ladder:
+      return it
+  else:
+      return CONTRADICTION(remaining candidates, reason)
 ```
 
-Four properties this ordering guarantees, and all four are testable:
+**What changed, and why it matters.**
 
-1. **Total and deterministic** given the same inputs — required by [I-14](01-ARCHITECTURE-CONSTITUTION.md#i-14--model-visible-state-is-reconstructable-provenance-linked-scope-authorized-and-auditable).
-2. **No LLM in the resolution path** — required by [I-4](01-ARCHITECTURE-CONSTITUTION.md#i-4--core-functionality-requires-no-paid-api) and [R-1](01-ARCHITECTURE-CONSTITUTION.md#2-derived-rules).
-3. **Explicit abstention.** `NO_ANSWER` is a first-class result. Abstention is a measured axis in LongMemEval and a system that guesses instead of abstaining is worse than useless for a memory OS.
+- **`confidence` is gone from the ladder.** F1's rung 6 let an uncalibrated model-produced float pick the winner whenever principled rules ran out. Removed ([§3.1](#31-field-semantics-that-carry-weight)). The ladder now **terminates in `CONTRADICTION` rather than in a number**.
+- **Rungs 1 and 2 were one rung.** F1 ranked `observed > asserted > inferred > unverified` and then, separately, "human-confirmed before machine-asserted" — comparing origin against verification inside a single order. They are now two rungs on two axes, in the order that reflects which question dominates: *has a human checked this* outranks *where did it come from*.
+- **Rung 2's internal order.** `USER_ASSERTED` outranks `EXTRACTED` because authority originates with the user and only the user ([C §3](02-THREAT-MODEL.md#3-actors)); a user correcting Fehrest's parse must win. `EXTRACTED` outranks `AGENT_ASSERTED` because Fehrest parsing a primary source is mechanically checkable while an agent's claim to have done so is not — this is the [T-2](02-THREAT-MODEL.md#t-2--memory-poisoning) boundary expressed as an ordering.
+- **Rung 3 can be skipped.** Incomparable scopes are common and legitimate (§3.4). A skipped rung is not a tie broken silently; it simply carries no information, and if nothing below it separates the candidates, the answer is `CONTRADICTION`.
+
+**Five properties this guarantees, all testable:**
+
+1. **Deterministic** given the same inputs — required by [I-14](01-ARCHITECTURE-CONSTITUTION.md#i-14--model-visible-state-is-reconstructable-provenance-linked-scope-authorized-and-auditable). Note it is deliberately **not total**: incomparable inputs have no winner, and the resolver says so.
+2. **No LLM in the resolution path** — required by [I-4](01-ARCHITECTURE-CONSTITUTION.md#i-4--core-functionality-requires-no-paid-api) and [R-1](01-ARCHITECTURE-CONSTITUTION.md#2-derived-rules). No model output influences any rung.
+3. **Explicit abstention.** `NO_ANSWER` is a first-class result. Abstention is a measured axis in LongMemEval, and a system that guesses instead of abstaining is worse than useless for a memory OS.
 4. **Contradiction is surfaced, not resolved.** Silently choosing between two equally-supported conflicting memories is how a memory system becomes untrustworthy. The compiler passes contradictions through to the agent explicitly ([H](07-CONTEXT-COMPILER-SPEC.md)).
+5. **Unconfirmed candidates cannot win.** `PENDING` memories are excluded at admission, so nothing awaiting confirmation can be reported as current state (§5.5, [R-12](01-ARCHITECTURE-CONSTITUTION.md#2-derived-rules)).
 
-Property tests: resolution is monotone in `recorded_at`; resolution is stable under reordering of the input set; resolution over a random history equals a naive reference implementation.
+**Property tests.** Resolution is monotone in `recorded_at`; stable under reordering of the input set; equal to a naive reference implementation over random histories; **never returns a winner selected by `confidence_diagnostic`** (mutate the field across the full range and assert the result is unchanged); and returns `CONTRADICTION` — not a winner — for every randomly generated incomparable-scope conflict.
 
 ### 4.3 Cost
 
@@ -239,7 +366,7 @@ This is the question the brief asks, and the answer determines whether `AI OFF` 
 |---|---|---|
 | 1 — extraction | **Rule-driven** + optional model | Explicit markers (`decision:`, "remember that", "note that X fails") and structured events are rule-extractable. A model finds more. |
 | 2 — triage | **Deterministic** | Hard filters below. |
-| 3 — classification | Rule for marked, **model-assisted** otherwise | Type inference from free prose is genuinely hard without a model; unclassified candidates default to `fact`/`unverified` rather than being dropped. |
+| 3 — classification | Rule for marked, **model-assisted** otherwise. **With AI off, unclassified prose is queued, never auto-typed** ([R2-16](reviews/F1-R2-RECONCILIATION.md)) | Type inference from free prose is genuinely hard without a model. |
 | 4 — dedup | **Deterministic** | Exact payload match, then normalised-statement match, then MinHash/trigram near-duplicate. No model needed. |
 | 5 — contradiction | **Deterministic** for same subject+predicate; model-assisted for semantic conflict | Structural conflicts are computable; paraphrased conflicts are not. |
 | 6 — temporal | **Deterministic** | §4.2. |
@@ -248,6 +375,25 @@ This is the question the brief asks, and the answer determines whether `AI OFF` 
 | 9 — decision | **Rule** for auto-promote/auto-reject; **human** for high-influence types | §5.4. |
 
 **With AI OFF, stages 1–2 and 4–9 run.** Fehrest still captures explicitly marked memories, all structured event-derived state, decisions, and everything an agent writes through the memory API. What is lost is *implicit* extraction from unmarked prose. That is a real degradation and it is stated plainly: `AI OFF` gives a fully functional memory system that captures less automatically. This is [H-3](research/EVIDENCE_LOG.md#h-3--deterministic-promotion-rules-capture-most-durable-memory-value) and it is unproven.
+
+#### The AI-OFF classification default — corrected in F1-R2 ([R2-16](reviews/F1-R2-RECONCILIATION.md))
+
+F1 specified that unclassified candidates *"default to `fact`/`unverified` rather than being dropped."* Combined with §5.4, where `fact` is an **auto-promote** type, that default silently converted arbitrary unclassified prose into authoritative memory whenever no model was available — in the exact configuration the constitution designates as fully supported ([I-4](01-ARCHITECTURE-CONSTITUTION.md#i-4--core-functionality-requires-no-paid-api)).
+
+**The corrected rule: uncertainty about type is uncertainty about influence.**
+
+If Fehrest cannot determine with a deterministic rule whether an item is a `fact`, `decision`, `constraint`, `preference`, `procedure`, `gotcha` or anything else, it does **not** pick the type that happens to auto-promote. The candidate is recorded with `memory_type: unclassified` and `lifecycle: PENDING`, and it waits for an explicit classification action (§5.5).
+
+| Situation | AI ON | AI OFF |
+|---|---|---|
+| Explicit marker present (`decision:`, "remember that…") | Rule-classified | Rule-classified — identical |
+| Structured event-derived state | Rule-classified | Rule-classified — identical |
+| Type inferable by a model | Model-classified, then §5.4 applies | **Queued as `unclassified` / `PENDING`** |
+| No marker, no rule, no model | **Queued as `unclassified` / `PENDING`** | **Queued as `unclassified` / `PENDING`** |
+
+Nothing is dropped — F1's concern was right. It is *held*, visibly, without authority.
+
+**Measured by [B-5](10-BENCHMARK-PLAN.md#b-5--memory-promotion-quality), with a metric added in R2:** **type-assignment precision**, and specifically the rate at which memories that *should* have required confirmation (`decision`, `constraint`, `preference`) were classified into an auto-promote type. That number is a safety metric, not a quality metric: each such misclassification is a memory that acquired steering authority without a human ever seeing it.
 
 **AgeMem's vocabulary is adopted; its mechanism is rejected.** The six operations — `add`, `update`, `delete`, `retrieve`, `summary`, `filter` — become Fehrest's memory API. Its actual results depend on a three-stage RL-trained policy (SFT → outcome RL → step-level GRPO), which cannot be the promotion decider in a system that must work with no model at all ([E-15](research/EVIDENCE_LOG.md#e-15--agemem-is-a-learned-policy-not-a-transplantable-algorithm)).
 
@@ -280,14 +426,40 @@ Non-recoverability is weighted highest deliberately. A memory duplicating what a
 
 ### 5.4 Who decides
 
-| Path | Applies to | Why |
-|---|---|---|
-| **Auto-promote** | `fact`, `episodic`, `relationship`, `state`, `procedure`, `gotcha` with resolvable evidence and no contradiction | High volume, moderate influence, fully reversible |
-| **Auto-reject** | Triage failures | Cheap and safe |
-| **Human confirmation required** | `decision`, `constraint`, `preference`; anything superseding a human-confirmed memory; anything contradicting an active memory | These steer all future agent behaviour and are the poisoning targets ([T-2](02-THREAT-MODEL.md#t-2--memory-poisoning)) |
-| **Queued** | Everything else | Batched review, not a modal interruption |
+| Path | Applies to | Resulting lifecycle | Why |
+|---|---|---|---|
+| **Auto-promote** | `fact`, `episodic`, `relationship`, `state`, `procedure`, `gotcha` with resolvable evidence, a determinate type, and no contradiction | `ACTIVE` | High volume, moderate influence, fully reversible |
+| **Auto-reject** | Triage failures | *(never a memory; `memory/rejected` event)* | Cheap and safe |
+| **Human confirmation required** | `decision`, `constraint`, `preference`; anything superseding a human-confirmed memory; anything contradicting an active memory; anything proposing a vault-global scope (§3.4) | `PENDING` | These steer all future agent behaviour and are the poisoning targets ([T-2](02-THREAT-MODEL.md#t-2--memory-poisoning)) |
+| **Queued** | Everything else, including every `unclassified` candidate | `PENDING` | Batched review, not a modal interruption |
 
-The confirmation queue is the main UX risk in this design: if it produces dozens of prompts a day, users will approve blindly and the control becomes theatre. Mitigations: batch review, group by session, sensible defaults, and a measured target of **fewer than 5 confirmations per active day** ([O](14-PERFORMANCE-BUDGETS.md)). If dogfooding exceeds that, the promotion rules are wrong — not the user.
+The confirmation queue is the main UX risk in this design: if it produces dozens of prompts a day, users will approve blindly and the control becomes theatre. Mitigations: batch review, group by session, sensible defaults, and the confirmation-burden budget in [O §10](14-PERFORMANCE-BUDGETS.md) — which F1-R2 reclassifies as an **unvalidated planning assumption to be measured, not a canonised threshold** ([R2-06](reviews/F1-R2-RECONCILIATION.md)). If dogfooding exceeds the measured tolerable rate, the promotion rules are wrong — not the user.
+
+### 5.5 Pending-confirmation semantics
+
+> **ADDED IN F1-R2 ([R2-06](reviews/F1-R2-RECONCILIATION.md)).** F1 named a confirmation queue but never specified what a queued item *is* while it waits. Two opposite failures were both reachable from that silence: an unconfirmed candidate leaking into authoritative state, or an unconfirmed candidate being invisible until someone happened to open a review screen — so an agent could act in ignorance of a constraint the user had already stated.
+
+`lifecycle: PENDING` is a real, specified state, and it is **non-authoritative but not hidden**.
+
+**What a PENDING memory may do:**
+
+- Appear in a **clearly separated, explicitly non-authoritative** advisory section of a compiled context package — `pending_advisory` ([H §3](07-CONTEXT-COMPILER-SPEC.md#3-output)) — labelled as unconfirmed, with its proposed type and scope shown.
+- Justify **asking**, **abstaining**, or **requesting human confirmation**. "There is an unconfirmed candidate constraint that may forbid this; confirm before proceeding" is exactly the behaviour wanted.
+- Be listed, searched, reviewed, promoted or rejected by the user.
+
+**What a PENDING memory may never do — [R-12](01-ARCHITECTURE-CONSTITUTION.md#2-derived-rules):**
+
+- Enter `active_constraints`, `current_decisions`, `project_state`, or any other authoritative section.
+- Be returned by `resolve()` as current state. It is excluded at admission (§4.2).
+- Grant a capability, revoke a capability, or appear in `permitted_actions`.
+- Supersede any `ACTIVE` memory, and specifically never a `USER_CONFIRMED` one.
+- Become executable policy of any kind.
+
+**The distinction in one line:** a `PENDING` memory can cause an agent to *stop and ask*; it can never cause an agent to *proceed differently and silently*. Advisory content can only ever narrow what an agent does on its own authority.
+
+**Tests.** `test_pending_never_authoritative` — for every authoritative surface (resolver output, each authoritative package section, `permitted_actions`, capability evaluation), assert no `PENDING` memory can reach it by any path. `test_pending_is_visible` — a `PENDING` candidate appears in `pending_advisory` with its non-authoritative labelling intact. `test_pending_cannot_supersede` — a supersession event naming a `PENDING` memory as the superseding record is rejected at the storage layer.
+
+**Confirmation burden is measured before automation is enabled.** Any expansion of auto-promotion beyond §5.4 requires measured confirmation-volume data from real multi-agent traces, not the assumed rate.
 
 ---
 
@@ -299,7 +471,7 @@ Supersession is an event, not a mutation:
 memory/superseded { superseded_id, superseding_id, reason, actor, ts }
 ```
 
-Rules: the superseding memory must satisfy full provenance; the superseded memory becomes `status: superseded` and is retained; its `valid_until` is set to the superseding memory's `valid_from` unless explicitly given; superseding a human-confirmed memory with a machine-asserted one requires confirmation; chains are traversable in both directions.
+Rules: the superseding memory must satisfy full provenance; the superseded memory moves to `lifecycle: SUPERSEDED` and is retained; its `valid_until` is set to the superseding memory's `valid_from` unless explicitly given; **a memory with `verification: USER_CONFIRMED` may be superseded only by another `USER_CONFIRMED` memory or after explicit confirmation**; **a `PENDING` memory may never supersede anything** (§5.5); chains are traversable in both directions.
 
 Retention matters more than it appears. It is what allows the compiler to include *"previously SolidJS was rejected in favour of React on 4 January; reversed 3 June because of X"* — the superseded decision is often what explains the current one, and deleting it destroys the reasoning while keeping the conclusion.
 
@@ -310,8 +482,8 @@ Retention matters more than it appears. It is what allows the compiler to includ
 Memory retrieval is a stage of the compiler ([H](07-CONTEXT-COMPILER-SPEC.md)), not a separate system:
 
 1. Structured resolution for known subject/predicate — deterministic, no scoring.
-2. Scope filter applied **first**, at every stage including graph expansion ([T-6](02-THREAT-MODEL.md#t-6--unauthorized-cross-project-retrieval)).
-3. Temporal filter — `active` at the requested valid time, unless superseded memories are explicitly requested.
+2. Scope filter applied **first**, at every stage including graph expansion, using the dimension-wise match of §3.4 ([T-6](02-THREAT-MODEL.md#t-6--unauthorized-cross-project-retrieval)).
+3. Temporal filter — `lifecycle: ACTIVE` at the requested valid time, unless superseded memories are explicitly requested. `PENDING` items are retrieved only into the advisory channel (§5.5).
 4. Lexical retrieval over statements via FTS5.
 5. Graph expansion from memory subjects to related entities.
 6. Optional vector similarity if D3 is enabled.
@@ -324,7 +496,9 @@ Memory retrieval is a stage of the compiler ([H](07-CONTEXT-COMPILER-SPEC.md)), 
 
 At 50 memories/day: ~18K/year, ~180K/decade. At ~1 KB each that is ~180 MB of JSONL per decade — a non-problem for storage, a real problem for retrieval precision.
 
-**Fehrest does not delete memories by default.** Instead: `expired` status when `valid_until` passes; decay applied to *ranking*, not existence; consolidation of many episodic memories into one semantic memory that `supersedes` them (retaining originals); and archival segments for old memory files, still queryable.
+> **The 50 memories/day and 500 events/day figures are UNVALIDATED PLANNING ASSUMPTIONS** ([R2-12](reviews/F1-R2-RECONCILIATION.md)). They are not measured, and no counter-estimate has been accepted in their place. Phase 0 measures real multi-agent event and memory volume by class before any retention, tiering or compaction parameter is frozen ([O §9](14-PERFORMANCE-BUDGETS.md#9-growth-over-time)).
+
+**Fehrest does not delete memories by default.** Instead: `lifecycle: EXPIRED` when `valid_until` passes; decay applied to *ranking*, not existence; consolidation of many episodic memories into one semantic memory that `supersedes` them (retaining originals); and archival segments for old memory files, still queryable.
 
 Deletion is user-initiated only. A memory system that silently forgets is a memory system that cannot be trusted — and the one thing worse than a missing memory is a memory whose absence is undetectable.
 
@@ -336,7 +510,9 @@ Deletion is user-initiated only. A memory system that silently forgets is a memo
 |---|---|
 | Deterministic promotion recall < 60% of model-assisted ([H-3](research/EVIDENCE_LOG.md#h-3--deterministic-promotion-rules-capture-most-durable-memory-value)) | `AI OFF` degrades to read-only knowledge base; a thesis-level weakening requiring founder sign-off |
 | Bitemporal resolution cannot be made deterministic in real conflicts | Core value proposition fails; redesign |
-| Confirmation queue exceeds 5/day sustained | Promotion rules wrong; retune before shipping |
+| Confirmation burden exceeds what dogfooding shows users will actually service | Promotion rules wrong; retune before shipping. **The tolerable rate is measured, not assumed** ([R2-06](reviews/F1-R2-RECONCILIATION.md)) |
 | Users never consult superseded memories | Retention is over-engineered; simplify (cheap to reverse) |
 | Contradiction detection produces mostly false positives | Detection is noise; move behind a flag |
 | Structured `payload` extractable for < 30% of memories | Deterministic resolution covers too little to matter; the model becomes prose-first and much weaker |
+| **The four-axis model produces `CONTRADICTION` so often that agents cannot act** ([R2-04](reviews/F1-R2-RECONCILIATION.md)) | The ladder is under-powered, **not** an argument to restore a confidence tie-break. Add *evidence-based* rungs, or accept a higher abstention rate as honest. Restoring uncalibrated confidence as truth authority is forbidden |
+| **`PENDING` items accumulate faster than they are reviewed** | The auto-promote boundary in §5.4 is drawn too conservatively for real use; widen it on measured type-assignment precision, never by lowering the confirmation requirement for `decision`/`constraint`/`preference` |

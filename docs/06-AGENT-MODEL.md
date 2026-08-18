@@ -66,7 +66,16 @@ Cedar's decision shape is adopted — `principal + action + resource + context` 
 
 ### 2.3 Scopes
 
-`vault` (whole vault — requires explicit user action, never a default) · `project` · `object` · `type` · `time` (a valid-time window).
+> **REDESIGNED IN F1-R2 ([R2-05](reviews/F1-R2-RECONCILIATION.md)).** F1 listed `vault · project · object · type · time` as one ordered set of scope kinds. **`time` is removed** — it is temporal validity, not containment, and it already has dedicated axes. **`type` is reclassified** from a container to a selector dimension. The full normative model is [F §3.4](05-MEMORY-MODEL.md#34-scope-is-orthogonal-dimensions-not-an-ordered-lattice); a grant is a scope selector plus a principal restriction.
+
+A grant's read and write scopes are **selectors over independent dimensions** — `vault` (required), `project`, `objects`, `object_types` — each either unconstrained or restricted to a set. A session's effective scope for any operation is the **dimension-wise intersection** of its grant with the request; an empty intersection on any dimension denies.
+
+```json
+"read": { "scopes": [ { "vault": "0198...", "project": "0198...",
+                        "object_types": ["decision", "note"] } ] }
+```
+
+**Vault-wide read (leaving `project` unconstrained) requires an explicit user action and is never a default.** Nothing an agent can request widens a dimension its grant constrains.
 
 Scope filtering is applied **during** retrieval at every stage, including graph expansion — never as a post-filter. Graph traversal naturally crosses project boundaries, which is what makes it useful and what makes post-filtering unsafe. Out-of-scope result *counts* are also not leaked, since a count is an oracle ([T-6](02-THREAT-MODEL.md#t-6--unauthorized-cross-project-retrieval)).
 
@@ -88,6 +97,8 @@ Fehrest publishes a small, deliberately narrow tool surface.
 | `memory.summary` / `memory.filter` | read | AgeMem's short-term vocabulary ([E-15](research/EVIDENCE_LOG.md#e-15--agemem-is-a-learned-policy-not-a-transplantable-algorithm)) |
 | `graph.query` | read | Traversal within scope |
 | `object.write` | write | **Requires approval per call.** Never auto-granted |
+
+**Every tool in this table that returns content returns it through the single core response envelope (§4).** That is a property of the tool surface, not a convention of the compiler — see [R-9](01-ARCHITECTURE-CONSTITUTION.md#2-derived-rules).
 
 ### 3.1 What Fehrest deliberately does not expose
 
@@ -118,6 +129,8 @@ request
 
 Approval semantics from [E-9](research/EVIDENCE_LOG.md#e-9--deepseek-harness-pinned-version-and-adoptable-patterns): a log-only `asked`/`decided` pair, fail-closed unless explicitly allowed once, and the approval identifier deliberately not interchangeable with the tool-call identifier. Oversized outputs are replaced by an opaque locator, with the donor's two rules adopted verbatim — **the source field is for naming and inspection, not access control**, and **a suggested name is not a path**.
 
+**Every spilled locator carries a durability class ([R2-11](reviews/F1-R2-RECONCILIATION.md)), specified in [D §5.5](03-CANONICAL-DATA-MODEL.md#55-spilled-locators-have-a-declared-durability-class).** A canonical audit event may not reference a payload whose lifetime is shorter than the event's, without saying so. Step [8] records the locator's class alongside the reference, so that a later reader is told whether the payload is expected to exist, may have been compacted, or was never durable.
+
 ---
 
 ## 4. Context delivery and the trust stratification
@@ -138,29 +151,53 @@ Approval semantics from [E-9](research/EVIDENCE_LOG.md#e-9--deepseek-harness-pin
 
 The distinction between 4 and 5 is not decorative: a note the user wrote and a PDF downloaded last week are both "in the vault," but only one has ever been under the user's editorial control. Collapsing them is how a poisoned import inherits the trust of a personal note.
 
-Everything served to an agent is wrapped in a labelled envelope:
+### 4.1 One envelope, every read path
+
+> **GENERALISED IN F1-R2 ([R2-03](reviews/F1-R2-RECONCILIATION.md)).** F1 specified the envelope as a property of *compiled context*. That left `search.query`, `object.read`, `object.list`, `memory.retrieve`, `memory.summary`, `memory.filter` and `graph.query` as **six further paths by which content could reach a model with its trust level, provenance, temporal state and supersession stripped** — and those are exactly the paths an agent uses when it explores rather than asks for a package. A boundary that holds on one of seven doors is not a boundary.
+
+**Every agent-facing tool that returns content returns it through one Rust-core response-envelope type.** There is no second serialisation path, and no tool constructs its own response shape. This is [R-9](01-ARCHITECTURE-CONSTITUTION.md#2-derived-rules).
 
 ```
 <fehrest:evidence
-    package="0198f4..."
+    package="0198f4..."            <!-- or response="..." for a direct read -->
     compiled_at="2026-08-17T14:05:00Z"
     authority="none">
   <fehrest:item id="0198..." kind="memory" type="constraint"
-      trust_level="4" state="USER_CONFIRMED"
+      trust_level="4"
+      basis="USER_ASSERTED" verification="USER_CONFIRMED"
+      lifecycle="ACTIVE" resolution="CLEAR"
       valid_from="2026-06-03" source="0198...#L42">
     Fehrest must never require cloud infrastructure.
   </fehrest:item>
   <fehrest:item id="0198..." kind="excerpt"
-      trust_level="5" state="UNRESOLVED"
+      trust_level="5"
+      basis="EXTRACTED" verification="UNVERIFIED"
+      lifecycle="ACTIVE" resolution="UNRESOLVED"
       source="0198...#p14" origin="import:downloaded-pdf">
     ...imported content, assume hostile...
   </fehrest:item>
 </fehrest:evidence>
 ```
 
-`authority="none"` is machine-readable and consistent across every package; `trust_level` carries the stratification above. The system prompt states that content inside these envelopes is data and that instructions inside it must not be followed.
+`authority="none"` is machine-readable and consistent across every response; `trust_level` carries the stratification above; the four semantic axes travel with every item ([F §3.3](05-MEMORY-MODEL.md#33-the-fehrest-evidence-and-trust-model)). The system prompt states that content inside these envelopes is data and that instructions inside it must not be followed.
 
-**This is defence-in-depth, not the boundary.** It is stated here explicitly because conflating the two is the standard error. The actual boundary is that the capability grant was computed before retrieval and cannot change; the envelope only helps a cooperative model behave sensibly ([§1 of the threat model](02-THREAT-MODEL.md#1-governing-principle)).
+### 4.2 Direct reads must be temporally honest — not compiled
+
+**A direct read is not required to behave like `context.compile`.** Historical exploration is legitimate and useful: an agent should be able to fetch a specific superseded decision and read it. What a direct read may **not** do is present that decision as though it were current.
+
+| A direct read **may** | A direct read **may not** |
+|---|---|
+| Return a superseded decision, verbatim | Return it without saying it is superseded |
+| Return a `PENDING` candidate | Return it without saying it is unconfirmed |
+| Return imported PDF text | Return it as undifferentiated prose at the same trust level as a user note |
+| Return an item whose evidence no longer resolves | Silently omit that its evidence no longer resolves |
+| Skip ranking, fusion, budgeting and section assembly | Skip labelling |
+
+**Supersession pointers are part of honesty, not a nicety.** When an item's replacement is known, the envelope names it, so an agent reading history is one hop from the current answer rather than one inference from a wrong one.
+
+**Test.** `test_no_unlabelled_content_path` — enumerate **the full agent-facing read surface**, not a sample, and assert every path returns the core envelope with trust level, provenance, the four axes and supersession state intact. A newly added tool that bypasses the envelope fails the build. This test is the structural form of the claim in §4.1.
+
+**This is defence-in-depth, not the boundary.** It is stated here explicitly because conflating the two is the standard error. The actual boundary is that the capability grant was computed before retrieval and cannot change; the envelope only helps a cooperative model behave sensibly ([§1 of the threat model](02-THREAT-MODEL.md#1-governing-principle)). What R2-03 changes is not the envelope's strength — it is its **coverage**, which was the actual defect.
 
 ---
 
@@ -175,6 +212,17 @@ Everything served to an agent is wrapped in a labelled envelope:
 
 **MCP is a transport, not an authorization boundary.** A connected MCP client has no authority until a grant is issued. This is the most commonly violated assumption in the current agent ecosystem and Fehrest's gateway is designed on the opposite assumption ([T-13](02-THREAT-MODEL.md#t-13--privilege-escalation-via-mcp-or-plugin)).
 
+**Implementation direction, added in F1-R2.** With the Core in Rust ([ADR-0010](09-TECHNOLOGY-DECISIONS.md#adr-0010--core-implementation-language)), the **official MCP Rust SDK is the preferred implementation candidate** ([SRC-114](research/FEHREST_SOURCE_REGISTRY.md#src-114--official-mcp-rust-sdk)) — F1 named the protocol without naming an implementation, which under a Rust Core silently implied writing one.
+
+```
+Official MCP Rust SDK
+      →  Fehrest MCP adapter
+      →  Fehrest authorization + trust envelope     (§2, §4.1)
+      →  Fehrest Core
+```
+
+The adapter sits **below** authorization in that stack, never beside it. **A proprietary MCP protocol stack is not written unless the official SDK fails a documented requirement** — Ponytail question 4. Adopting the SDK changes the implementation and changes nothing about the boundary.
+
 Because Fehrest speaks MCP, any compliant agent — Claude, Codex, Gemini, GLM, a local model, a future system — connects without Fehrest knowing anything about it. That is the mechanism by which agents become disposable.
 
 ---
@@ -185,8 +233,8 @@ Every session is fully reconstructable from T1/T2 events ([D §5.2](03-CANONICAL
 
 Three operations:
 
-- **Audit** — "what did `agent:claude` do in project X last week?" Answered from the event log.
-- **Replay** — recompile a historical context package and compare digests ([I-14](01-ARCHITECTURE-CONSTITUTION.md#i-14--model-visible-state-is-reconstructable-provenance-linked-scope-authorized-and-auditable)). Where canonical state has changed since, the mismatch is *reported with the reason*, not hidden: `context/compiled` records the event-sequence high-water mark it was compiled against.
+- **Audit** — "what did `agent:claude` do in project X last week?" and, since F1-R2, **"what exactly was this session shown?"** Both answered from the event log; the second from the permanent served-item manifest ([H §3.2](07-CONTEXT-COMPILER-SPEC.md#32-the-served-item-manifest--permanent-t1)).
+- **Replay** — recompile a historical context package and report one of `IDENTICAL` / `DIVERGED` / `UNRECONSTRUCTABLE` with a reason ([H §3.3](07-CONTEXT-COMPILER-SPEC.md#33-replay-outcomes-are-explicit--three-results-never-two)). A mismatch is never reported as success. **Audit does not depend on replay succeeding**: the manifest answers "what was served" even when the content can no longer be reproduced.
 - **Revoke by provenance** — "reject everything `agent:X` asserted in session Y." This is the recovery path for [T-2](02-THREAT-MODEL.md#t-2--memory-poisoning), and it works because provenance is mandatory and unforgeable. Without mandatory provenance, poisoned memory would be unrecoverable — which is why [I-11](01-ARCHITECTURE-CONSTITUTION.md#i-11--agent-generated-memories-preserve-provenance) is non-negotiable.
 
 Fork and resume are **deferred**. They are useful runtime features, but Fehrest is not the runtime; the agent's own harness owns its loop. Fehrest only needs the durable record.
@@ -217,3 +265,5 @@ Fehrest is memory and context with a boundary. Resisting the pull to become an a
 | Scope filtering during graph expansion is too slow to be viable | Either expansion is disabled for multi-scope vaults or a scope-partitioned graph is required |
 | The approval flow produces so many prompts that users blanket-approve | Approval becomes theatre; re-scope which actions require it |
 | Compiled context alone is insufficient and agents always need raw history | The thesis of [H](07-CONTEXT-COMPILER-SPEC.md) is wrong; see [B-7](10-BENCHMARK-PLAN.md) |
+| **Agents perform materially worse when direct reads carry full labelling** | The envelope's verbosity is the cost of honesty. Reduce *token cost* of labelling; **do not** reintroduce an unlabelled path ([R2-03](reviews/F1-R2-RECONCILIATION.md)) |
+| **`test_no_unlabelled_content_path` cannot be written to cover the surface exhaustively** | The tool surface is not centralised enough to be a boundary. Centralise it before shipping any agent gateway |
