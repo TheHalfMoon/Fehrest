@@ -488,3 +488,56 @@ Whatever wins, the constitution binds it: canonical artifacts stay open, specifi
 | Context package **bodies** | No | **Conditionally** — only while the cited source revisions survive (§5.2, [H §3.3](07-CONTEXT-COMPILER-SPEC.md#33-replay-outcomes-are-explicit--three-results-never-two)) |
 
 **One documented exception to "derived is always rebuildable":** extracted text from a *deleted* source attachment. If a user deletes the original PDF, its extracted text can no longer be regenerated. Resolution: extracted text is stored in `derived/` and is genuinely lost on rebuild — Fehrest does **not** silently promote it to canonical. The user is warned at deletion time that derived extractions will be lost. Making it canonical would mean Fehrest quietly retaining content the user tried to delete, which is worse than the data loss.
+
+---
+
+## 9. Inter-process single-writer discipline
+
+> **ADDED IN G3 ([SEC-R5](reviews/G3-SECURITY-RECONCILIATION.md), G3-M3).** [§5.4](#54-crash-safety) covers crash safety for **one** writer. Nothing covered **two Fehrest processes writing the same vault at once** — two CLI invocations, a CLI beside a future desktop process, or a scripted loop. The event log's `seq` is contiguous *by construction* only if one process constructs it.
+
+**Requirement: one canonical writer per vault at a time.** The mechanism is **not frozen here** — an OS-backed file or instance lock is a candidate, and the choice belongs to the implementation gate.
+
+**Required properties:**
+
+| # | Property |
+|---|---|
+| 1 | Only one canonical writer per vault at a time |
+| 2 | A second writer **fails or degrades visibly** — never silently proceeds read-only while believing it wrote |
+| 3 | **No silent concurrent append** to the event or memory journals |
+| 4 | Duplicate sequence numbers are **detected** |
+| 5 | Event-chain **forks** are detected |
+| 6 | Memory/journal forks are **surfaced** |
+| 7 | **Forked canonical histories are NEVER silently auto-merged or auto-repaired** |
+
+**Property 7 is the load-bearing one, and it follows directly from [N §1 principle 5](13-RECOVERY-MODEL.md#1-principles).** Two divergent canonical histories are a *conflict*, and a conflict is representable state to be surfaced — not damage to be tidied away. Auto-merging two event chains fabricates a history that never happened, and every hash, manifest and provenance record downstream would then attest to the fabrication.
+
+**Lock recovery must not itself corrupt canonical state.** A stale lock from a crashed process must be recoverable without deleting or rewriting canonical data; the recovery path is subject to the same "quarantine, never destroy" rule as every other scenario in [N](13-RECOVERY-MODEL.md).
+
+Kill test [K-24](11-SECURITY-VERIFICATION-PLAN.md#13-kill-test-canon).
+
+---
+
+## 10. Ingestion boundary — supported-content allowlist
+
+> **ADDED IN G3 ([SEC-R9](reviews/G3-SECURITY-RECONCILIATION.md), G3-M7 — PARTIAL remedy).** The risk is valid: a vault root is an ordinary directory, and *everything under it* was implicitly a candidate for the knowledge index — including `.env`, `.git/`, key material and archives a user never intended Fehrest to read, let alone serve to an agent.
+>
+> **The proposed remedy — a growing list of secret filenames — is not accepted as the primary boundary.** A deny-list is a permanent race against filenames nobody has thought of yet, and it fails in the dangerous direction: an unlisted secret is indexed by default. **Fehrest inverts it.**
+
+**The model is allowlist plus reserved-path exclusion plus explicit opt-in:**
+
+| Rule | |
+|---|---|
+| 1 | **Only intentionally supported canonical Fehrest content types are indexed automatically.** Support is a decision, not a default |
+| 2 | **`.fehrest/` is never indexed as user knowledge.** It is Fehrest's own canonical machine state ([E §1](04-DERIVED-DATA-MODEL.md#1-two-classes-of-state-inside-fehrest)) — indexing it would feed audit records back as knowledge |
+| 3 | **`.git/` is not indexed as knowledge by default.** It contains object data, credentials in remotes, and hooks |
+| 4 | **Unsupported binary, archive and document classes do not enter the knowledge index merely because they exist under the vault root** |
+| 5 | **Attachment and import classes require their own future ingestion gate** ([T-10](02-THREAT-MODEL.md#t-10--parser-vulnerabilities), [T-12](02-THREAT-MODEL.md#t-12--malicious-attachment--parser-confusion)) |
+| 6 | Users may **explicitly include** supported content that was excluded, where the product eventually allows it, **with the consequences stated at the point of choice** |
+
+**Secret-pattern detection remains permitted as `DEFENSE_IN_DEPTH`** — flagging an apparent credential is useful. It must **never** be presented as a complete secret-detection or DLP system, and [C §7.1](02-THREAT-MODEL.md#71-security-claims-fehrest-v1-explicitly-does-not-make) records that non-claim.
+
+### 10.1 Audit metadata is not model-visible metadata
+
+**A second, quieter finding in the same area.** Manifest and content hashes exist for **audit** ([H §3.2](07-CONTEXT-COMPILER-SPEC.md#32-the-served-item-manifest--permanent-t1)). They are not automatically useful to a downstream agent, and exposing them by default widens what a model — and anything that later reads its output — learns about vault contents it was never served.
+
+**Keep the two conceptually separate:** raw audit metadata is recorded canonically and completely; **model-visible metadata is the subset the agent actually needs.** Hashes not required by the agent should not appear in model-visible context by default.

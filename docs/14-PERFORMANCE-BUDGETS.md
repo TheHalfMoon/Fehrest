@@ -233,3 +233,40 @@ A budget that is missed and then quietly raised is worse than no budget. Any bud
 | Startup exceeds 5 s at M **on the healthy path** | Projection checkpointing is insufficient |
 | **Measured event volume ([B-0](10-BENCHMARK-PLAN.md#b-0--event-volume-measurement)) differs from assumption by more than an order of magnitude** | Every log-derived row in [§8](#8-disk) and [§9](#9-growth-over-time) is re-derived, and the T1/T2 tiering in [D §5.2](03-CANONICAL-DATA-MODEL.md#52-durability-tiers--the-correction-to-the-brief) is re-decided before it is frozen |
 | **Degraded full-replay recovery proves unacceptably slow once measured** | Increase checkpoint cadence, or checkpoint more projections — never make a checkpoint authoritative to avoid replaying ([E §11](04-DERIVED-DATA-MODEL.md#11-projection-checkpoints)) |
+
+---
+
+## 13. Local resource-safety bounds
+
+> **ADDED IN G3 ([SEC-R7](reviews/G3-SECURITY-RECONCILIATION.md), G3-M5).** An authorized agent can drive operations that **permanently amplify canonical state** — compile requests writing T1 manifests, memory writes, approval pairs. Each is individually legitimate; unbounded, they are a disk-exhaustion and audit-flood primitive that no authorization check catches, because every request is authorized.
+
+### 13.1 These are safety bounds, not product limits
+
+**The distinction is a founder principle and it is not negotiable here.** Fehrest imposes **no artificial product limits**. The bounds below exist because a local process can fill a local disk, and for no other reason.
+
+| **NOT permitted** — commercial or artificial | **Permitted** — local resource safety |
+|---|---|
+| Daily compile limits | Maximum accepted request size |
+| Paid-tier limits | Maximum event size |
+| Trial-style limits | Bounded concurrent work |
+| Arbitrary lifetime quotas | Bounded compile frequency/burst **where required** |
+| Vendor-controlled waiting queues | Disk-reserve threshold |
+| | Bounded pending-approval amplification |
+
+**Exact numeric values remain benchmark and configuration decisions** ([B-0](10-BENCHMARK-PLAN.md#b-0--event-volume-measurement) supplies the real distributions). Freezing numbers here would repeat the R2-12 error of shipping an unmeasured figure as a threshold.
+
+### 13.2 Prefer absorption over rejection
+
+Where possible, **coalescing · idempotency · deduplication · bounded concurrency** come before rate rejection. A duplicate compile of unchanged state should be *absorbed*, not refused — refusing correct work is a worse failure than doing it once.
+
+### 13.3 Properties of a safety rejection
+
+When a bound does fire, the rejection is:
+
+```
+EXPLICIT · AUDITED · LOCAL · NON-COMMERCIAL · NON-TIER-BASED
+```
+
+and it **must never silently discard canonical state**. A dropped memory write that the caller believes succeeded is data loss wearing a rate limiter's clothing — the failure must be visible to the caller and recorded.
+
+Kill test [K-24b](11-SECURITY-VERIFICATION-PLAN.md#13-kill-test-canon).

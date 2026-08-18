@@ -473,6 +473,25 @@ memory/superseded { superseded_id, superseding_id, reason, actor, ts }
 
 Rules: the superseding memory must satisfy full provenance; the superseded memory moves to `lifecycle: SUPERSEDED` and is retained; its `valid_until` is set to the superseding memory's `valid_from` unless explicitly given; **a memory with `verification: USER_CONFIRMED` may be superseded only by another `USER_CONFIRMED` memory or after explicit confirmation**; **a `PENDING` memory may never supersede anything** (§5.5); chains are traversable in both directions.
 
+### 6.1 Supersession graph integrity
+
+> **ADDED IN G3 ([SEC-R10](reviews/G3-SECURITY-RECONCILIATION.md), G3-L1).** Non-blocking, and cheap enough to specify now rather than discover later. Supersession is a **graph**, and F1 specified its edges without specifying which edges are invalid.
+
+**Rejected relationships — each surfaced as `INVALID_SUPERSESSION`, never silently normalised:**
+
+| Invalid edge | Why |
+|---|---|
+| **Self-supersession** | A memory superseding itself is either a bug or an attempt to make lifecycle unresolvable |
+| **Cycles** | A ⊃ B ⊃ A leaves no current state; resolution would depend on traversal order |
+| **Cross-vault supersession** | Vault is a required scope dimension ([§3.4](#34-scope-is-orthogonal-dimensions-not-an-ordered-lattice)) |
+| **Cross-project supersession where scope rules prohibit it** | Otherwise supersession becomes a cross-project write primitive, bypassing [T-6](02-THREAT-MODEL.md#t-6--unauthorized-cross-project-retrieval) |
+| **A `PENDING` item superseding authoritative state** | [R-12](01-ARCHITECTURE-CONSTITUTION.md#2-derived-rules); already forbidden, now also a graph-level check |
+| **Incompatible or incomparable authority transitions** | e.g. an `UNVERIFIED` memory superseding a `USER_CONFIRMED` one without confirmation |
+
+**Silent normalisation is the specific thing forbidden.** Dropping a cycle edge to make the graph traversable produces a *plausible* current state derived from an invalid history — worse than an error, because nothing downstream can tell.
+
+**Property-test the supersession graph** over randomly generated edge sets, asserting every invalid class is rejected and surfaced.
+
 Retention matters more than it appears. It is what allows the compiler to include *"previously SolidJS was rejected in favour of React on 4 January; reversed 3 June because of X"* — the superseded decision is often what explains the current one, and deleting it destroys the reasoning while keeping the conclusion.
 
 ---

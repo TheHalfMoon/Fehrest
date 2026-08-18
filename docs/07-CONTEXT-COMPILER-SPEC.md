@@ -214,7 +214,32 @@ Constraints and gotchas outrank raw evidence deliberately: one line of "never re
 
 `pending_advisory` sits last on purpose: unconfirmed material is worth showing when there is room and must never crowd out confirmed state. It has no floor — it is the one section permitted to be starved entirely.
 
-Each other section has a floor (never fully starved) and a cap (cannot crowd out others). Within a section, truncation is by rank, and the count omitted is always recorded. **Stage [10] then writes the served-item manifest (§3.2) from exactly what survived budgeting** — the manifest records what was *emitted*, never what was *selected*.
+Each other section has a floor (never fully starved) and a cap (cannot crowd out others). Within a section, truncation is by rank, and the count omitted is always recorded.
+
+#### Budget atomicity — security metadata is never truncated away
+
+> **ADDED IN G3 ([SEC-R6](reviews/G3-SECURITY-RECONCILIATION.md), G3-M4).** Budget allocation trimmed *items*, and nothing said what happens when an item's **envelope** does not fit. The reachable failure: a payload emitted with its trust level, provenance or supersession state truncated off — content arriving unlabelled, from the one stage whose job is labelling it.
+
+**An emitted item is one security-relevant unit:**
+
+```
+CONTENT + TRUST LABEL + PROVENANCE + TEMPORAL STATE
+        + SUPERSESSION STATE + TRUNCATION STATUS
+```
+
+**Machine-owned security metadata must survive for every emitted item. If the budget cannot accommodate the required envelope, the item is OMITTED — never emitted stripped.** An omitted item costs recall; a stripped item is unlabelled content in a model's context, which is the exact failure [I-13](01-ARCHITECTURE-CONSTITUTION.md#i-13--imported-and-retrieved-content-is-evidence-never-authority) exists to prevent.
+
+**Three explicit states, per item, recorded in the manifest:**
+
+| State | Meaning |
+|---|---|
+| `FULL` | Content and complete envelope emitted |
+| `TRUNCATED` | **Content** shortened at a recorded boundary; **envelope complete** |
+| `OMITTED` | Not emitted. Counted in `omitted`, with the reason |
+
+Specify: a **per-item** byte/token bound; a **package-wide** bound; the **truncation boundary** used; and the state's representation in the served-item manifest (§3.2).
+
+**Truncation never alters the semantic identity of security metadata.** Shortening a quoted excerpt is legitimate; shortening a provenance chain, a trust level or a supersession pointer is not — those are emitted whole or the item is omitted. Kill test [K-20](11-SECURITY-VERIFICATION-PLAN.md#13-kill-test-canon). **Stage [10] then writes the served-item manifest (§3.2) from exactly what survived budgeting** — the manifest records what was *emitted*, never what was *selected*.
 
 ---
 

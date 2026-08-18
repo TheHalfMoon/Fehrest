@@ -5,7 +5,9 @@
 
 Derived state is everything reconstructable from canonical state. Its governing property is [I-6](01-ARCHITECTURE-CONSTITUTION.md#i-6--derived-state-is-disposable-and-rebuildable): delete all of it, restart, and the system is functionally identical.
 
-That property is not a convenience. It is what makes every index decision in this document reversible, and it is the reason index corruption is an availability problem rather than a security problem ([T-16](02-THREAT-MODEL.md#t-16--corrupted-derived-indexes)).
+That property is not a convenience. It is what makes every index decision in this document reversible.
+
+> **The security half of that claim is withdrawn in G3 ([SEC-R2](reviews/G3-SECURITY-RECONCILIATION.md)).** F1 continued: *"…and it is the reason index corruption is an availability problem rather than a security problem."* **It is not.** Rebuildability bounds the cost of *recovery*; it says nothing about the window before detection, in which a semantically poisoned derived table can steer scope attribution, ID→location resolution, candidate selection, ranking and retrieval. Derived state is `NON-CANONICAL · REBUILDABLE · UNTRUSTED FOR AUTHORITY` — see [§12](#12-derived-state-is-untrusted-for-authority).
 
 ---
 
@@ -348,3 +350,108 @@ digest                         # over the checkpointed state
 **No degraded-path latency target is invented here.** The temptation is to write a plausible number — the Codex review suggested replay "necessarily takes minutes," which is an unmeasured claim about an unbuilt system on an unmeasured event volume whose own baseline assumption is unvalidated ([R2-12](reviews/F1-R2-RECONCILIATION.md)). Three unknowns multiplied together do not produce a budget. The degraded budget is set after Phase 0 measures real event volume and Phase 1 measures real replay throughput; until then it is stated as unmeasured, which is the honest form of the answer.
 
 **Checkpoint cadence is likewise unset**, for the same reason: cadence trades startup latency against write amplification, and both sides of that trade are currently unmeasured.
+
+---
+
+## 12. Derived state is untrusted for authority
+
+> **ADDED IN G3 ([SEC-R2](reviews/G3-SECURITY-RECONCILIATION.md), G3-H2 — HIGH).** The classification below is normative and supersedes any earlier phrasing suggesting that derived-state corruption is merely an availability concern.
+
+```
+DERIVED STATE:  NON-CANONICAL  ·  REBUILDABLE  ·  UNTRUSTED FOR AUTHORITY
+```
+
+**Rebuildability bounds the cost of recovery. It does not prevent a poisoned derived store from causing a security failure before detection.** Between poisoning and rebuild, derived tables influence scope attribution, ID→location resolution, candidate selection, ranking and retrieval — every one of which is consumed by the compiler and served to an agent.
+
+### 12.1 Two independent guarantees — neither substitutes for the other
+
+**This is the specific error G3 caught:** post-open UUID verification and filesystem containment defend different things, and treating either as sufficient leaves the other's attack open.
+
+#### A — Location / containment guarantee
+
+**Every derived path is an `UNTRUSTED_LOCATOR_HINT`.** It answers *where the object probably was*, never *what may be opened*.
+
+A content read opens **relative to the authorized vault root**, through a containment-preserving mechanism. At **use time**, not merely at write time:
+
+| Must fail | |
+|---|---|
+| Absolute-path escape | `/etc/shadow`, `C:\Users\…` |
+| `..` traversal escape | Any parent-directory ascent out of the root |
+| Symlink / reparse escape | Per the supported platform policy ([T-8](02-THREAT-MODEL.md#t-8--symlink-and-junction-attacks)) |
+| Authority enlargement | **Derived path data may never enlarge filesystem authority** |
+
+The implementation mechanism is **not frozen here.** [cap-std](research/FEHREST_SOURCE_REGISTRY.md#src-112--cap-std) or another Rust/platform primitive may be evaluated later; **cap-std is not accepted during this documentation gate** ([SEC-R14](reviews/G3-SECURITY-RECONCILIATION.md)).
+
+#### B — Identity guarantee
+
+**After** opening through the confined path, read from the **opened handle** — never re-resolve the path — and verify:
+
+```
+embedded Fehrest UUID  ==  requested Fehrest object ID
+```
+
+plus, where the object model supports it, the expected source revision / content hash.
+
+A mismatch is `IDENTITY_CONFLICT`, `STALE_LOCATOR` or `TAMPER_SUSPECTED` according to the cause actually available. **It must never silently serve the bytes as the requested object.** Silently serving them is how a poisoned locator becomes a content substitution that every downstream provenance record then attests to.
+
+**Why both.** Containment without identity verification lets an attacker swap *which in-vault object* a locator resolves to — entirely inside the root, so containment never fires. Identity verification without containment lets a read reach outside the vault before any UUID is examined — and a file with no Fehrest UUID produces an error only *after* it has been opened and read. The two failures are disjoint.
+
+### 12.2 Canonical scope is the authorization authority
+
+**Authorization-relevant scope attribution originates from canonical state.** Derived scope columns may *accelerate* matching; they may never be the sole authority.
+
+The **final emission and retrieval authorization check** compares against canonical scope evidence — or against a security-reviewed projection whose canonical inputs and revision are explicitly anchored and revalidated at use time. **In the Headless Proof, prefer the simpler canonical assertion**; a projection that needs its own security review is not the cheapest correct thing at that stage.
+
+### 12.3 Required properties
+
+| Property | Asserts |
+|---|---|
+| `test_derived_path_cannot_expand_vault_authority` | No derived path value, however crafted, opens a resource outside the authorized vault root |
+| `test_post_open_uuid_must_match_requested_object` | A locator resolving to the wrong in-vault object is rejected, not served |
+| `test_derived_scope_cannot_grant_access` | Mutating derived scope columns never widens what a session may retrieve or be served |
+
+Kill tests [K-14](11-SECURITY-VERIFICATION-PLAN.md#13-kill-test-canon), [K-16](11-SECURITY-VERIFICATION-PLAN.md#13-kill-test-canon), [K-17](11-SECURITY-VERIFICATION-PLAN.md#13-kill-test-canon) and [K-22](11-SECURITY-VERIFICATION-PLAN.md#13-kill-test-canon) exercise these adversarially.
+
+---
+
+## 13. SQLite and FTS5 hardening baseline
+
+> **ADDED IN G3 ([SEC-R8](reviews/G3-SECURITY-RECONCILIATION.md), G3-M6).** [ADR-0006](09-TECHNOLOGY-DECISIONS.md#adr-0006--sqlite-is-the-derived-store-and-only-the-derived-store) chose SQLite and specified durability settings. It specified **no security posture**, in a component that parses attacker-influenced content into a database file the user's other processes can also write.
+
+### 13.1 Connection and engine posture
+
+Each row is a **requirement to implement or to document an incompatibility**, not a suggestion:
+
+| Control | Requirement |
+|---|---|
+| **Extension loading** | **Disabled by construction.** Not merely unused — the capability is not enabled on the connection |
+| `load_extension()` | **No user- or content-controlled path reaches it.** There is no code path from vault content to extension loading |
+| **Database path** | Derived from the **active vault root**. Never from configuration a document can influence, and never from derived data |
+| `ATTACH` | **No arbitrary path from untrusted content**, unless separately and explicitly authorized |
+| `trusted_schema` | **`OFF`, or the documented equivalent safe connection configuration**, unless a documented Fehrest requirement proves incompatibility — in which case the incompatibility is recorded, not the exception assumed |
+| **Resource behaviour** | Bounded — query, memory and result-size limits set on the connection |
+| **Corrupt database** | Treated as **derived and untrusted** ([§12](#12-derived-state-is-untrusted-for-authority)): quarantined and rebuilt, never repaired into trust |
+
+**`PRAGMA integrity_check` does not prove semantic correctness.** It establishes that the file is structurally well-formed; a structurally perfect database can hold a poisoned `object.path`, a poisoned scope column, or a poisoned FTS index. Passing it is necessary and nowhere near sufficient, and §12's controls are what actually carry the weight.
+
+### 13.2 FTS5 `MATCH` is a query language, not a string
+
+**This is not "SQL parameterisation," and describing it that way would be the defect.** Parameter binding protects the SQL statement; **the right-hand side of `MATCH` is then interpreted by FTS5's own query language.** A bound parameter carrying `foo OR bar`, `title:secret`, `NEAR(a b)`, or `pre*` is passed through as *syntax*, not as literal text.
+
+The consequences are not merely wrong results:
+
+| Injected syntax | Effect |
+|---|---|
+| Column filters (`title:…`) | Search constrained or redirected in ways the caller did not request |
+| Boolean operators | Result-set manipulation, including broadening beyond intent |
+| Prefix / `NEAR` | Pathological query cost — a denial-of-service against retrieval |
+
+**Requirement.** Where normal user or project text is intended as **literal** search input, Fehrest constructs an FTS expression that **cannot activate FTS5 syntax** unless that syntax is an explicitly exposed Fehrest feature. Specifically:
+
+- **Literal-query construction / escaping** for all non-feature input.
+- A **query length bound**, and a **complexity bound** where necessary.
+- **Fuzz and property tests** over pathological and hostile syntax.
+
+**Kept separate on purpose:** [B-12](10-BENCHMARK-PLAN.md#b-12--fts5-rebuild-and-ranking-stability) tests *ranking and rebuild determinism*. This section tests *query construction safety*. They share a component and answer unrelated questions; merging them would let a passing determinism benchmark be cited as evidence of query safety.
+
+Kill tests [K-16](11-SECURITY-VERIFICATION-PLAN.md#13-kill-test-canon) and [K-17](11-SECURITY-VERIFICATION-PLAN.md#13-kill-test-canon) cover both surfaces adversarially.

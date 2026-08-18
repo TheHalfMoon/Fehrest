@@ -244,3 +244,59 @@ That last item is a hard requirement. [T-10](02-THREAT-MODEL.md#t-10--parser-vul
 | 14 | **Recovery under malicious or corrupt derived state** | [N](13-RECOVERY-MODEL.md), including the new [§3A](13-RECOVERY-MODEL.md#3a-hostile-filesystem-and-sync-environments) hostile-environment scenarios and checkpoint loss |
 
 **Two framings worth carrying into the review.** First, the [controls table](02-THREAT-MODEL.md#6-controls-summary-by-mechanism) marks which controls are **Boundary** and which are **defence-in-depth** — only the former are load-bearing, and F1-R2 found one Boundary row (T-3) that had **no implementable mechanism behind it**. A second instance of that pattern is the most valuable thing this review could find. Second, **no source in the registry is a runtime dependency**, and external verification of a repository establishes existence, never security.
+
+---
+
+## 13. Kill-test canon
+
+**K-01 through K-24b.**
+
+> **ADDED IN G3.** The adversarial test set from the GLM-5.3 security review, reconciled against the GPT-5.6 Sol validation. **Where GLM's proposed remedy conflicts with that validation, the corrected semantics below are normative** — most visibly for [K-21](#k-21-semantics-corrected).
+>
+> **None of these is implemented.** They are specified now so that the [Headless Thesis-Proof](15-IMPLEMENTATION-PHASES.md#phase-t--headless-rust-thesis-proof-slice) is built against them rather than retrofitted to them.
+
+| ID | Kill test | Asserts | Primary reference |
+|---|---|---|---|
+| **K-01** | Imported-content injection | No capability change, no unapproved tool execution | [T-1](02-THREAT-MODEL.md#t-1--indirect-prompt-injection-via-imported-document), [§6.1](#61-c-inject--prompt-injection) |
+| **K-02** | Malicious `AGENTS.md`-style in-vault instruction file | Instruction-shaped vault content gains no authority; trust level 4 stays evidence | [I-13](01-ARCHITECTURE-CONSTITUTION.md#i-13--imported-and-retrieved-content-is-evidence-never-authority) |
+| **K-03** | MCP capability / tool-description manipulation | Permitted actions come from Fehrest authorization state, never from `tools/list`, capabilities or descriptions | [T-13](02-THREAT-MODEL.md#t-13--privilege-escalation-via-mcp-or-plugin) |
+| **K-04** | In-grant-but-not-served provenance claim | Rejected as observed evidence | [T-3](02-THREAT-MODEL.md#t-3--forged-provenance) |
+| **K-05** | Manifest tamper | Partial modification detected; **no authentication claimed** against a full consistent rewrite | [C §6.1](02-THREAT-MODEL.md#61-what-each-mechanism-actually-provides) |
+| **K-06** | Package/manifest mismatch | Replay reports `DIVERGED` or `UNRECONSTRUCTABLE` with a reason, never `IDENTICAL` | [H §3.3](07-CONTEXT-COMPILER-SPEC.md#33-replay-outcomes-are-explicit--three-results-never-two) |
+| **K-07** | Cross-project poisoning | No memory written under project A becomes a candidate for project B | [F §3.4](05-MEMORY-MODEL.md#34-scope-is-orthogonal-dimensions-not-an-ordered-lattice) |
+| **K-08** | Vault-global poisoning | Vault-global creation is unreachable from any agent path; global never outranks project-local | [F §3.4](05-MEMORY-MODEL.md#34-scope-is-orthogonal-dimensions-not-an-ordered-lattice) |
+| **K-09** | Pending influence and flooding | `PENDING` never reaches an authoritative surface; advisory flooding cannot force action | [F §5.5](05-MEMORY-MODEL.md#55-pending-confirmation-semantics) |
+| **K-10** | Temporal resurrection | A superseded or expired memory cannot be returned as current state | [F §4.2](05-MEMORY-MODEL.md#42-deterministic-resolution) |
+| **K-11** | Duplicate UUID | Surfaced as an identity conflict; neither file silently discarded | [D §3.2](03-CANONICAL-DATA-MODEL.md#32-identity-across-filesystem-operations) |
+| **K-12** | Symlink escape | Read fails at the containment boundary | [T-8](02-THREAT-MODEL.md#t-8--symlink-and-junction-attacks) |
+| **K-13** | Windows reparse point / junction escape | Same, on the weakest confinement platform | [T-18](02-THREAT-MODEL.md#t-18--windows-confinement-is-weaker-than-posix) |
+| **K-14** | Authorize/open swap (TOCTOU) | The bytes served are the object authorized — post-open verification, not pre-open checking | [T-9](02-THREAT-MODEL.md#t-9--filesystem-race-conditions) |
+| **K-15** | Git rename / case storm | Identity survives; no duplicate objects allocated; bulk change escalates to reconciliation | [D §3.3](03-CANONICAL-DATA-MODEL.md#33-filesystem-identity-and-path-semantics) |
+| **K-16** | Poisoned derived SQLite | Poisoned rows cannot grant access, redirect a read outside the root, or substitute an object | [E §12](04-DERIVED-DATA-MODEL.md#12-derived-state-is-untrusted-for-authority) |
+| **K-17** | Poisoned FTS / hostile `MATCH` syntax | Literal input never activates FTS5 query syntax; pathological queries bounded | [E §13.2](04-DERIVED-DATA-MODEL.md#132-fts5-match-is-a-query-language-not-a-string) |
+| **K-18** | Event replay / reorder | Partial tamper detected; rollback surfaced; **no authentication claimed** | [T-4](02-THREAT-MODEL.md#t-4--event-log-tampering) |
+| **K-19** | Graph identity injection | Extractor IDs never become canonical identity; collisions surfaced | [G-ID-1…4](01-ARCHITECTURE-CONSTITUTION.md#i-15--paths-are-locations-stable-ids-are-identities) |
+| **K-20** | Provenance / trust truncation | An item is `FULL`, `TRUNCATED` (envelope intact) or `OMITTED` — never emitted stripped | [H §4](07-CONTEXT-COMPILER-SPEC.md#4-pipeline) |
+| **K-21** | Scripted user-authority path | **See corrected semantics below** | [C §3.1](02-THREAT-MODEL.md#31-the-local-root-of-trust-g3-h1) |
+| **K-22** | Derived path vault escape | No derived path value opens a resource outside the authorized root | [E §12.3](04-DERIVED-DATA-MODEL.md#123-required-properties) |
+| **K-23** | Envelope serialization forgery | Content cannot create a second machine-owned item or forge trust, provenance or section identity | [G §4.3](06-AGENT-MODEL.md#43-two-layers-typed-internal-envelope-canonical-serialization) |
+| **K-24** | Concurrent canonical writers | One writer per vault; forks detected and surfaced, **never auto-merged** | [D §9](03-CANONICAL-DATA-MODEL.md#9-inter-process-single-writer-discipline) |
+| **K-24b** | Permanent-state amplification | Local resource-safety bounds hold; rejections explicit and audited; **no canonical state silently discarded** | [O §13](14-PERFORMANCE-BUDGETS.md#13-local-resource-safety-bounds) |
+
+### K-21 semantics, corrected
+
+> **This is the one place where GLM's proposed remedy is not adopted, and the reason matters.**
+
+GLM's K-21 tested whether a **script** could reach a user-authority transition. Under the root of trust now stated in [C §3.1](02-THREAT-MODEL.md#31-the-local-root-of-trust-g3-h1), **that test cannot pass and should not be written**: a process holding the user's OS authority is not claimed to be distinguishable from the user, and any mechanism that appeared to distinguish it — TTY presence being the obvious candidate — is defeated by a process that allocates a PTY.
+
+**The invariant actually tested is narrower and genuinely enforceable:**
+
+> An **agent, MCP, or untrusted-content path** — one **without user-authority interface access** — cannot mint user authority.
+
+That covers the actor class the product actually exposes, and it is structural rather than behavioural: the transition does not exist on the agent surface at all ([G §2.4](06-AGENT-MODEL.md#24-the-user-authority-surface-is-separate-from-the-agent-surface)).
+
+**If the threat model is ever widened to include hostile same-user processes, K-21 must become stricter — but only after a real authentication mechanism exists.** Writing the stricter test first produces a test that fails for correct code, and the usual response to that is to weaken the test rather than build the mechanism.
+
+### What the kill-test canon does not do
+
+It does not establish security. **Passing every test above means the specified attacks were tried and did not work** — not that the model is sound, and not that the [§7.1 non-claims](02-THREAT-MODEL.md#71-security-claims-fehrest-v1-explicitly-does-not-make) have quietly become claims. The corpora rule in [§1 principle 4](#1-principles) applies: this set grows on every finding and is never shrunk.

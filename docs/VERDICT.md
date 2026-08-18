@@ -2,14 +2,27 @@
 
 **Date:** 2026-08-17
 **Author role:** Principal Architect
-**Phase:** `F1-R2` reconciliation complete
-**Next gate:** GPT-5.6 Sol **R2 delta** review → GLM-5.3 security/cyber review → architecture freeze → founder implementation authorization
+**Phase:** `G3` security reconciliation complete
+**Next gate:** GPT-5.6 Sol **final security delta** review → architecture freeze may then be considered → founder implementation authorization
 
 ---
 
 ## Verdict
 
-# `F1_R2_RECONCILED_READY_FOR_GPT_DELTA_REVIEW`
+# `G3_SECURITY_RECONCILED_READY_FOR_GPT_DELTA_REVIEW`
+
+**Read [the G3 security delta](reviews/G3-SECURITY-RECONCILIATION.md) first.**
+
+GLM-5.3's independent adversarial review returned `G3_SECURITY_PASS_WITH_REQUIRED_RECONCILIATION` — **CRITICAL=0, HIGH=2, MEDIUM=7, LOW=5, INFO=4**, with 9 freeze blockers and 8 implementation blockers. GPT-5.6 Sol validated 16 findings VALID and 2 PARTIAL, rejecting none. **All are reconciled**; all 9 freeze blockers are closed.
+
+**No foundational trust assumption was found invalid.** Plane separation, pre-retrieval frozen grants, the deny-by-default chokepoint, Fehrest-owned identity, the served-item manifest, the single read envelope, four-axis memory, PENDING non-authority and canonical/derived separation all survive unchanged.
+
+**What G3 corrected were claims stronger than their mechanisms.** Three were withdrawn: *"unforgeable provenance"* over an unkeyed hash chain, *"derived corruption is an availability problem"* over a poisonable index, and *"explicit user authority"* with no defined authenticator. Six mechanisms that existed only as prose now have normative specifications. **Four GLM remedies were modified rather than adopted** ([§4](reviews/G3-SECURITY-RECONCILIATION.md)) — most importantly TTY detection as authentication, which would have converted an honest limitation into a false guarantee.
+
+---
+
+<details>
+<summary>Prior verdict — <code>F1_R2_RECONCILED_READY_FOR_GPT_DELTA_REVIEW</code></summary>
 
 **Read [the R2 delta](reviews/F1-R2-RECONCILIATION.md) first.** It carries the finding-by-finding table; this document is the summary.
 
@@ -20,6 +33,8 @@
 The verdict is not `F1_R2_BLOCKED_BY_UNRESOLVED_EVIDENCE`: every open item has a named benchmark and a phase. The two largest — event volume and FTS5 ranking stability — are now *scheduled measurements* rather than *unstated assumptions*, which is strictly better than the position G2 reviewed. It is not `F1_R2_MAJOR_REDESIGN_REQUIRED`: the four-layer architecture, constitutional invariants, plane separation, bitemporal memory and the falsification experiment all survive.
 
 **What changed structurally.** Several mechanisms that were *asserted* are now *specified* — the served-item manifest, checkpoints, derivation lineage, filesystem identity, pending semantics. Several vocabularies that were *conflated* are now *separated* — the four memory axes, the scope dimensions. And **the experiment that decides whether the product should exist now runs before the architecture that depends on it** ([Phase T](15-IMPLEMENTATION-PHASES.md#phase-t--headless-rust-thesis-proof-slice)).
+
+</details>
 
 ---
 
@@ -77,7 +92,7 @@ Where I expect the plan to survive attack.
 
 4. **The security boundary is structural, and its limits are stated.** Capability grants are computed before retrieval and frozen; agents address objects by ID so path traversal is removed at the interface rather than defended at every call site. And the model explicitly distinguishes **boundary** controls from **defence-in-depth** ones, stating plainly that Fehrest bounds privilege, not persuasion. Overclaiming here is the standard failure of agent security documents.
 
-5. **Disposability is load-bearing and it pays for itself.** [I-6](01-ARCHITECTURE-CONSTITUTION.md#i-6--derived-state-is-disposable-and-rebuildable) is what makes `synchronous=NORMAL` safe, makes index corruption an availability problem, makes "delete the derived directory" a support instruction, eliminates derived-schema migration entirely, and makes every index decision reversible. One invariant carrying five consequences is a sign the decomposition is right.
+5. **Disposability is load-bearing and it pays for itself.** [I-6](01-ARCHITECTURE-CONSTITUTION.md#i-6--derived-state-is-disposable-and-rebuildable) is what makes `synchronous=NORMAL` safe, makes "delete the derived directory" a support instruction, eliminates derived-schema migration entirely, and makes every index decision reversible. One invariant carrying four consequences is a sign the decomposition is right. *(G3 removed a fifth: rebuildability does **not** make index corruption merely an availability problem — [SEC-R2](reviews/G3-SECURITY-RECONCILIATION.md).)*
 
 6. **Failure conditions are specific and run both ways.** Seventeen conditions name their trigger, detector, consequence and invalidated documents — including four findings that would *expand* scope. A plan that only lists ways to shrink will only ever be revised downward.
 
@@ -121,6 +136,14 @@ Where I expect the plan to survive attack.
 **Not blockers, but unproven:** hypotheses [H-1](research/EVIDENCE_LOG.md#h-1--fts5--graph-expansion-beats-dense-retrieval-on-personal-vaults) through [H-5](research/EVIDENCE_LOG.md#h-5--a-single-sidecar-process-is-sufficient-isolation-for-the-extraction-path), each scheduled against a named benchmark.
 
 ---
+
+## Documents added in G3
+
+```
+docs/reviews/G3-SECURITY-RECONCILIATION.md   # the security delta
+```
+
+Modified in G3: `README.md`, `02-THREAT-MODEL.md`, `03-CANONICAL-DATA-MODEL.md`, `04-DERIVED-DATA-MODEL.md`, `05-MEMORY-MODEL.md`, `06-AGENT-MODEL.md`, `07-CONTEXT-COMPILER-SPEC.md`, `09-TECHNOLOGY-DECISIONS.md`, `11-SECURITY-VERIFICATION-PLAN.md`, `14-PERFORMANCE-BUDGETS.md`, `15-IMPLEMENTATION-PHASES.md`, `VERDICT.md`, `research/FEHREST_SOURCE_REGISTRY.md`.
 
 ## Documents added in F1-R2
 
@@ -244,6 +267,8 @@ I confirm that:
 - **Broad donor discovery is now FROZEN.** New sources enter only through a documented gap trigger ([registry §14.9](research/FEHREST_SOURCE_REGISTRY.md#149-research-freeze--now-binding)).
 - **No Yjs, vectors, DuckDB, TimesFM, UI or cloud infrastructure was added.**
 - **Nothing was merged. Nothing was pushed.** The local `origin` was set to the canonical repository so that any future push targets the right remote and can never default to `wepld/Fehrest`; no push occurred.
+- **No security subsystem was built or adopted.** No authentication subsystem, no TTY detection, no MAC/keychain/TPM, no Cedar, no cap-std, no MCP SDK. G3's corrections are specifications and honest claims, not mechanisms.
+- **No kill test was implemented.** K-01…K-24b are specified so Phase T is built against them.
 - **Implementation is not authorized** and is not claimed to be.
 - **The Code Provenance Ledger remains empty**, correctly, because no donor code has been copied or adapted ([registry §11](research/FEHREST_SOURCE_REGISTRY.md#11-code-provenance-ledger)).
 - **Live repository truth took precedence over prior conclusions.** Three F1 findings were retracted on re-verification.
@@ -266,4 +291,6 @@ The most useful attacks would be on:
 8. **Whether the [Editor Gate](18-EDITOR-GATE.md#6-scoring) weights should have been changed rather than marked provisional**, and specifically whether agent editability at 5% is double-counted under fidelity or genuinely under-weighted ([Q-16](16-OPEN-QUESTIONS.md#q-16--editor-gate-weights-and-agent-editability)).
 9. **Whether the Event Plane's T1/T2/T3 tiering is over-engineered** for a single-user product — still open, and now explicitly unfrozen pending [B-0](10-BENCHMARK-PLAN.md#b-0--event-volume-measurement).
 
-**Two failure modes are worth attacking directly.** F1's was reading **absence of signal as evidence of absence**. F1-R2's findings clustered on a different one: **an unmeasured number or an untested engine property propagating into decisions without a status label**. If either pattern survives anywhere else in the package, it is the thing most likely to embarrass the next review — and the second is harder to spot, because an assumption stated confidently reads exactly like a finding.
+**Three failure modes are worth attacking directly, one per review round.** F1's was reading **absence of signal as evidence of absence**. F1-R2's was **an unmeasured number or untested engine property propagating into decisions without a status label**. G3's was **a security claim stronger than its mechanism** — "unforgeable", "availability problem", "explicit user authority", each asserted in prose with nothing a test could reach.
+
+**All three are the same root cause:** a sentence that reads as established, with nothing underneath it. Three rounds have each found instances, and there is no reason to assume the supply is exhausted. **The highest-value thing the next review can do is find a fourth.**

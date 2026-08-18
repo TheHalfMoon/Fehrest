@@ -18,11 +18,16 @@
 | F1 Architecture + Plan | ✅ Complete |
 | F1-R1 Reconciliation | ✅ Complete — [delta](docs/reviews/F1-R1-RECONCILIATION.md) |
 | G2 independent review + GPT-5.6 Sol validation | ✅ Complete — 13 VALID · 5 PARTIAL · 1 NEEDS_EVIDENCE · 0 REJECTED |
-| **F1-R2 Reconciliation** | ✅ **Complete** — [delta](docs/reviews/F1-R2-RECONCILIATION.md) |
-| GPT-5.6 Sol **R2 delta** review | ⏳ Next gate |
-| GLM-5.3 security/cyber review → architecture freeze → founder authorization | Pending |
+| F1-R2 Reconciliation | ✅ Complete — [delta](docs/reviews/F1-R2-RECONCILIATION.md) |
+| GPT-5.6 Sol R2 delta review | ✅ Accepted with two pre-GLM corrections |
+| GLM-5.3 adversarial security review | ✅ `G3_SECURITY_PASS_WITH_REQUIRED_RECONCILIATION` — CRITICAL=0, HIGH=2, MED=7, LOW=5, INFO=4 |
+| **G3 Security Reconciliation** | ✅ **Complete** — [delta](docs/reviews/G3-SECURITY-RECONCILIATION.md) |
+| GPT-5.6 Sol **final security delta** review | ⏳ Next gate |
+| Architecture freeze → founder authorization | Pending |
 
-**Verdict:** `F1_R2_RECONCILED_READY_FOR_GPT_DELTA_REVIEW` — see [the R2 delta](docs/reviews/F1-R2-RECONCILIATION.md) and [the verdict](docs/VERDICT.md).
+**Verdict:** `G3_SECURITY_RECONCILED_READY_FOR_GPT_DELTA_REVIEW` — see [the G3 delta](docs/reviews/G3-SECURITY-RECONCILIATION.md) and [the verdict](docs/VERDICT.md).
+
+**No foundational trust assumption was found invalid.** What G3 corrected were **claims stronger than their mechanisms** — see [what Fehrest v1 does not claim](docs/02-THREAT-MODEL.md#71-security-claims-fehrest-v1-explicitly-does-not-make).
 
 **Founder decisions recorded in F1-R2:**
 
@@ -72,6 +77,7 @@ The desktop shell ([ADR-0011](docs/09-TECHNOLOGY-DECISIONS.md#adr-0011--desktop-
 | [Q — Open Questions](docs/16-OPEN-QUESTIONS.md) | Founder decisions and known weaknesses |
 | [S — Engineering Method](docs/19-ENGINEERING-METHOD.md) | Spec Kit + Ponytail — how implementation proceeds after authorization |
 | [T — Future Capability Gates](docs/20-FUTURE-GATES.md) | Visual/Canvas Engine · Unified Surface Test · Collaboration/CRDT · View Engine — **none authorized** |
+| [G3 Security Reconciliation](docs/reviews/G3-SECURITY-RECONCILIATION.md) | **The security delta — read this first** |
 | [Editor Gate](docs/18-EDITOR-GATE.md) | Prototype bake-off deciding the editor |
 | [Failure Conditions](docs/17-FAILURE-CONDITIONS.md) | What would force redesign |
 | [F1-R2 Reconciliation](docs/reviews/F1-R2-RECONCILIATION.md) | **The R2 delta — read this first** |

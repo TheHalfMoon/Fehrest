@@ -162,7 +162,11 @@ None of these is a defect; all follow from what an extractor ID is for — addre
 
 **Decision.** One SQLite database holds all required derived state (object index, links, FTS5, memory projection) plus optional D2 mappings. WAL, `synchronous=NORMAL`, `foreign_keys=ON`, single writer. **No canonical state in SQLite.**
 
-**Reasoning.** `synchronous=NORMAL` is safe *because* the store is derived: power-loss corruption costs a rebuild, not data. This is [I-6](01-ARCHITECTURE-CONSTITUTION.md#i-6--derived-state-is-disposable-and-rebuildable) paying for itself in write throughput. Corruption becomes an availability problem rather than a security one ([T-16](02-THREAT-MODEL.md#t-16--corrupted-derived-indexes)).
+**Reasoning.** `synchronous=NORMAL` is safe *because* the store is derived: power-loss corruption costs a rebuild, not data. This is [I-6](01-ARCHITECTURE-CONSTITUTION.md#i-6--derived-state-is-disposable-and-rebuildable) paying for itself in write throughput.
+
+**Corrected in G3 ([SEC-R2](reviews/G3-SECURITY-RECONCILIATION.md)):** this argument covers **accidental** corruption only. *Power-loss* corruption costs a rebuild; **semantic poisoning** of a derived table is a security event during the window before detection, because retrieval, ranking and locator resolution consume derived state. The durability setting remains correct; the sentence that generalised it to "corruption is not a security problem" does not ([T-16](02-THREAT-MODEL.md#t-16--corrupted-derived-indexes), [E §12](04-DERIVED-DATA-MODEL.md#12-derived-state-is-untrusted-for-authority)).
+
+**Hardening baseline.** This ADR now carries a minimum SQLite security posture — extension loading disabled by construction, no untrusted `ATTACH`, `trusted_schema=OFF` or documented equivalent, vault-rooted database path, bounded resource behaviour, and literal FTS5 `MATCH` construction ([E §13](04-DERIVED-DATA-MODEL.md#13-sqlite-and-fts5-hardening-baseline)).
 
 **Rejected.** SQLite as canonical (violates [I-1](01-ARCHITECTURE-CONSTITUTION.md#i-1--user-knowledge-exists-locally-by-default)/[I-5](01-ARCHITECTURE-CONSTITUTION.md#i-5--canonical-artifacts-are-open-local-and-inspectable-amended)); separate databases per concern (cross-store transactions, more corruption surface); CozoDB (interesting Datalog+graph, but unproven for this and would make a young engine load-bearing); embedded KV store (loses SQL and FTS5 for no gain).
 

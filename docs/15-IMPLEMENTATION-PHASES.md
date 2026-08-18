@@ -88,6 +88,30 @@ Rule 2 is what prevents the failure the brief names: downstream work starting wh
 - Deterministic bounded Context Compiler.
 - Baseline harnesses: plain agent, repository-native docs, raw stuffing, BM25, and the **Karpathy-style maintained LLM Wiki** ([§3.1 ladder](10-BENCHMARK-PLAN.md#31-the-baseline-ladder)).
 
+#### Security floor — added in G3 ([G3 reconciliation](reviews/G3-SECURITY-RECONCILIATION.md))
+
+The slice above is the *thesis* boundary. G3 adds the **security** boundary it must satisfy, because a proof slice that establishes signal on an unsound base establishes nothing transferable:
+
+```
++ explicit single-user OS-account trust model        (C section 3.1)
++ no agent path capable of minting user authority    (G section 2.4)
++ root-confined filesystem read/write discipline     (E section 12.1)
++ post-open UUID verification                        (E section 12.1)
++ canonical scope as authorization authority         (E section 12.2)
++ derived paths treated only as locator hints        (E section 12)
++ SQLite / FTS5 hardening baseline                   (E section 13)
++ valid supersession graph                           (F section 6.1)
++ inter-process single-writer discipline             (D section 9)
++ honest hash-chain / tamper-evidence semantics      (C section 6.1)
++ typed trust envelope + canonical serialization     (G section 4.3)
++ per-item / package budget atomicity                (H section 4)
++ bounded local resource safety                      (O section 13)
++ supported-content ingestion allowlist              (D section 10)
++ no network · no process execution · no plugins
+```
+
+**Every item is a property of code that is already being written for the thesis proof**, not an additional subsystem. That is the test of whether the security floor is correctly scoped: containment discipline, post-open verification and a single-writer lock are *how* the slice reads and writes files, not extra components beside it.
+
 **Explicitly NOT in this phase** — and none of it may be added for convenience:
 
 ```
@@ -95,6 +119,20 @@ desktop UI · editor · Graphify production sidecar · vectors
 automatic memory promotion · T2/T3 compaction engine · cloud · sync
 mobile · marketplace · plugins · Spark · DuckDB · TimesFM
 ```
+
+**And, added in G3 — no security subsystem beyond the declared threat model:**
+
+```
+no MAC / keychain / TPM / signing service        (C section 6.1 — honest claim instead)
+no user-authentication subsystem                 (C section 3.1 — OS account is the root)
+no TTY / PTY detection as authentication         (explicitly forbidden)
+no Cedar policy engine                           (SEC-R15 — minimum deny-by-default instead)
+no cap-std adoption decision                     (SEC-R14 — evaluated at implementation)
+no MCP                                           (SEC-R16 — deferred to the MCP gate)
+no external notarization or cloud authority      (SEC-R12 — limitation documented instead)
+```
+
+**The temptation this list exists to name:** a security review makes it feel responsible to add mechanisms. Each line above would *exceed* the declared threat model rather than satisfy it, and a mechanism whose key custody is the same OS account it defends against is ceremony, not security ([C §7.1](02-THREAT-MODEL.md#71-security-claims-fehrest-v1-explicitly-does-not-make)).
 
 An item leaves this list **only** if it becomes strictly required to run the experiment, and only with that requirement written down first.
 

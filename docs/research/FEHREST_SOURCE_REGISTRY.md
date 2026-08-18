@@ -1674,3 +1674,28 @@ evidence: []
 ```
 
 **What this subsection did not do.** It closed an identification gap and nothing else. No disposition moved, no gate opened, no candidate was promoted, and **no source here is a runtime dependency**. The [research freeze](#149-research-freeze--now-binding) remains active: these two entries were already in the registry as named-but-unidentified, so identifying them admits no new source.
+
+---
+
+### 14.12 An observed revision is not an adoption pin
+
+> **ADDED IN G3 ([SEC-R13](../reviews/G3-SECURITY-RECONCILIATION.md), G3-L5).** [§14.11](#1411-externally-verified-identifications-2026-08-18) recorded exact revisions for six sources, and G3-L5 caught the reading that invites: that a recorded SHA is an approved dependency. **It is not**, and the two are now named differently.
+
+| | `EXTERNALLY_OBSERVED_SOURCE_REVISION` | `ADOPTION_PIN` |
+|---|---|---|
+| **Establishes** | The source exists, is locatable, and had this exact state when someone looked | That **this** revision was deliberately reviewed and is approved for use |
+| **Chosen by** | Whatever was at the tip when observed | A deliberate decision |
+| **Authorises** | Identification and inspection | Code reuse or dependency admission |
+| **Current §14 entries** | **All of them** | **None** |
+
+**Before any code reuse or dependency admission**, pin a **deliberately reviewed revision or release** and record:
+
+```
+why THAT revision            licence at that revision
+security / advisory state    relevant source paths
+changes since the prior reviewed pin
+```
+
+**Two failure modes, and the second is the subtler one.** *"Latest `main`"* is not a reviewed pin — it is whatever landed most recently, reviewed by nobody. But **a CI or dependabot commit is not inherently disqualifying either**: the problem is the *absence of deliberate review*, not the commit's authorship or message. Rejecting a revision because its message looks automated, while accepting one because its message looks human, is aesthetics standing in for diligence.
+
+This is the [§11 provenance ledger](#11-code-provenance-ledger) gate stated at the level of *revision selection*, and it applies to every source in §14 without exception.

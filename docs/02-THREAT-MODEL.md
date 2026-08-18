@@ -52,7 +52,8 @@ A-3 deserves emphasis. Fehrest's *purpose* is that agents trust its memory. A me
 
 | Actor | Trust | Capability | Notes |
 |---|---|---|---|
-| **User** | Full | Everything | Authority originates here and only here |
+| **User** | Full | Everything | Authority originates here and only here — **as identified by the local OS account**, see [§3.1](#31-the-local-root-of-trust-g3-h1) |
+| **Same-user local process** | **Indistinguishable from the user in v1** | Whatever the OS account permits | **Added in G3 ([SEC-R1](reviews/G3-SECURITY-RECONCILIATION.md)).** A declared limit, not a control gap |
 | **Fehrest core** | Full | Enforces policy | The TCB. Must be small and auditable |
 | **Local agent (MCP client)** | **Untrusted, authenticated** | Only its grant | Identified per session. Assume compromised or manipulated |
 | **Remote model provider** | Untrusted | Sees what is sent | Assume logging. Assume prompt-injectable output |
@@ -61,6 +62,47 @@ A-3 deserves emphasis. Fehrest's *purpose* is that agents trust its memory. A me
 | **Vault files on disk** | **Untrusted input** | None | May be attacker-authored, synced, or restored from a hostile backup |
 | **Other local processes** | Untrusted | OS-level | Vault is readable by anything running as the user — see [T-19](#t-19--local-process-reads-the-vault) |
 | **Future plugin** | Hostile | To be confined | Out of v1 scope; must not be foreclosed |
+
+### 3.1 The local root of trust (G3-H1)
+
+> **ADDED IN G3 ([SEC-R1](reviews/G3-SECURITY-RECONCILIATION.md)).** The model used `USER_ASSERTED`, `USER_CONFIRMED`, "explicit user authority" and "vault-global user authorization" **without ever defining what authenticates *the user*** on a headless local CLI. That is a real ambiguity, and it is now resolved by stating the boundary rather than by inventing a mechanism.
+
+```
+OS ACCOUNT INTEGRITY IS THE LOCAL USER ROOT OF TRUST.
+```
+
+**Fehrest v1 does not claim to distinguish a physical human from an arbitrary process already executing with the same OS-user authority.** Consequently:
+
+| Term | What it actually means in v1 |
+|---|---|
+| `USER_CONFIRMED` | An explicit transition through a Fehrest **user-authority control surface**, under the trusted local OS-user model. **Not** cryptographic proof, and **not** proof a human was present |
+| `USER_ASSERTED` | The same |
+| Vault-global authorization | The same |
+| Grant issuance | The same |
+
+Each is **exactly as strong as the local OS account**, and no stronger, unless a stronger authentication mechanism is explicitly enabled in some future version.
+
+**This is the integrity-side counterpart of [T-19](#t-19--local-process-reads-the-vault)**, which already concedes the confidentiality side honestly. A local-first system that hands the user their own files cannot simultaneously defend those files from the user's own processes. Stating one side and leaving the other implicit was the defect.
+
+#### TTY detection is explicitly rejected as authentication
+
+An interactive-terminal check — `isatty()`, PTY presence, "a human is at a console" — **must never be a security boundary.** A malicious same-user process can allocate and drive a PTY itself, so the check distinguishes nothing while *appearing* to. Adopting it would convert an honestly-stated limit into a false guarantee, which is strictly worse than the ambiguity it replaced.
+
+#### What remains structurally enforced despite the accepted limit
+
+The concession above is about **who can reach the user-authority surface**. It is not a licence to let agents reach it. **No agent-facing or MCP-facing tool may directly mint:**
+
+```
+USER_CONFIRMED                         vault-global authority
+USER_ASSERTED-as-user                  grant expansion
+confirmation of the agent's own memory supersession requiring user authority
+```
+
+These transitions live on a **separate user-authority API/control surface** from the agent tool surface ([G §2.4](06-AGENT-MODEL.md#24-the-user-authority-surface-is-separate-from-the-agent-surface)). The separation is structural and testable — `test_agent_surface_cannot_mint_user_authority` — even though a process holding full OS-user authority can invoke local applications directly. **The boundary being defended is the agent path, not the OS account.**
+
+#### Future hardening — deliberately not frozen
+
+If Fehrest later claims resistance to malicious same-user processes, that requires an independently designed mechanism (OS-mediated protected credentials, user-presence attestation, or equivalent) **and a re-scoped threat model**. No keychain, MAC, auth daemon or credential subsystem is required in [Phase T](15-IMPLEMENTATION-PHASES.md#phase-t--headless-rust-thesis-proof-slice) merely to exceed the declared threat model.
 
 ---
 
@@ -168,7 +210,15 @@ Each entry: attack → why it works → controls → detection → residual risk
 
 **Controls.** Append-only writer; per-record and per-segment hash chaining so any edit invalidates all subsequent records; segment digests recorded; verification on load with loud failure. Correction is a compensating event, never mutation ([R-5](01-ARCHITECTURE-CONSTITUTION.md#2-derived-rules)).
 
-**Honest limit.** Hash chaining detects tampering; it **cannot prevent** it, because the user owns the file and the key material would live on the same machine. Fehrest provides *tamper-evidence*, not tamper-resistance. Claiming otherwise for a local-first single-user system would be dishonest. Optional external notarisation is deferred.
+**Honest limit — recalibrated in G3 ([SEC-R4](reviews/G3-SECURITY-RECONCILIATION.md)).** Hash chaining detects tampering; it **cannot prevent** it, because the user owns the file and any key material would live on the same machine. Fehrest provides *tamper-evidence*, not tamper-resistance.
+
+**The stronger correction G3 forced:** an **unkeyed** hash chain does not authenticate history at all against an attacker who can rewrite the *entire* canonical history consistently. Such an attacker recomputes every dependent hash, and the result verifies. What the chain actually detects is **partial** modification:
+
+| Detected | Not detected |
+|---|---|
+| Single-record edit · truncation · reordering · splice · deletion · a partial or inconsistent restore · accidental corruption | A **complete, internally consistent rewrite** of the whole chain by a same-user process |
+
+Under [§3.1](#31-the-local-root-of-trust-g3-h1)'s declared root of trust, that attacker is inside the threat model's accepted limit. **No MAC, keychain, TPM, signing service, external notarisation or cloud authority is required in [Phase T](15-IMPLEMENTATION-PHASES.md#phase-t--headless-rust-thesis-proof-slice)** — an honest statement of the property is the correct v1 answer, and adding a key whose custody is the same compromised account would move the problem without solving it. Recorded as possible future hardening only.
 
 **Detection.** `test_chain_verification_detects_edit` across edit/truncate/reorder/splice cases.
 
@@ -262,7 +312,22 @@ Each entry: attack → why it works → controls → detection → residual risk
 ### T-16 — Corrupted derived indexes
 **Attack.** Tamper with the FTS or graph index to hide a document from retrieval — a *suppression* attack, which is stealthier than injection because nothing appears wrong.
 
-**Controls.** Derived state is fully rebuildable ([I-6](01-ARCHITECTURE-CONSTITUTION.md#i-6--derived-state-is-disposable-and-rebuildable)) — this converts index integrity from a security problem into an availability problem; derived state is never authoritative for authorization; periodic reconciliation of canonical object inventory against index contents detects omissions.
+> **CLAIM CORRECTED IN G3 ([SEC-R2](reviews/G3-SECURITY-RECONCILIATION.md)).** F1 asserted that rebuildability "converts index integrity from a security problem into an availability problem." **That is too strong and is withdrawn.** Rebuildability bounds *recovery cost*; it does nothing about the window **before** detection, during which a semantically poisoned derived table can influence scope attribution, ID→location resolution, candidate selection, ranking and retrieval. A poisoned index that is later rebuilt still served poisoned results.
+
+**Derived state is therefore classified as:**
+
+```
+NON-CANONICAL  ·  REBUILDABLE  ·  UNTRUSTED FOR AUTHORITY
+```
+
+**Controls.**
+1. **Derived state is never authoritative for authorization.** Authorization-relevant scope attribution originates from canonical state ([E §12](04-DERIVED-DATA-MODEL.md#12-derived-state-is-untrusted-for-authority)).
+2. **Every derived path is an `UNTRUSTED_LOCATOR_HINT`**, never an authorization token. Reads open relative to the authorized vault root through a containment-preserving mechanism.
+3. **Post-open identity verification.** After opening through the confined path, the embedded Fehrest UUID read *from the opened handle* must equal the requested object ID; a mismatch is `IDENTITY_CONFLICT` / `STALE_LOCATOR` / `TAMPER_SUSPECTED`, never silently served.
+4. Rebuildability ([I-6](01-ARCHITECTURE-CONSTITUTION.md#i-6--derived-state-is-disposable-and-rebuildable)) bounds the **cost of recovery** once poisoning is detected.
+5. Periodic reconciliation of the canonical object inventory against index contents detects omissions.
+
+**Containment and identity are two independent requirements, and neither substitutes for the other** — see [E §12](04-DERIVED-DATA-MODEL.md#12-derived-state-is-untrusted-for-authority).
 
 **Detection.** `test_index_reconciliation` — inject an index deletion, assert reconciliation reports the gap.
 
@@ -311,7 +376,9 @@ Each entry: attack → why it works → controls → detection → residual risk
 |---|---|---|
 | Pre-retrieval frozen capability grants | T-1, T-13, T-14 | **Boundary** |
 | Single authorization chokepoint | T-6, T-13, T-14 | **Boundary** |
-| Mandatory unforgeable provenance | T-2, T-3, T-5 | **Boundary** |
+| Mandatory provenance, core-stamped and agent-unsettable | T-2, T-3, T-5 | **Boundary** *(against agents; **not** against a same-user process — [§3.1](#31-the-local-root-of-trust-g3-h1), [§6.1](#61-what-each-mechanism-actually-provides))* |
+| Root-confined filesystem access + post-open identity verification | T-7, T-8, T-16 | **Boundary** |
+| Canonical scope as authorization authority | T-6, T-16 | **Boundary** |
 | **Permanent served-item manifest** ([R2-01](reviews/F1-R2-RECONCILIATION.md)) | T-3 | **Boundary** — and the mechanism T-3's boundary claim previously lacked |
 | Event-sourced four-axis memory semantics | T-2, T-5 | **Boundary** |
 | **Single core response envelope on every read path** ([R2-03](reviews/F1-R2-RECONCILIATION.md)) | T-1, T-2 | **Defence-in-depth — with complete coverage** |
@@ -327,6 +394,20 @@ Each entry: attack → why it works → controls → detection → residual risk
 
 The middle column matters more than the list. **Only the rows marked Boundary are load-bearing.** If a reviewer can defeat one of those, the model is broken. If they defeat a defence-in-depth row, the model degrades as designed.
 
+### 6.1 What each mechanism actually provides
+
+> **ADDED IN G3 ([SEC-R4](reviews/G3-SECURITY-RECONCILIATION.md)).** Three properties were being described with one vocabulary, which let *tamper-evidence* read as *authentication*. They are separated here, and this table is normative wherever a security claim is made elsewhere in the package.
+
+| Class | Mechanisms | What it establishes | What it does **not** establish |
+|---|---|---|---|
+| **Correctness** | Canonical/derived separation · rebuild equivalence · derivation lineage · incremental-equals-full | That the system's own state transitions are consistent | Nothing about an adversary |
+| **Integrity / partial-tamper evidence** | Content hashes · segment digests · append-only sequence · **unkeyed** hash chain · served-item manifest hashes | That **partial** modification, reordering, truncation, splice, deletion or inconsistent restore is **detectable** | That a **complete consistent rewrite** is detectable. It is not |
+| **Authentication** | *(none in v1)* | — | **Nothing.** There is currently no authentication of canonical history against a same-user attacker able to rewrite all of it |
+
+**The honest one-line summary:** Fehrest v1 offers correctness and partial-tamper evidence, and **no authentication of history**. Words like *unforgeable*, *proof* and *authenticated* are reserved for mechanisms in the third row, which is presently empty.
+
+**Where the boundary still holds.** Provenance is unsettable *by agents* — the core stamps actor identity from the authenticated session and `basis` is never actor-supplied. That is a real boundary against the actor class the product actually exposes ([§3](#3-actors)). It is not a boundary against the OS account, and [§3.1](#31-the-local-root-of-trust-g3-h1) says so.
+
 ---
 
 ## 7. Explicitly out of scope for v1
@@ -339,6 +420,31 @@ The middle column matters more than the list. **Only the rows marked Boundary ar
 | Sync-channel security | Sync deferred | Event log must carry origin identity |
 | Protection from co-resident processes | Impossible ([T-19](#t-19--local-process-reads-the-vault)) | — |
 | Notarised external timestamping | Overkill for single-user | Chain design must permit anchoring |
+| **Authentication of canonical history** | No key custody exists that a same-user attacker does not also hold ([§3.1](#31-the-local-root-of-trust-g3-h1)) | A future keyed or externally anchored mode must remain expressible |
+| **Distinguishing a human from a same-user process** | Declared out of scope ([§3.1](#31-the-local-root-of-trust-g3-h1)) | The user-authority surface stays separate so a stronger mechanism can attach to it later |
+
+---
+
+## 7.1 Security claims Fehrest v1 explicitly does NOT make
+
+> **ADDED IN G3.** Stated as flatly as possible, because every item here is something a reader could otherwise reasonably infer from the rest of this document. A security document that only lists what it defends is a marketing document.
+
+| # | Fehrest v1 does **not** claim |
+|---|---|
+| 1 | **Protection against OS or root compromise.** Nothing above the OS can defend against it |
+| 2 | **Confidentiality against arbitrary same-user processes** ([T-19](#t-19--local-process-reads-the-vault)) |
+| 3 | **Cryptographic proof that `USER_CONFIRMED` was entered by a human.** In the headless single-user model it means an explicit transition through the user-authority surface, nothing more ([§3.1](#31-the-local-root-of-trust-g3-h1)) |
+| 4 | **Full-history tamper resistance** against a same-user attacker able to rewrite all canonical state consistently ([§6.1](#61-what-each-mechanism-actually-provides)) |
+| 5 | **Immunity from prompt injection at the level of model persuasion.** The boundary is privilege, never persuasion ([§1](#1-governing-principle)) |
+| 6 | **Any automatic secret detection or DLP guarantee.** Pattern matching is defence-in-depth, never a complete control |
+| 7 | **Multi-user security.** Single-user product; the scope model must merely generalise later |
+| 8 | **Sync-channel security**, before sync exists |
+| 9 | **A process sandbox from Cedar.** Cedar answers *is this permitted*, never *what can this process reach* |
+| 10 | **A process sandbox from MCP.** MCP is transport ([T-13](#t-13--privilege-escalation-via-mcp-or-plugin)) |
+| 11 | **An arbitrary-code sandbox from cap-std.** It is capability-relative filesystem access, defeated by any ambient `std::fs` path that bypasses it |
+| 12 | **That derived-state corruption is only an availability issue** ([T-16](#t-16--corrupted-derived-indexes)) |
+
+**Each of these is a limit of the declared model, not a defect to be fixed before implementation.** Fixing one means re-scoping the threat model deliberately, with its own review — not quietly strengthening a sentence.
 
 ---
 
