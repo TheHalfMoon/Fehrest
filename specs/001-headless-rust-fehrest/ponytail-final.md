@@ -17,7 +17,7 @@ only check when it flatters you is not a gate.
 | `TEST_TO_PRODUCTION_RATIO` | 1.09 : 1 |
 | `PACKAGES` | 1 |
 | `DIRECT_DEPENDENCIES` | 5 |
-| `BINARY_TARGETS` | 2 (`fehrest`, `fehrest-bench`) |
+| `BINARY_TARGETS` | 2 at Phase T (`fehrest`, `fehrest-bench`). **3 since Phase T-R1**: `fehrest`, `fehrest-bench-v0`, `fehrest-r1` — both benchmark binaries are research tooling and neither is part of the product surface |
 | `UNSAFE_BLOCKS` | 0 (`unsafe_code = "forbid"` at the crate root) |
 | `COMPILER_WARNINGS` | 0 |
 | `CLIPPY_WARNINGS` (`--all-targets -D warnings`) | 0 |

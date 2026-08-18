@@ -57,6 +57,18 @@ Vertical slices. Tests live beside behaviour. **No future scaffolding** — no t
 - [x] **T035** `cargo fmt --check`, `cargo check`, `cargo clippy -D warnings`, `cargo test`
 - [x] **T036** Checklist verification pass; `analyze.md` and `ponytail-final.md`
 
+> **Phase T-R1 notes on the entries above.**
+>
+> - **T035 was over-claimed at Phase T.** `cargo fmt --check` did not run — rustfmt was
+>   unavailable — and [verification.md](./verification.md) said so plainly while this
+>   line said `[x]`. The gate has since been run, it **failed** with 52 hunks, the
+>   formatting was applied, and it now passes on Windows and Linux. The tick is earned
+>   as of [verification-r1.md §A1](./verification-r1.md), not before it.
+> - **T032–T034** were completed against `bench/`; that work is now sealed at
+>   [bench/V0/](../../bench/V0/) with verdict `INCONCLUSIVE`, and the binary is
+>   `fehrest-bench-v0`. `SC-006…SC-008` remain `NOT_YET_EVALUATED` — the pilot measured
+>   context adequacy, not agent continuation.
+
 ---
 
 **Removed before implementation** (would have been unauthorized scaffolding): plugin architecture prep · UI architecture prep · graph extension prep · collaboration support prep · incremental reindex infrastructure · migration framework · config system · logging framework.
