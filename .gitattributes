@@ -1,0 +1,21 @@
+# Line endings are part of the experiment, not a cosmetic preference.
+#
+# The V0 harness reads fixture files with `fs::read_to_string` and packs them
+# under a byte budget, so a CRLF checkout fits fewer documents into the same
+# budget and produces different context bytes. A fresh clone on a host with
+# `core.autocrlf=true` therefore did NOT reproduce the sealed V0 results.
+# See bench/V0/ARCHIVE.md erratum E-3.
+#
+# Pinning LF makes every checkout byte-identical on every platform, which is a
+# precondition for an external executor reproducing a sealed benchmark.
+#
+# (R1 is unaffected by construction -- its .scn parser normalises through
+# `str::lines()`. That was verified, not assumed, and is recorded in
+# bench/R1/STATUS.md. This file protects it regardless.)
+
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.gz  binary
+*.zip binary
