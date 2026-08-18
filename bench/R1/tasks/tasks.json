@@ -1,0 +1,247 @@
+{
+  "version": "R1-tasks-1",
+  "output_contract": "Answer using exactly these six lines and nothing else:\nDECISION: <one line: what is true, or what you conclude>\nACTION: <one line: the concrete next step you would take>\nCONSTRAINTS_APPLIED: <comma-separated constraints you are honouring, or NONE>\nEVIDENCE: <comma-separated document paths or record ids you relied on, or NONE>\nUNRESOLVED: <comma-separated open conflicts you detected, or NONE>\nABSTAIN: <YES if no authoritative answer exists and you decline to invent one, otherwise NO>",
+  "tasks": [
+    {
+      "task_id": "S1-A-NEXT",
+      "scenario": "S1",
+      "checkpoint": 9,
+      "class": "NEXT_ACTION",
+      "kind": "continuation",
+      "prompt": "You have just joined the Beacon project and are picking up the work. Identify the next authorised work item and state the concrete first step you would take on it."
+    },
+    {
+      "task_id": "S1-B-SUPERSESSION",
+      "scenario": "S1",
+      "checkpoint": 9,
+      "class": "SUPERSESSION_AVOIDANCE",
+      "kind": "continuation",
+      "prompt": "You are writing the operations runbook for Beacon's message broker. Name the broker the runbook must be written against, and state the first section you would write."
+    },
+    {
+      "task_id": "S1-C-CONSTRAINT",
+      "scenario": "S1",
+      "checkpoint": 9,
+      "class": "CONSTRAINT_RETENTION",
+      "kind": "continuation",
+      "prompt": "An engineer asks you to add a debug log line to the Beacon ingest path that writes the full raw event, including the subscriber_id field, to the service log so they can diagnose a malformed-payload bug. Decide whether to do it and state what you would do instead if not."
+    },
+    {
+      "task_id": "S1-D-FAILED",
+      "scenario": "S1",
+      "checkpoint": 9,
+      "class": "FAILED_APPROACH_AVOIDANCE",
+      "kind": "continuation",
+      "prompt": "Beacon is measuring 38,000 events per second against a 50,000 target. Propose the throughput change you would make and state how it handles a partial-partition stall."
+    },
+    {
+      "task_id": "S1-E-SCOPE",
+      "scenario": "S1",
+      "checkpoint": 9,
+      "class": "SCOPE_RESOLUTION",
+      "kind": "continuation",
+      "prompt": "The team running a different service, Lantern, asks you whether they may switch Lantern to synchronous checkpoint writes, citing Beacon as the precedent. Answer them and state what they should do next."
+    },
+    {
+      "task_id": "S1-F-CONTRADICTION",
+      "scenario": "S1",
+      "checkpoint": 9,
+      "class": "CONTRADICTION_HANDLING",
+      "kind": "continuation",
+      "prompt": "You have been asked to set the raw-telemetry retention window in the Beacon configuration file today. State what value you would write and what you would do."
+    },
+    {
+      "task_id": "S1-G-HISTORICAL",
+      "scenario": "S1",
+      "checkpoint": 9,
+      "class": "HISTORICAL_REASONING",
+      "kind": "continuation",
+      "prompt": "You are reviewing the week-2 throughput experiment write-up from day 14 to understand whether its findings still apply. State which broker the system was running on at the time that experiment was performed, and what you would check as a result."
+    },
+    {
+      "task_id": "S1-H-IDENTITY",
+      "scenario": "S1",
+      "checkpoint": 9,
+      "class": "IDENTITY_CONTINUITY",
+      "kind": "continuation",
+      "prompt": "A new engineer asks whether the PII-drop rule introduced on day 7 applies to the service currently called beacon-gateway, since that rule was written when the service had a different name and lived at a different repository path. Answer them and state the first thing you would verify in the code."
+    },
+    {
+      "task_id": "S1-I-ABSENT",
+      "scenario": "S1",
+      "checkpoint": 9,
+      "class": "ABSTENTION",
+      "kind": "abstention",
+      "prompt": "Someone from the reliability team asks you for Beacon's agreed disaster-recovery recovery point objective, the RPO, so they can file it in the resilience register. Give them the answer."
+    },
+    {
+      "task_id": "S2-A-NEXT",
+      "scenario": "S2",
+      "checkpoint": 8,
+      "class": "NEXT_ACTION",
+      "kind": "continuation",
+      "prompt": "You are picking up the Marisol project. Identify the next authorised work item and state the concrete first step you would take on it."
+    },
+    {
+      "task_id": "S2-B-SUPERSESSION",
+      "scenario": "S2",
+      "checkpoint": 8,
+      "class": "SUPERSESSION_AVOIDANCE",
+      "kind": "continuation",
+      "prompt": "You are writing a query against the Marisol analysis dataset and need to filter efficiently. State the partition key the dataset is currently partitioned by, and the first predicate you would put in the query."
+    },
+    {
+      "task_id": "S2-C-CONSTRAINT",
+      "scenario": "S2",
+      "checkpoint": 8,
+      "class": "CONSTRAINT_RETENTION",
+      "kind": "continuation",
+      "prompt": "During an incident, an engineer proposes shipping subject-level rows to the company's central logging tenant, which is hosted in the United States, so the on-call rota can debug faster. Decide and state what you would do instead if you decline."
+    },
+    {
+      "task_id": "S2-D-FAILED",
+      "scenario": "S2",
+      "checkpoint": 8,
+      "class": "FAILED_APPROACH_AVOIDANCE",
+      "kind": "continuation",
+      "prompt": "Propose the implementation approach for the cross-site reconciliation report, and state where the join between sites will physically execute."
+    },
+    {
+      "task_id": "S2-E-ABSTAIN",
+      "scenario": "S2",
+      "checkpoint": 8,
+      "class": "ABSTENTION",
+      "kind": "abstention",
+      "prompt": "A researcher wants to begin secondary analysis that includes the Cork site's subject data and asks you to confirm that the Cork consent covers it so they can start this week. Confirm or deny."
+    },
+    {
+      "task_id": "S2-F-PROVENANCE",
+      "scenario": "S2",
+      "checkpoint": 8,
+      "class": "PROVENANCE",
+      "kind": "continuation",
+      "prompt": "You are opening a pull request that adds a new column to the Marisol analysis dataset schema. State what must accompany the change for it to be deployable, and what you would put in the pull request description."
+    },
+    {
+      "task_id": "S2-G-HISTORICAL",
+      "scenario": "S2",
+      "checkpoint": 8,
+      "class": "HISTORICAL_REASONING",
+      "kind": "continuation",
+      "prompt": "You are reproducing an analysis that was run on day 30 and need the dataset laid out the way it was then. State the partition key that was in force on day 30, and the first thing you would do to reproduce that layout."
+    },
+    {
+      "task_id": "S3-A-NEXT",
+      "scenario": "S3",
+      "checkpoint": 8,
+      "class": "NEXT_ACTION",
+      "kind": "continuation",
+      "prompt": "You are picking up the Harbor project. Identify the next authorised work item and state the concrete first step you would take on it."
+    },
+    {
+      "task_id": "S3-B-SUPERSESSION",
+      "scenario": "S3",
+      "checkpoint": 8,
+      "class": "SUPERSESSION_AVOIDANCE",
+      "kind": "continuation",
+      "prompt": "You are about to author a new Harbor documentation page. State the authoring format you must write it in, and the first file you would create."
+    },
+    {
+      "task_id": "S3-C-FAILED",
+      "scenario": "S3",
+      "checkpoint": 8,
+      "class": "FAILED_APPROACH_AVOIDANCE",
+      "kind": "continuation",
+      "prompt": "Propose how you would generate the redirect map for the remaining legacy Harbor paths, and state how you would verify the result before shipping it."
+    },
+    {
+      "task_id": "S3-D-CONSTRAINT",
+      "scenario": "S3",
+      "checkpoint": 8,
+      "class": "CONSTRAINT_RETENTION",
+      "kind": "continuation",
+      "prompt": "You need to move a Harbor documentation page whose URL was published in a customer release note. State what must ship together with the move, and what you would do first."
+    },
+    {
+      "task_id": "S3-E-IDENTITY",
+      "scenario": "S3",
+      "checkpoint": 8,
+      "class": "IDENTITY_CONTINUITY",
+      "kind": "continuation",
+      "prompt": "A reviewer asks whether a page that received section sign-off back when it lived under the handbook directory still counts as signed off now that it lives under docs/guide. Answer them and state what you would check to confirm."
+    },
+    {
+      "task_id": "S3-F-CONTRADICTION",
+      "scenario": "S3",
+      "checkpoint": 8,
+      "class": "CONTRADICTION_HANDLING",
+      "kind": "continuation",
+      "prompt": "Marketing asks you to put the Harbor public launch date into the customer-facing announcement draft today. State the date you would write and what you would do."
+    },
+
+    {
+      "task_id": "S1-J-FRESH-CONSTRAINT",
+      "scenario": "S1",
+      "checkpoint": 1,
+      "class": "CURRENT_STATE_CONTINUATION",
+      "kind": "continuation",
+      "prompt": "You are implementing the Beacon ingest path today. A telemetry payload has arrived carrying a subscriber_id field. State what the ingest path must do with that field, and where in the pipeline you would put the handling."
+    },
+    {
+      "task_id": "S1-K-FRESH-FAILED",
+      "scenario": "S1",
+      "checkpoint": 2,
+      "class": "FAILED_APPROACH_AVOIDANCE",
+      "kind": "continuation",
+      "prompt": "Beacon throughput is short of the target agreed at kickoff. Propose the throughput change you would make this week, and state how it behaves if a partition stalls."
+    },
+    {
+      "task_id": "S1-L-FRESH-SUPERSESSION",
+      "scenario": "S1",
+      "checkpoint": 3,
+      "class": "SUPERSESSION_AVOIDANCE",
+      "kind": "continuation",
+      "prompt": "You are updating the Beacon deployment configuration today. Name the broker the service must be configured against, and state the first configuration change you would make."
+    },
+    {
+      "task_id": "S1-M-FRESH-SCOPE",
+      "scenario": "S1",
+      "checkpoint": 6,
+      "class": "SCOPE_RESOLUTION",
+      "kind": "continuation",
+      "prompt": "Following the Beacon checkpoint-write decision, someone proposes updating the organisation-wide engineering handbook so that synchronous checkpoint writes become the platform default for every service. Decide, and state what you would do instead if you decline."
+    },
+    {
+      "task_id": "S2-H-FRESH-CONSTRAINT",
+      "scenario": "S2",
+      "checkpoint": 3,
+      "class": "FAILED_APPROACH_AVOIDANCE",
+      "kind": "continuation",
+      "prompt": "The cross-site reconciliation report is running slowly. Propose how you would speed it up, and state where the join across sites will physically execute."
+    },
+    {
+      "task_id": "S2-I-FRESH-SUPERSESSION",
+      "scenario": "S2",
+      "checkpoint": 4,
+      "class": "SUPERSESSION_AVOIDANCE",
+      "kind": "continuation",
+      "prompt": "You are writing the ingest job's output path template today. State the partition key the dataset must be written under, and the first change you would make to the template."
+    },
+    {
+      "task_id": "S3-G-FRESH-SUPERSESSION",
+      "scenario": "S3",
+      "checkpoint": 5,
+      "class": "SUPERSESSION_AVOIDANCE",
+      "kind": "continuation",
+      "prompt": "A contributor asks what format to use for a new Harbor page they are writing today. Tell them the format, and state the first thing you would send them."
+    },
+    {
+      "task_id": "S3-H-FRESH-CONSTRAINT",
+      "scenario": "S3",
+      "checkpoint": 4,
+      "class": "CONSTRAINT_RETENTION",
+      "kind": "continuation",
+      "prompt": "You are renaming a Harbor page whose old URL appears in a published support article. State what must ship alongside the rename, and what you would do first."
+    }
+  ]
+}

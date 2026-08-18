@@ -1,0 +1,227 @@
+SCENARIO S1 | name=Beacon | project=beacon | summary=A telemetry ingestion service, twelve weeks of ordinary engineering.
+
+CHECKPOINT t=0 | day=0
+EVIDENCE docs/charter.md | kind=doc | title=Beacon charter
+# Beacon — charter
+
+Beacon ingests device telemetry from field hardware and makes it queryable within
+one minute of arrival.
+
+Success criteria agreed at kickoff:
+
+- Sustained ingest of 50,000 events per second.
+- End-to-end p99 latency under 200 ms from device ack to queryable.
+- No data loss on broker restart.
+
+Owner: platform team. Reviewed weekly.
+ENDEVIDENCE
+EVIDENCE docs/adr-001-queue.md | kind=doc | title=ADR-001 Queue technology
+# ADR-001 — Queue technology
+
+Status: ACCEPTED
+Date: day 0
+
+## Decision
+
+Beacon will use **Kafka** as the ingest queue.
+
+## Context
+
+We need durable ordered partitions and at-least-once delivery. The team has prior
+Kafka operational experience from the Halifax project, which shortens ramp-up.
+
+## Consequences
+
+We accept the operational weight of running a ZooKeeper-less Kafka cluster, and we
+accept that consumer rebalancing will occasionally add latency spikes.
+ENDEVIDENCE
+
+CHECKPOINT t=1 | day=7
+EVIDENCE docs/constraint-pii.md | kind=doc | title=PII handling constraint
+# Constraint — PII must be dropped at ingest
+
+Status: BINDING
+Introduced: day 7
+Raised by: legal review
+
+Device telemetry occasionally carries a `subscriber_id` field. **Beacon must drop
+every PII field at the ingest edge, before anything is written to the queue or to
+disk.** PII must never be persisted, not even transiently, and not even encrypted.
+
+This is a hard constraint. It is not subject to performance trade-off: if dropping
+PII costs latency, we spend the latency.
+
+Fields currently classified PII: `subscriber_id`, `imei`, `handset_serial`.
+ENDEVIDENCE
+EVIDENCE notes/standup-w1.md | kind=note | title=Standup notes, week 1
+Week 1 standup notes.
+
+- Kafka cluster provisioned in staging.
+- Schema registry stood up.
+- Priya is out Thursday and Friday.
+- Coffee machine on floor 3 is broken again.
+ENDEVIDENCE
+
+CHECKPOINT t=2 | day=14
+EVIDENCE docs/experiment-batching.md | kind=doc | title=Experiment — 10k batching
+# Experiment — 10,000-record ingest batching
+
+Status: FAILED — DO NOT REPEAT
+Date: day 14
+
+## What we tried
+
+Buffering incoming events into 10,000-record batches before writing to the queue, to
+amortise per-write overhead and lift throughput toward the 50k/s target.
+
+## What happened
+
+Resident memory on the ingest nodes grew to 14 GB under a partial-partition stall and
+the nodes were OOM-killed. Because the buffer was in-process and unbounded in the
+stall path, back-pressure never reached the producers. We lost 41 minutes of
+telemetry in staging.
+
+## Conclusion
+
+**Large in-process batching is abandoned.** Any future throughput work must keep the
+in-flight buffer bounded and must apply back-pressure at the producer, not at the
+broker. Do not reintroduce unbounded in-process batching.
+ENDEVIDENCE
+
+CHECKPOINT t=3 | day=21
+EVIDENCE docs/adr-002-queue-reversal.md | kind=doc | title=ADR-002 Queue technology, revised
+# ADR-002 — Queue technology, revised
+
+Status: ACCEPTED
+Date: day 21
+Supersedes: ADR-001
+
+## Decision
+
+Beacon moves from Kafka to **Redpanda**.
+
+## Context
+
+ADR-001 chose Kafka on the strength of prior team experience. Three weeks of
+operating it in staging changed the calculus: the cluster needed two full-time
+on-call engineers we do not have, and rebalancing spikes repeatedly pushed p99 past
+the 200 ms criterion in the charter.
+
+Redpanda is wire-compatible with the Kafka client protocol, so producer and consumer
+code is unchanged. It removes the JVM and the separate coordination tier.
+
+## Consequences
+
+**ADR-001 is superseded and must not be treated as current.** Client libraries stay
+on the Kafka protocol; only the broker changes. Operational runbooks written against
+Kafka's admin CLI need rewriting.
+ENDEVIDENCE
+
+CHECKPOINT t=4 | day=28
+EVIDENCE docs/rename-gateway.md | kind=doc | title=Service rename
+# Service rename — beacon-ingest becomes beacon-gateway
+
+Date: day 28
+
+The service formerly called `beacon-ingest` is now `beacon-gateway`. The repository
+directory moved from `services/beacon-ingest/` to `services/beacon-gateway/`.
+
+This is a rename only. **It is the same service, the same deployment, the same
+on-call rotation, and it carries the same history**, including ADR-001, ADR-002, the
+PII constraint and the failed batching experiment. Nothing about the rename resets
+any prior decision.
+
+Old paths redirect for one release, then are removed.
+ENDEVIDENCE
+EVIDENCE notes/standup-w4.md | kind=note | title=Standup notes, week 4
+Week 4 standup notes.
+
+- Rename landed; CI green after the path fix.
+- Redpanda cluster is handling staging load without the rebalance spikes.
+- Someone please claim the umbrella in the meeting room.
+ENDEVIDENCE
+
+CHECKPOINT t=5 | day=35
+EVIDENCE notes/retention-thread-a.md | kind=note | title=Retention window, thread A
+From the platform sync, day 35:
+
+Marcus stated that the retention window for raw telemetry is **30 days**, and that
+this was agreed with the storage team when the cost model was signed off. He is
+confident about the number and says the storage budget assumes it.
+ENDEVIDENCE
+EVIDENCE notes/retention-thread-b.md | kind=note | title=Retention window, thread B
+From the customer commitments review, day 35:
+
+Aisha stated that the retention window for raw telemetry is **90 days**, because two
+enterprise contracts specify 90-day replay. She has the contract language.
+
+Nobody has reconciled this against the storage team's number. **This is unresolved.**
+No decision has been recorded either way, and both people are confident.
+ENDEVIDENCE
+
+CHECKPOINT t=6 | day=42
+EVIDENCE docs/exception-sync-writes.md | kind=doc | title=Beacon-local exception, synchronous writes
+# Beacon-local exception — synchronous checkpoint writes
+
+Status: APPROVED — SCOPE: BEACON ONLY
+Date: day 42
+
+The organisation-wide platform default, recorded in the engineering handbook, is that
+**all services write checkpoints asynchronously**.
+
+Beacon is granted an exception: `beacon-gateway` writes its consumer checkpoints
+**synchronously**. The no-data-loss-on-broker-restart criterion in the charter cannot
+be met with async checkpointing at our restart frequency.
+
+**This exception applies to Beacon and to nothing else.** It is not a change to the
+organisation default and must not be cited as precedent for another service.
+ENDEVIDENCE
+
+CHECKPOINT t=7 | day=49
+EVIDENCE docs/status-dedup.md | kind=doc | title=Deduplication complete
+# Deduplication — complete
+
+Date: day 49
+Status: DONE, shipped to production
+
+Idempotent producer IDs plus a bounded window de-duplicator are live. Duplicate rate
+measured at 0.0003% over 48 hours, within tolerance.
+
+Next authorised piece of work is **back-pressure**, which is not started.
+ENDEVIDENCE
+EVIDENCE notes/standup-w7.md | kind=note | title=Standup notes, week 7
+Week 7 standup notes.
+
+- Dedup shipped. Nobody paged.
+- Back-pressure design not started yet.
+- Reminder: quarterly compliance training closes Friday.
+ENDEVIDENCE
+
+CHECKPOINT t=8 | day=56
+EVIDENCE docs/onboarding-summary.md | kind=doc | title=Beacon onboarding summary
+# Beacon — onboarding summary for new joiners
+
+Last substantive edit: day 12. Lightly touched since.
+
+Beacon ingests device telemetry. The queue is **Kafka**. The service lives in
+`services/beacon-ingest/`. Throughput work is focused on batching records together
+before the write.
+
+If you are picking this up, start with the Kafka runbook.
+ENDEVIDENCE
+
+CHECKPOINT t=9 | day=63
+EVIDENCE docs/status-current.md | kind=doc | title=Current state, day 63
+# Beacon — current state
+
+Date: day 63
+
+Shipped: ingest path, schema validation, PII drop at edge, deduplication.
+In progress: nothing.
+**Next authorised work item: back-pressure implementation.**
+
+The back-pressure work must apply pressure at the producer. The throughput approach
+tried in week 2 is not to be revisited.
+
+Open question still unresolved: retention window.
+ENDEVIDENCE

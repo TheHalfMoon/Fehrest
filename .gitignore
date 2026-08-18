@@ -4,3 +4,6 @@
 
 # Phase T scratch / benchmark output (not canonical)
 /bench/out/
+
+# R1 run bundle is deterministically regenerable from scenarios/ + tasks/
+/bench/R1/bundle/

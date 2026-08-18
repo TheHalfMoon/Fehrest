@@ -24,3 +24,7 @@ path = "src/main.rs"
 [[bin]]
 name = "fehrest-bench-v0"
 path = "bench/V0/harness.rs"
+
+[[bin]]
+name = "fehrest-r1"
+path = "bench/R1/harness/main.rs"

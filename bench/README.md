@@ -27,6 +27,10 @@ model actually executes, a benchmark design is not a result.
 2. [R1/PROTOCOL.md](./R1/PROTOCOL.md) — the longitudinal design.
 3. [R1/PREREGISTRATION.md](./R1/PREREGISTRATION.md) — what was fixed before results, and
    its digest.
+4. [R1/PILOT.md](./R1/PILOT.md) — the instrument pilot, including the three defects it
+   caught before preregistration.
+5. [R1/STATUS.md](./R1/STATUS.md) — why no model ran, and what an external executor
+   must do.
 
 ## Rules that hold across both
 

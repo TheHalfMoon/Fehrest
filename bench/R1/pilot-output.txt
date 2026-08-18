@@ -1,0 +1,47 @@
+R1 INSTRUMENT PILOT — measurement-instrument validation only
+NO MODEL EXECUTED. NO ARM SCORE IS PRODUCED OR IMPLIED.
+
+corpus: 3 scenarios, 28 checkpoints, 36 evidence items, 30 tasks, 30 oracles
+
+[1] TASK / ORACLE CORRESPONDENCE
+
+[2] ANSWERABILITY AND TRAP REALITY
+
+[3] SCORER VALIDATION (synthetic responses, not model output)
+
+[4] PACKAGE CONSTRUCTION (plumbing maintenance -- NOT an arm result)
+
+[5] BASELINE METADATA ISOLATION
+
+[6] TEMPORAL BOUNDARY -- no arm may see the future
+
+[7] NEGATIVE CONTROLS -- every detector must fire when fed a defect
+
+[8] MAINTENANCE STATE PRESENCE
+  B1     S1  maintainer output: ABSENT -- arm cannot be scored until a maintainer runs
+  B4     S1  maintainer output: ABSENT -- arm cannot be scored until a maintainer runs
+  B5     S1  maintainer output: ABSENT -- arm cannot be scored until a maintainer runs
+  B1     S2  maintainer output: ABSENT -- arm cannot be scored until a maintainer runs
+  B4     S2  maintainer output: ABSENT -- arm cannot be scored until a maintainer runs
+  B5     S2  maintainer output: ABSENT -- arm cannot be scored until a maintainer runs
+  B1     S3  maintainer output: ABSENT -- arm cannot be scored until a maintainer runs
+  B4     S3  maintainer output: ABSENT -- arm cannot be scored until a maintainer runs
+  B5     S3  maintainer output: ABSENT -- arm cannot be scored until a maintainer runs
+
+CHECKS BY FAMILY
+    90 passed   0 failed   [1] TASK / ORACLE CORRESPONDENCE
+   106 passed   0 failed   [2] ANSWERABILITY AND TRAP REALITY
+   209 passed   0 failed   [3] SCORER VALIDATION (synthetic responses, not model output)
+   110 passed   0 failed   [4] PACKAGE CONSTRUCTION (plumbing maintenance -- NOT an arm result)
+    56 passed   0 failed   [5] BASELINE METADATA ISOLATION
+    55 passed   0 failed   [6] TEMPORAL BOUNDARY -- no arm may see the future
+     5 passed   0 failed   [7] NEGATIVE CONTROLS -- every detector must fire when fed a defect
+
+=====================================================
+INSTRUMENT CHECKS: 631 passed, 0 failed
+=====================================================
+R1_INSTRUMENT_PILOT: PASS
+MODEL_EXECUTED: NO
+ARM_SCORES_PRODUCED: NONE
+VARIANCE_ESTIMATE: UNAVAILABLE_WITHOUT_MODEL_EXECUTION
+PRODUCT_THESIS_STATUS: NOT_EVALUATED

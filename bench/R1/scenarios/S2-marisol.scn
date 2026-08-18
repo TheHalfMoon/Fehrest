@@ -1,0 +1,185 @@
+SCENARIO S2 | name=Marisol | project=marisol | summary=A clinical-trial data pipeline with hard regulatory constraints and one genuinely unresolved question.
+
+CHECKPOINT t=0 | day=0
+EVIDENCE docs/charter.md | kind=doc | title=Marisol charter
+# Marisol — charter
+
+Marisol consolidates trial data from three investigator sites — Lyon, Utrecht and
+Cork — into a single analysis-ready dataset.
+
+Scope at kickoff:
+
+- Nightly ingest from each site's EDC export.
+- Deterministic subject identifiers across sites.
+- Analysis dataset regenerated from source on every run; no in-place edits.
+
+Owner: data engineering, with clinical operations as the accountable stakeholder.
+ENDEVIDENCE
+
+CHECKPOINT t=1 | day=10
+EVIDENCE docs/constraint-residency.md | kind=doc | title=Data residency constraint
+# Constraint — subject data must not leave the EU
+
+Status: BINDING — REGULATORY
+Introduced: day 10
+
+**No subject-level data may be processed or stored outside the EU region.** This
+covers compute, object storage, logs, backups, and any managed service that could
+relocate data.
+
+Aggregates that cannot be re-identified may leave the region. Subject-level rows may
+not, under any circumstance, including debugging and incident response.
+
+This constraint is regulatory, not architectural preference. It cannot be traded away
+for cost or latency, and no engineering decision may weaken it.
+ENDEVIDENCE
+
+CHECKPOINT t=2 | day=20
+EVIDENCE docs/adr-011-partitioning.md | kind=doc | title=ADR-011 Partition strategy
+# ADR-011 — Partition strategy
+
+Status: ACCEPTED
+Date: day 20
+
+## Decision
+
+The analysis dataset is partitioned **by site**: `site=lyon`, `site=utrecht`,
+`site=cork`.
+
+## Context
+
+Sites deliver on different schedules and re-deliver corrections independently.
+Site partitioning lets a single site be reprocessed without touching the others.
+
+## Consequences
+
+Cross-site queries scan every partition. We accept that; the analysis workload is
+mostly per-site.
+ENDEVIDENCE
+
+CHECKPOINT t=3 | day=30
+EVIDENCE docs/incident-cross-site-join.md | kind=doc | title=Incident — cross-site join in the warehouse
+# Incident — cross-site join executed in the shared warehouse
+
+Status: ROLLED BACK — APPROACH FORBIDDEN
+Date: day 30
+
+## What was tried
+
+To speed up the cross-site reconciliation report, subject-level rows from all three
+sites were loaded into the shared analytics warehouse and joined there.
+
+## Why it was wrong
+
+The shared warehouse has a US replica. Loading subject-level rows into it **breached
+the day-10 residency constraint**. The breach was caught in review before any
+production run, and the staging data was purged under a documented procedure.
+
+## Conclusion
+
+**Subject-level cross-site joins in the shared warehouse are forbidden.** Cross-site
+reconciliation must run inside the EU-resident pipeline and emit only aggregates.
+Do not reintroduce the warehouse join, in any form, for any performance reason.
+ENDEVIDENCE
+
+CHECKPOINT t=4 | day=40
+EVIDENCE docs/adr-014-partitioning-revised.md | kind=doc | title=ADR-014 Partition strategy, revised
+# ADR-014 — Partition strategy, revised
+
+Status: ACCEPTED
+Date: day 40
+Supersedes: ADR-011
+
+## Decision
+
+The analysis dataset is partitioned **by protocol version**: `protocol=v2`,
+`protocol=v3`.
+
+## Context
+
+ADR-011 partitioned by site. Protocol v3 changed the visit schedule mid-trial, and
+every analysis now filters on protocol version first. Site partitioning forced a full
+scan for the most common query shape.
+
+Re-delivery isolation, which was ADR-011's motivation, is preserved by the
+per-site manifest table rather than by the partition layout.
+
+## Consequences
+
+**ADR-011 is superseded.** Any code or document still asserting site partitioning as
+current is stale. The partition key is protocol version.
+ENDEVIDENCE
+
+CHECKPOINT t=5 | day=50
+EVIDENCE notes/consent-question.md | kind=note | title=Open question — Cork consent scope
+Raised at the clinical operations sync, day 50:
+
+Does the Cork site's consent form cover **secondary analysis** of the trial data, or
+only the primary endpoint analysis?
+
+- The Lyon and Utrecht forms explicitly cover secondary analysis.
+- The Cork form uses different wording and nobody in the meeting could say whether it
+  does or not.
+- The question has been referred to the sponsor's regulatory counsel.
+
+**No answer has come back. No decision has been recorded. This is open.**
+
+Until counsel responds, nobody should assume either answer.
+ENDEVIDENCE
+
+CHECKPOINT t=6 | day=60
+EVIDENCE docs/provenance-rule.md | kind=doc | title=Change-control provenance rule
+# Rule — schema changes must cite their change-control ticket
+
+Status: BINDING
+Introduced: day 60
+
+Any change to the analysis dataset schema must, in the pull request and in the
+migration record, **cite the approving change-control ticket** in the form
+`CC-####`.
+
+A schema change without a cited approving ticket is not deployable, regardless of who
+wrote it or how urgent it is. Auditors sample migrations and check this.
+
+The rule applies to column additions, removals, renames and type changes. It does not
+apply to partition-layout changes, which are covered by the ADR process instead.
+ENDEVIDENCE
+
+CHECKPOINT t=7 | day=70
+EVIDENCE docs/status-ingest.md | kind=doc | title=Ingest hardening complete
+# Ingest hardening — complete
+
+Date: day 70
+Status: DONE
+
+Retry, quarantine and manifest reconciliation are live for all three sites. Cork's
+late-delivery pattern is handled by the quarantine path rather than by a per-site
+special case.
+
+Next authorised work item: **the cross-site reconciliation report**, not started.
+It must run inside the EU-resident pipeline.
+ENDEVIDENCE
+EVIDENCE notes/standup-w10.md | kind=note | title=Standup notes, week 10
+Week 10 notes.
+
+- Quarantine path merged.
+- Utrecht sent a corrected export for visit 4; reprocessed cleanly.
+- Someone rebooted the build agent without telling anyone. Again.
+ENDEVIDENCE
+
+CHECKPOINT t=8 | day=80
+EVIDENCE docs/status-current.md | kind=doc | title=Current state, day 80
+# Marisol — current state
+
+Date: day 80
+
+Shipped: nightly ingest, quarantine, manifest reconciliation, protocol-version
+partitioning.
+In progress: nothing.
+**Next authorised work item: the cross-site reconciliation report.**
+
+Constraints in force: EU residency (day 10), change-control citation for schema
+changes (day 60).
+
+Open and unresolved: the Cork consent scope question.
+ENDEVIDENCE

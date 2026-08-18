@@ -1,0 +1,178 @@
+SCENARIO S3 | name=Harbor | project=harbor | summary=A documentation migration with two renames, an abandoned tool, and a date nobody reconciled.
+
+CHECKPOINT t=0 | day=0
+EVIDENCE docs/charter.md | kind=doc | title=Harbor charter
+# Harbor — charter
+
+Harbor migrates 412 pages of internal product documentation off the legacy wiki and
+into the versioned documentation site.
+
+Success criteria:
+
+- Every page migrated, with review sign-off per section.
+- No external URL breaks. Links published in release notes and support articles must
+  keep resolving.
+- Search parity or better against the legacy wiki.
+ENDEVIDENCE
+
+CHECKPOINT t=1 | day=9
+EVIDENCE docs/adr-003-format.md | kind=doc | title=ADR-003 Authoring format
+# ADR-003 — Authoring format
+
+Status: ACCEPTED
+Date: day 9
+
+## Decision
+
+Pages are authored in **MDX**, so that interactive components can be embedded
+directly in the prose.
+
+## Context
+
+Three sections need live API consoles. MDX lets us drop a React component inline
+rather than iframing a separate app.
+
+## Consequences
+
+The docs build now depends on the React toolchain. Contributors who only write prose
+must still run the full build to preview.
+ENDEVIDENCE
+
+CHECKPOINT t=2 | day=18
+EVIDENCE docs/move-handbook-to-guide.md | kind=doc | title=Directory move — handbook to guide
+# Directory move — `handbook/` becomes `guide/`
+
+Date: day 18
+
+The `handbook/` directory is renamed to `guide/`. Content is unchanged; only the path
+moves. Redirects are in place from the old paths.
+
+This is a path change. **The pages keep their identity, their review sign-off and
+their history.** Nothing about the move alters the migration status of any page.
+ENDEVIDENCE
+
+CHECKPOINT t=3 | day=27
+EVIDENCE docs/tool-linkrewriter-v1.md | kind=doc | title=Link rewriter v1 — abandoned
+# Link rewriter v1 — abandoned
+
+Status: ABANDONED — DO NOT REVIVE
+Date: day 27
+
+## What it did
+
+A regex-based rewriter that rewrote legacy wiki links to the new site paths in bulk.
+
+## Why it was abandoned
+
+It matched inside fenced code blocks and inside anchor fragments, silently corrupting
+147 pages: code samples had their URLs rewritten, and `#section` anchors were
+rewritten to paths that do not exist. The corruption was not caught by the build,
+because broken anchors still build.
+
+We reverted the batch. **Regex-based link rewriting is abandoned.** Any future link
+work must parse the document rather than pattern-match its text, and must verify
+anchors resolve, not merely that the build passes.
+ENDEVIDENCE
+
+CHECKPOINT t=4 | day=36
+EVIDENCE docs/constraint-urls.md | kind=doc | title=External URL stability constraint
+# Constraint — published external URLs must never break
+
+Status: BINDING
+Introduced: day 36
+
+Every URL that has been published outside the company — in release notes, support
+articles, email campaigns or the status page — **must keep resolving**, permanently.
+
+Any move or rename of a page that has a published URL requires a redirect entry
+shipped **in the same change**. A move without its redirect is not deployable.
+
+"We will add the redirects afterwards" is not acceptable and has already caused one
+support escalation.
+ENDEVIDENCE
+
+CHECKPOINT t=5 | day=45
+EVIDENCE docs/adr-009-format-reversal.md | kind=doc | title=ADR-009 Authoring format, revised
+# ADR-009 — Authoring format, revised
+
+Status: ACCEPTED
+Date: day 45
+Supersedes: ADR-003
+
+## Decision
+
+Pages are authored in **plain Markdown with directives**. MDX is dropped.
+
+## Context
+
+ADR-003 chose MDX for three sections needing live consoles. Nine months of contributor
+data says the cost landed on everyone else: prose-only contributors could not preview
+without the React toolchain, and external contribution dropped to near zero.
+
+The three interactive sections move to a directive that renders the console from a
+spec file, which does not require MDX.
+
+## Consequences
+
+**ADR-003 is superseded and is not the current format.** Existing MDX pages are
+converted mechanically. The React toolchain leaves the critical build path.
+ENDEVIDENCE
+
+CHECKPOINT t=6 | day=54
+EVIDENCE docs/move-guide-to-docs-guide.md | kind=doc | title=Directory move — guide to docs/guide
+# Directory move — `guide/` becomes `docs/guide/`
+
+Date: day 54
+
+The `guide/` directory moves under `docs/`, becoming `docs/guide/`. This is the second
+path change for this content, which was originally `handbook/`.
+
+Redirects were shipped in the same change, per the day-36 constraint, and they chain
+correctly from the original `handbook/` paths.
+
+**Same pages, same identity, same sign-off.** A page that was signed off under
+`handbook/` is still signed off under `docs/guide/`.
+ENDEVIDENCE
+EVIDENCE notes/standup-w8.md | kind=note | title=Standup notes, week 8
+Week 8 notes.
+
+- Move landed with redirects in the same PR.
+- Search reindex queued.
+- The plant in the corner is definitely dead. Removing it.
+ENDEVIDENCE
+
+CHECKPOINT t=7 | day=63
+EVIDENCE notes/launch-date-a.md | kind=note | title=Launch date, note A
+From the programme review, day 63:
+
+Dana recorded the public launch date for the documentation site as **14 November**,
+and says marketing has already scheduled the announcement against it.
+ENDEVIDENCE
+EVIDENCE notes/launch-date-b.md | kind=note | title=Launch date, note B
+From the release planning meeting, day 63:
+
+Tomas recorded the public launch date as **28 November**, on the basis that the search
+reindex and the accessibility audit cannot both complete before then.
+
+The two dates have not been reconciled. **No decision has been taken.** Both were
+recorded on the same day by people with reason to know.
+ENDEVIDENCE
+
+CHECKPOINT t=8 | day=72
+EVIDENCE docs/status-current.md | kind=doc | title=Current state, day 72
+# Harbor — current state
+
+Date: day 72
+
+Migrated: 412 of 412 pages. Sign-off: 391 of 412 sections.
+Format: converted to the current authoring format across the whole tree.
+In progress: nothing.
+
+**Next authorised work item: generate the redirect map for the remaining legacy
+paths.**
+
+The redirect map must be generated by parsing the documents. The approach abandoned on
+day 27 is not to be revived.
+
+Unresolved: the public launch date.
+ENDEVIDENCE
