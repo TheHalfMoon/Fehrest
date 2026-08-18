@@ -40,7 +40,7 @@ The second half is the part that matters. Fehrest's position is that the **forma
 | **Penpot** | [SRC-120](research/FEHREST_SOURCE_REGISTRY.md#src-120--penpot) | Open-standard visual document architecture; SVG/CSS/HTML/JSON interoperability; design tokens; components and variants; layout/grid/flex; plugin and API architecture; large-canvas mutation handling | A hosted collaborative application's server and runtime assumptions, which Fehrest does not share |
 | **AFFiNE BlockSuite Edgeless** | [SRC-121](research/FEHREST_SOURCE_REGISTRY.md#src-121--affine--blocksuite-extended-scope-extends-src-004-src-006) | Page and canvas transitions in one substrate; proven interaction model | Monorepo extraction cost; split license; coupling depth |
 | **tldraw** and **Excalidraw** | [SRC-084](research/FEHREST_SOURCE_REGISTRY.md#9-product-references) | Canvas interaction, gestures, export, shape libraries | A second canvas runtime — explicitly constrained against |
-| *OpenPencil* | **unidentified** | — | **Not a candidate until identified and verified** |
+| **OpenPencil** | [SRC-180](research/FEHREST_SOURCE_REGISTRY.md#src-180--openpencil) | Identified `open-pencil/open-pencil` at `15bd0ba…` *(externally observed 2026-08-18, not verified here)* | Licence not observed — must be established before any code import. Identification is not adoption |
 
 **What must be proven** — the visual analogue of the Editor Gate's P-1…P-6:
 
@@ -147,7 +147,7 @@ A dashboard, chart, table or timeline is a **projection over canonical or derive
 | **Microsoft Data Formulator** | [SRC-079](research/FEHREST_SOURCE_REGISTRY.md#9-product-references) | A *different* problem: agentic exploratory analysis, branching investigations, Data Threads |
 | **Airtable / Teable / Baserow / NocoDB** | [SRC-076](research/FEHREST_SOURCE_REGISTRY.md#9-product-references) | One dataset, many views |
 | **DuckDB** | [SRC-018](research/FEHREST_SOURCE_REGISTRY.md#4-storage-and-retrieval) | Deferred. **Not admitted to the MVP because analytics products use it** |
-| *Flint* | **unidentified** | **Not a candidate until identified and verified** |
+| **Microsoft Flint** | [SRC-181](research/FEHREST_SOURCE_REGISTRY.md#src-181--microsoft-flint) | Declarative chart specification with agent-oriented usage — a *projection description*, which is this gate's principle in miniature. `microsoft/flint-chart` at `34ef451…`, MIT *(externally observed 2026-08-18)*. **Still deferred**: identification does not open this gate |
 
 **Hard constraints on any future analytics layer:**
 

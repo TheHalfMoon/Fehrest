@@ -3,9 +3,24 @@
 **Phase:** `F1-R2` ACTIVE
 **Date:** 2026-08-17
 **Canonical repository:** `TheHalfMoon/Fehrest` (private, `main`, size 0, no implementation)
-**Prior state:** F1-R1 package + two pre-G2 governance corrections, local commit `bb6c1251648741c4ca4e436ca4a054a51b771972`
-**This reconciliation:** local commit `8b829ec0d3e880cca04e3fa899926d7ee8008aff` (not pushed)
-**Next gate:** GPT-5.6 Sol R2 delta review → GLM-5.3 security/cyber review → architecture freeze → founder implementation authorization
+**Next gate:** GLM-5.3 security/cyber review → architecture freeze → founder implementation authorization
+
+### Commit provenance
+
+```
+REVIEW_BASE                             bb6c1251648741c4ca4e436ca4a054a51b771972
+R2_RECONCILIATION_CONTENT_COMMIT        8b829ec0d3e880cca04e3fa899926d7ee8008aff
+KNOWN_POST_RECONCILIATION_METADATA      6b4f847f197515ed3f6ec1ea3c03b2676a765dd4
+                                        288a78c20964a78b8127e108460425a422515f7a
+PRE_THIS_CORRECTION_HEAD                288a78c20964a78b8127e108460425a422515f7a
+FINAL_REVIEW_CANDIDATE_HEAD             REPORTED_EXTERNALLY_AFTER_COMMIT
+```
+
+> **Why `FINAL_REVIEW_CANDIDATE_HEAD` is not a SHA — corrected pre-GLM.** An earlier revision of this header recorded *"This reconciliation: local commit `8b829ec…`"*, and the F1-R1 practice it copied was to append the SHA in a follow-up commit. Both are unsound as an **audit** field: **a commit SHA is a hash of the tree that contains the field**, so writing the current HEAD into this file necessarily changes the file and therefore changes the HEAD. The field can never be simultaneously present and correct.
+>
+> Two consequences follow, and both are now explicit. **`R2_RECONCILIATION_CONTENT_COMMIT` names the commit that carried the substantive reconciliation** — that is a *historical* reference to an earlier commit, which is well-founded. **`FINAL_REVIEW_CANDIDATE_HEAD` is reported to the reviewer out-of-band**, in the response accompanying the commit, and is deliberately absent from the tree it would describe.
+>
+> The metadata commits above are listed rather than elided: this artifact was changed after `8b829ec`, and a header claiming otherwise would misstate what a reviewer is reading.
 
 **Implementation is NOT authorized. No product code was written in F1, F1-R1 or F1-R2.**
 
@@ -243,7 +258,9 @@ Phase 7    Desktop application
 
 ### 9.5 Pins still pending
 
-**Every entry in registry §14 is `PIN_PENDING_EXTERNAL_VERIFICATION`** — 29 entries covering 24 new projects. No live upstream verification was performed for them in this session, and **no commit hash was guessed** — a fabricated pin passes a reviewer's eye and fails at the moment it matters. None may transition to `ADAPT` or `USE` before pinning.
+**Corrected pre-GLM.** **Six entries are now `EXTERNALLY_VERIFIED_BY_GPT_2026_08_18`** with exact repository identities and observed revisions ([registry §14.11](../research/FEHREST_SOURCE_REGISTRY.md#1411-externally-verified-identifications-2026-08-18)): OpenPencil, Microsoft Flint, Cedar for Agents, cap-std, the official MCP Rust SDK, and AppFlowy-Collab. **This environment could not fetch any of them**, so they are explicitly *not* `VERIFIED_IN_CLAUDE_ENVIRONMENT` — the two labels are kept distinct so the package never claims verification it did not perform.
+
+**Every other §14 entry remains `PIN_PENDING_EXTERNAL_VERIFICATION`** — the remainder of 29 entries covering 24 new projects. No live upstream verification was performed for them in this session, and **no commit hash was guessed** — a fabricated pin passes a reviewer's eye and fails at the moment it matters. None may transition to `ADAPT` or `USE` before pinning.
 
 Also unpinned by design: **SRC-100 (Spark)** — concepts read from published design documentation, so a pin would imply a code relationship that does not exist. Still needing a pin before use: **SRC-101 (Karpathy LLM Wiki)** before the baseline harness, and **SRC-102/103 (Spec Kit, Ponytail)** at Phase 0.
 
@@ -257,7 +274,9 @@ Also unpinned by design: **SRC-100 (Spark)** — concepts read from published de
 | **Ponytail** (SRC-103) | License unverified at time of writing; must be confirmed before adoption |
 | **All of §14** | Licenses recorded as stated by each project and marked `UNVERIFIED_IN_THIS_SESSION` |
 
-**Two names could not be identified:** `OpenPencil` and `Flint`, carried from the founder donor map. No repository, license or capability claim is asserted for either, and neither is a gate candidate until identified and verified.
+**The two previously unidentified names are now identified** *(corrected pre-GLM)*: `OpenPencil` is [`open-pencil/open-pencil`](../research/FEHREST_SOURCE_REGISTRY.md#src-180--openpencil) and `Flint` is [`microsoft/flint-chart`](../research/FEHREST_SOURCE_REGISTRY.md#src-181--microsoft-flint), both with revisions externally observed on 2026-08-18. **Identification is not adoption**: OpenPencil becomes a Visual/Canvas Engine Gate candidate, Flint remains a deferred future visualization donor, and neither opens a gate.
+
+**AppFlowy-Collab's licence is now specific rather than generic:** externally observed **AGPL-3.0**, which is *copyleft* where every other code-donor licence in this registry is permissive. `CODE REUSE: RIGHTS / PROVENANCE REVIEW REQUIRED`, and that review reaches a founder-level licensing decision because Fehrest's own licence is still open. Architecture study is unaffected; the `STUDY / SELECTIVE_ADAPT / DEFER` posture is unchanged.
 
 ### 9.7 Confirmations
 

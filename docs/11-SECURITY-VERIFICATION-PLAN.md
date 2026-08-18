@@ -217,3 +217,30 @@ That last item is a hard requirement. [T-10](02-THREAT-MODEL.md#t-10--parser-vul
 | Sync-channel security | Sync deferred | With sync |
 | Untrusted plugin sandboxing | No plugin system in v1; WASI seam preserved | With plugins |
 | Model-output safety | Fehrest bounds privilege, not persuasion | Not Fehrest's boundary |
+
+---
+
+## 12. Handoff note — GLM-5.3 security/cyber review
+
+> **ADDED PRE-GLM.** A reviewer handoff, not a review. **No security review has been performed here**, and nothing in this section is a finding.
+
+**Attack these, particularly:**
+
+| # | Surface | Why it is on this list |
+|---|---|---|
+| 1 | **Uniform trust-envelope completeness** | [R2-03](reviews/F1-R2-RECONCILIATION.md) found the envelope covered **one of seven** agent-facing read paths. The fix is structural ([G §4.1](06-AGENT-MODEL.md#41-one-envelope-every-read-path)) and `test_no_unlabelled_content_path` is a *claim about coverage* — verify the surface is genuinely enumerable |
+| 2 | **Context manifest forgery and tampering** | The served-item manifest ([H §3.2](07-CONTEXT-COMPILER-SPEC.md#32-the-served-item-manifest--permanent-t1)) is new, T1, and now load-bearing for [T-3](02-THREAT-MODEL.md#t-3--forged-provenance). It inherits only the hash chain's tamper-**evidence**, never resistance |
+| 3 | **Evidence provenance spoofing** | Specifically the **in-grant-but-not-served** case, which F1's design silently failed |
+| 4 | **Pending-memory influence** | [F §5.5](05-MEMORY-MODEL.md#55-pending-confirmation-semantics) claims a `PENDING` item can only make an agent *stop and ask*. Attack that bound — advisory-channel flooding, and any path from advisory to authoritative |
+| 5 | **Cross-project and vault-global contamination** | The scope redesign ([F §3.4](05-MEMORY-MODEL.md#34-scope-is-orthogonal-dimensions-not-an-ordered-lattice)) argues specificity makes the dangerous direction structurally unavailable. Test that, including incomparable selectors |
+| 6 | **MCP authorization assumptions** | **MCP is transport, not authorization** ([T-13](02-THREAT-MODEL.md#t-13--privilege-escalation-via-mcp-or-plugin)). The official Rust SDK is a preferred *implementation* candidate ([SRC-114](research/FEHREST_SOURCE_REGISTRY.md#src-114--official-mcp-rust-sdk)) and changes nothing about the boundary — verify the adapter sits below the chokepoint |
+| 7 | **Cedar policy bypass and misconfiguration** | [SRC-113](research/FEHREST_SOURCE_REGISTRY.md#src-113--cedar-for-agents-extends-src-042) is externally verified to **exist**, which is not evidence its authorization model is correct for Fehrest, correctly configured, or bypass-free. **Review it independently** |
+| 8 | **cap-std, path, symlink and confinement limits** | [SRC-112](research/FEHREST_SOURCE_REGISTRY.md#src-112--cap-std) is an adoption *candidate*, not a decision. Assess whether it or another Rust-native capability strategy materially improves the boundary, and whether [ADR-0009](09-TECHNOLOGY-DECISIONS.md#adr-0009--agents-address-objects-by-id-never-by-path) already carries the load |
+| 9 | **Windows filesystem semantics** | The weakest confinement platform ([T-18](02-THREAT-MODEL.md#t-18--windows-confinement-is-weaker-than-posix)) **and** the founder's own environment. The new identity design ([D §3.3](03-CANONICAL-DATA-MODEL.md#33-filesystem-identity-and-path-semantics)) is untested code |
+| 10 | **Imported-content prompt injection** | [I-13](01-ARCHITECTURE-CONSTITUTION.md#i-13--imported-and-retrieved-content-is-evidence-never-authority) bounds privilege, not persuasion — a limit stated deliberately. Attack the privilege bound, and the Fehrest-specific corpus in [§6.1](#61-c-inject--prompt-injection) |
+| 11 | **Memory poisoning and supersession attacks** | [T-2](02-THREAT-MODEL.md#t-2--memory-poisoning), [T-5](02-THREAT-MODEL.md#t-5--memory-supersession-abuse), against the **four-axis** model and the confidence-free resolver, both new |
+| 12 | **Event and audit tampering** | [T-4](02-THREAT-MODEL.md#t-4--event-log-tampering), now also carrying manifests and spilled-locator durability classes ([D §5.5](03-CANONICAL-DATA-MODEL.md#55-spilled-locators-have-a-declared-durability-class)) |
+| 13 | **Graph sidecar future isolation** | [H-5](research/EVIDENCE_LOG.md#h-5--a-single-sidecar-process-is-sufficient-isolation-for-the-extraction-path) is unproven and 28 upstream grammars are outside Fehrest's control ([T-10](02-THREAT-MODEL.md#t-10--parser-vulnerabilities)). Note that [GI-CAP](10-BENCHMARK-PLAN.md#b-13--gi-cap--graph-intelligence-capability-experiment) may remove the capability before the sidecar exists |
+| 14 | **Recovery under malicious or corrupt derived state** | [N](13-RECOVERY-MODEL.md), including the new [§3A](13-RECOVERY-MODEL.md#3a-hostile-filesystem-and-sync-environments) hostile-environment scenarios and checkpoint loss |
+
+**Two framings worth carrying into the review.** First, the [controls table](02-THREAT-MODEL.md#6-controls-summary-by-mechanism) marks which controls are **Boundary** and which are **defence-in-depth** — only the former are load-bearing, and F1-R2 found one Boundary row (T-3) that had **no implementable mechanism behind it**. A second instance of that pattern is the most valuable thing this review could find. Second, **no source in the registry is a runtime dependency**, and external verification of a repository establishes existence, never security.

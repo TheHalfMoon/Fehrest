@@ -845,7 +845,7 @@ Stated openly rather than discovered by a reviewer:
 10. **SRC-100 (Spark) is deliberately unpinned and must stay that way.** Concepts are read from published design documentation; a pin would imply a code relationship that does not exist and is not anticipated.
 11. **Every source in [§14](#14-f1-r2-final-donor-discovery-addendum) is `PIN_PENDING_EXTERNAL_VERIFICATION`** — 29 entries covering 24 new projects, the remainder being restatements or promotions of existing entries. No live upstream verification was performed for them in the F1-R2 session, and **no commit was guessed**. None may transition to `ADAPT` or `USE` until pinned and license-verified; §11 CI rule 2 enforces this once implementation begins.
 12. **Every license in §14 is `UNVERIFIED_IN_THIS_SESSION`**, recorded as stated by the project. Two require *per-repository* review rather than per-project: **any-sync / Anytype** (SRC-134 — do not infer uniform permissive licensing across `anyproto` components) and **AFFiNE** (SRC-121 — split license, per-file provenance required before vendoring).
-13. **`OpenPencil` and `Flint` are named but unidentified.** Carried forward from the founder donor map; no repository, license or capability claim is asserted. They enter their respective gates only after identification and verification ([§14.7](#147-data-analytics-and-view-engines)).
+13. **`OpenPencil` and `Flint` are now identified** ([§14.11](#1411-externally-verified-identifications-2026-08-18)) — `open-pencil/open-pencil` and `microsoft/flint-chart`, both with externally observed revisions from 2026-08-18. **Neither was verified in this environment**, and both remain `STUDY`-class gate candidates rather than adopted anything. *(This gap is closed as an identification; the verification gap in item 11 still applies.)*
 14. **SRC-161 (MemOra), SRC-162 (EvoMemBench) and SRC-163 ("Total Recall at What Cost?") are named only.** Exact identifiers, versions and venues are unverified, and **no figure from any of them may be cited until they are**.
 
 ---
@@ -867,6 +867,18 @@ Stated openly rather than discovered by a reviewer:
 Per the [pinning rule](#legend), no entry below may transition to `ADAPT` or `USE` until an exact revision is pinned and its license verified. §11 CI rule 2 enforces this mechanically once implementation begins.
 
 **Licenses are recorded as stated by the projects and are `UNVERIFIED_IN_THIS_SESSION`.** Each requires confirmation at pin time, per source, before any code is imported.
+
+#### Pin-verification semantics — two distinct labels
+
+> **Added pre-GLM.** Six entries were **externally verified by GPT-5.6 Sol on 2026-08-18** and now carry observed revisions. **This environment still could not fetch them**, so the distinction is recorded rather than blurred:
+
+| Label | Meaning |
+|---|---|
+| `EXTERNALLY_VERIFIED_BY_GPT_2026_08_18` | Repository identity, and where stated the license and revision, were observed by an external reviewer on that date. **Not verified here.** |
+| `VERIFIED_IN_CLAUDE_ENVIRONMENT` | Observed directly in this session by a recorded command. Applies to the F1 measurements in [E-1](EVIDENCE_LOG.md#e-1--graphify-pinned-version-and-license)–[E-13](EVIDENCE_LOG.md#e-13--supporting-donors-and-standards-verified-live), **not** to anything in §14. |
+| `PIN_PENDING_EXTERNAL_VERIFICATION` | Neither. Unchanged for every §14 entry not listed below. |
+
+**An externally observed revision is a pin candidate, not a verified pin.** It is sufficient to remove the *"unidentified"* status and to give a reviewer something exact to check; it is **not** sufficient to authorise code import, which still requires the rights review in [§11](#11-code-provenance-ledger) against a revision confirmed in the build environment.
 
 ---
 
@@ -954,8 +966,9 @@ id: SRC-112
 name: cap-std
 class: [SECURITY_DONOR, CODE_DONOR, ARCHITECTURE_DONOR]
 repository_or_url: https://github.com/bytecodealliance/cap-std
-exact_commit_or_version: PIN_PENDING_EXTERNAL_VERIFICATION
-date_verified: not verified in this session
+exact_commit_or_version: de1d389d726c9adf45fc0d7fc4066224ebf68212
+pin_status: EXTERNALLY_VERIFIED_BY_GPT_2026_08_18   # NOT verified in this environment
+date_verified: 2026-08-18 (external reviewer)
 decision: STUDY / SECURITY_BENCHMARK / ADOPTION_CANDIDATE
 fehrest_layer: SECURITY
 status_note: >
@@ -979,6 +992,9 @@ boundary_discipline:
      SRC-113), not a process sandbox, and not prompt-injection resistance. These
      are four separate controls and Fehrest must not let one be cited as another."
 license: Apache-2.0 WITH LLVM-exception / Apache-2.0 / MIT (UNVERIFIED_IN_THIS_SESSION)
+security_note: >
+  An externally observed revision is NOT evidence that the confinement model is
+  sufficient for Fehrest. GLM-5.3 evaluates that independently.
 evidence: []
 ```
 
@@ -990,8 +1006,9 @@ name: Cedar for Agents
 class: [SECURITY_DONOR, CODE_DONOR, AUTHORIZATION_REFERENCE]
 repository_or_url: https://github.com/cedar-policy/cedar-for-agents
 also_retained: https://github.com/cedar-policy/cedar   # SRC-042
-exact_commit_or_version: PIN_PENDING_EXTERNAL_VERIFICATION
-date_verified: not verified in this session
+exact_commit_or_version: 84f030ab9ea3e6f0fff3e387250cffff3ebfb2f8
+pin_status: EXTERNALLY_VERIFIED_BY_GPT_2026_08_18   # NOT verified in this environment
+date_verified: 2026-08-18 (external reviewer)
 decision: STUDY / ADAPT / STRONG_IMPLEMENTATION_CANDIDATE
 fehrest_layer: SECURITY
 gap_closed: >
@@ -1018,7 +1035,13 @@ open_question: >
   Whether embedding a policy engine beats an auditable hand-written evaluator for
   v1's policy space. Decided at Phase 5, not here. Ponytail question 5 applies: an
   auditable 200-line evaluator may still be the right answer.
-license: Apache-2.0 (UNVERIFIED_IN_THIS_SESSION)
+security_note: >
+  UPSTREAM EXISTENCE IS NOT PROOF OF SECURITY. An externally verified repository and
+  revision establish that the project is real and locatable -- nothing about whether
+  its authorization model is correct for Fehrest, correctly configured, or free of
+  bypasses. GLM-5.3 must review the authorization model INDEPENDENTLY, and the
+  decision below remains NOT-YET-ACCEPTED.
+license: Apache-2.0 (EXTERNALLY_OBSERVED_2026_08_18; not verified in this environment)
 evidence: [E-13]
 ```
 
@@ -1029,8 +1052,9 @@ id: SRC-114
 name: Model Context Protocol -- official Rust SDK
 class: [STANDARD_IMPLEMENTATION, CODE_DONOR, INTEROPERABILITY_REFERENCE]
 repository_or_url: https://github.com/modelcontextprotocol/rust-sdk
-exact_commit_or_version: PIN_PENDING_EXTERNAL_VERIFICATION
-date_verified: not verified in this session
+exact_commit_or_version: 38428f66bc679ad73ce3c4de729c90af64bc9aac
+pin_status: EXTERNALLY_VERIFIED_BY_GPT_2026_08_18   # NOT verified in this environment
+date_verified: 2026-08-18 (external reviewer)
 decision: PREFERRED_IMPLEMENTATION_CANDIDATE
 fehrest_layer: AGENT
 gap_closed: >
@@ -1254,13 +1278,21 @@ All feed the **Collaboration/CRDT Gate** ([T §4](../20-FUTURE-GATES.md#4-collab
 | SRC-130 | **Loro** — `loro-dev/loro` | CODE_DONOR / ARCHITECTURE_DONOR / LOCAL_FIRST_REFERENCE | **STUDY / BENCHMARK / DEFER** | Rust-native collaborative structures; text and rich text; map/list/tree state; version and history inspection; sync; local-first operation | Adoption on the grounds of being Rust-native. Collaboration introduced because a donor supports it |
 | SRC-131 | **Automerge** — `automerge/automerge` *(extends [SRC-007](#34-automerge--study))* | ARCHITECTURE_DONOR / CODE_DONOR / LOCAL_FIRST_REFERENCE | **STUDY / BENCHMARK / DEFER** | Local-first document semantics; sync protocol; durable collaborative state; version/history concepts; Rust implementation lessons | **No automatic preference.** F1 listed Automerge alone; R2 makes it one candidate among four |
 | SRC-132 | **Yrs / Yjs** *(see [SRC-005](#32-yjs--conditional--editor-dependent))* | CODE_DONOR / RESEARCH | **CONDITIONAL — editor-dependent** | Reference semantics; arrives with Candidate B if it wins the Editor Gate | Adoption independent of the Editor Gate |
-| SRC-133 | **AppFlowy-Collab** — `AppFlowy-IO/AppFlowy-Collab` | CODE_DONOR / ARCHITECTURE_DONOR / LOCAL_FIRST_REFERENCE / PRODUCT_REFERENCE | **STUDY / SELECTIVE_ADAPT / DEFER** | A Rust collaborative substrate shared across **document, database and folder/workspace** object types; persistence plugins; history; import/export; Yrs integration | AppFlowy's product architecture wholesale. Exact license/provenance review required before any code import |
+| SRC-133 | **AppFlowy-Collab** — `AppFlowy-IO/AppFlowy-Collab`<br>**License: `AGPL-3.0`** *(externally observed 2026-08-18)*<br>Revision `be5aa89b4aeafd4e7159e92b86784c02caaa85ce` | CODE_DONOR / ARCHITECTURE_DONOR / LOCAL_FIRST_REFERENCE / PRODUCT_REFERENCE | **STUDY / SELECTIVE_ADAPT / DEFER** *(posture unchanged)* | A Rust collaborative substrate shared across **document, database and folder/workspace** object types; persistence plugins; history; import/export; Yrs integration | **CODE REUSE: RIGHTS / PROVENANCE REVIEW REQUIRED.** AGPL-3.0 is a copyleft licence whose obligations differ materially from the permissive licences elsewhere in this registry. **Do not infer permissive reuse from the project being open source.** Architecture study is unaffected |
 | SRC-134 | **any-sync / Anytype** — `anyproto/any-sync` | ARCHITECTURE_DONOR / LOCAL_FIRST_REFERENCE / P2P_REFERENCE / PRODUCT_REFERENCE | **STUDY** | Local-first object architecture; P2P sync; encrypted collaboration; offline-first knowledge workspace; object-oriented knowledge UX | **Licenses must be treated PER REPOSITORY.** Do not infer that all Anytype code is permissively licensed because some anyproto components are. Source-specific rights review before any reuse |
 | SRC-135 | **iroh** — `n0-computer/iroh` | ARCHITECTURE_DONOR / CODE_DONOR / P2P_REFERENCE | **STUDY / DEFER** | Rust P2P networking; content-addressed transfer; QUIC; NAT traversal; gossip; local-first device sync | Any sync infrastructure before the core thesis passes. **Fehrest v1 remains local and single-device capable** ([I-7](../01-ARCHITECTURE-CONSTITUTION.md#i-7--sync-is-optional)) |
 
 **All pins `PIN_PENDING_EXTERNAL_VERIFICATION`; all licenses `UNVERIFIED_IN_THIS_SESSION`.**
 
 **SRC-133 is the most decision-relevant entry in this table, and not for its CRDT.** AppFlowy-Collab is direct evidence about whether **one shared collaborative substrate across several object types** is maintainable in practice — which is the [Unified Surface Test](../20-FUTURE-GATES.md#3-unified-surface-test) question, and the practical form of Fehrest's own *"Everything is an Object; views are projections"* ([D §1](../03-CANONICAL-DATA-MODEL.md#1-the-object-model-decision)).
+
+> **AppFlowy-Collab's licence changes what may be taken from it, and only that** *(corrected pre-GLM)*. Its repository licence was externally observed as **AGPL-3.0** on 2026-08-18. F1-R2 recorded "exact license/provenance review required" generically; the specific fact matters, because AGPL-3.0 is **copyleft**, not permissive, and every other code-donor licence in this registry is MIT, Apache-2.0, MPL-2.0 or public domain.
+>
+> **What is unaffected:** reading the design, and reasoning about whether a shared substrate is maintainable. Studying an architecture is not reuse.
+> **What is gated:** any code import whatsoever. `CODE REUSE: RIGHTS / PROVENANCE REVIEW REQUIRED`, and that review must reach a founder-level licensing decision rather than an engineering one, since Fehrest's own licence is still open ([Q-1a](../16-OPEN-QUESTIONS.md#q-1--repository-identity-closed)).
+> **What must not be inferred:** that open source implies permissive reuse. That inference is how a copyleft obligation enters a codebase unnoticed.
+>
+> The `STUDY / SELECTIVE_ADAPT / DEFER` posture is **unchanged** — this correction records a constraint on a future action, not a new decision.
 
 ---
 
@@ -1497,7 +1529,7 @@ license: Apache-2.0 (UNVERIFIED_IN_THIS_SESSION)
 evidence: []
 ```
 
-**Two names carried forward from the founder donor map are NOT identified here.** `OpenPencil` (visual) and `Flint` (data/research) are recorded as **named by the founder and not identified or verified in this session**. No repository, license, maintenance status or capability claim is asserted for either. They enter the Visual/Canvas Engine Gate and the View Engine candidate list respectively **only after identification and verification** — listing an unidentified project as a candidate would be exactly the collection-driven research this addendum closes.
+**The two previously unidentified names are now identified** — see [§14.11](#1411-externally-verified-identifications-2026-08-18). `OpenPencil` is `open-pencil/open-pencil` and `Flint` is `microsoft/flint-chart`, both with revisions externally observed on 2026-08-18. Neither was verified in this environment, and neither is adopted.
 
 ---
 
@@ -1573,3 +1605,72 @@ Stated explicitly, because a large donor round is exactly where scope creep ente
 | **The v1 scope exclusions** | UI, canvas, editor, CRDT, sync, production graph sidecar, vectors, automatic promotion, analytics, dashboards, plugins, cloud, mobile — all still excluded ([A §9](../00-PRODUCT-THESIS.md#9-scope-commitments)) |
 | **Constitutional invariants** | None amended. I-16 and I-17 in particular bound every UI-adjacent and Python-adjacent entry above |
 | **The Core** | **Rust-owned, and independent of AFFiNE, BlockSuite, Electron, Penpot, Superset, and any cloud or server runtime** |
+
+---
+
+### 14.11 Externally verified identifications (2026-08-18)
+
+> **ADDED PRE-GLM.** Six entries were verified by an external reviewer on 2026-08-18 and now carry exact repository identities and observed revisions. **This environment could not fetch any of them**, so every entry below is `EXTERNALLY_VERIFIED_BY_GPT_2026_08_18` and **not** `VERIFIED_IN_CLAUDE_ENVIRONMENT` (§14.0). **No decision, disposition or posture changed.**
+
+| Source | Repository | Observed revision | License | Status |
+|---|---|---|---|---|
+| **OpenPencil** | `open-pencil/open-pencil` | `15bd0ba19f02d0e889068817c0888640e2d4fa04` | not observed | **STUDY / BENCHMARK / ADAPT** — Visual/Canvas Engine Gate candidate |
+| **Microsoft Flint** | `microsoft/flint-chart` | `34ef4516554b323a740a426bd1a1e6ba31ee8245` | MIT *(GitHub metadata)* | **STUDY / DEFER** — future visualization/data donor only |
+| **Cedar for Agents** ([SRC-113](#src-113--cedar-for-agents-extends-src-042)) | `cedar-policy/cedar-for-agents` | `84f030ab9ea3e6f0fff3e387250cffff3ebfb2f8` | Apache-2.0 | **SECURITY DONOR / STRONG IMPLEMENTATION CANDIDATE / NOT YET ACCEPTED** |
+| **cap-std** ([SRC-112](#src-112--cap-std)) | `bytecodealliance/cap-std` | `de1d389d726c9adf45fc0d7fc4066224ebf68212` | not re-observed | **SECURITY DONOR / ADOPTION CANDIDATE / NOT ACCEPTED YET** |
+| **Official MCP Rust SDK** ([SRC-114](#src-114--official-mcp-rust-sdk)) | `modelcontextprotocol/rust-sdk` | `38428f66bc679ad73ce3c4de729c90af64bc9aac` | not re-observed | **PREFERRED PROTOCOL IMPLEMENTATION CANDIDATE** |
+| **AppFlowy-Collab** ([SRC-133](#143-local-first-and-crdt-candidates)) | `AppFlowy-IO/AppFlowy-Collab` | `be5aa89b4aeafd4e7159e92b86784c02caaa85ce` | **AGPL-3.0** | **STUDY / SELECTIVE_ADAPT / DEFER** — code reuse gated on rights review |
+
+#### SRC-180 — OpenPencil
+
+```yaml
+id: SRC-180
+name: OpenPencil
+class: [CODE_DONOR, PRODUCT_REFERENCE, INTEROPERABILITY_REFERENCE]
+repository_or_url: https://github.com/open-pencil/open-pencil
+exact_commit_or_version: 15bd0ba19f02d0e889068817c0888640e2d4fa04
+pin_status: EXTERNALLY_VERIFIED_BY_GPT_2026_08_18   # NOT verified in this environment
+date_verified: 2026-08-18 (external reviewer)
+decision: STUDY / BENCHMARK / ADAPT
+fehrest_layer: UI
+gate: Visual/Canvas Engine Gate (T section 2) -- Phase 8+, not v1
+status_correction: >
+  F1-R2 recorded this name as unidentified and therefore not a gate candidate.
+  It is now identified and IS a candidate in the Visual/Canvas Engine Gate. It is
+  NOT promoted to a runtime dependency, and nothing about canvas being deferred
+  changes.
+what_we_will_not_do:
+  - Treat identification as adoption. A gate candidate is a question, not a choice.
+  - Un-defer canvas. A section 8+ candidate does not move a section 8+ feature.
+license: not observed -- MUST be established before any code import
+evidence: []
+```
+
+#### SRC-181 — Microsoft Flint
+
+```yaml
+id: SRC-181
+name: Microsoft Flint (flint-chart)
+class: [ARCHITECTURE_DONOR, PRODUCT_REFERENCE, ANALYTICS_REFERENCE]
+repository_or_url: https://github.com/microsoft/flint-chart
+exact_commit_or_version: 34ef4516554b323a740a426bd1a1e6ba31ee8245
+pin_status: EXTERNALLY_VERIFIED_BY_GPT_2026_08_18   # NOT verified in this environment
+date_verified: 2026-08-18 (external reviewer)
+decision: STUDY / DEFER
+fehrest_layer: UI                          # a future View Engine, not v1
+category: >
+  Visualization language / chart specification system with agent-oriented usage.
+why_it_is_interesting_to_fehrest: >
+  A DECLARATIVE CHART SPECIFICATION is a projection description, not a projection.
+  That is the same shape as the View Engine Gate principle -- canonical objects
+  are not views (T section 5) -- and an agent-oriented specification language is
+  directly relevant to a product whose primary non-human user is an agent.
+what_we_will_not_do:
+  - Adopt it, or any charting system, before a MEASURED analytics requirement
+    exists (T section 5). Identification does not open the View Engine Gate.
+  - Introduce a visualization dependency into the Headless Thesis-Proof.
+license: MIT (GitHub metadata, externally observed 2026-08-18; confirm at pin time)
+evidence: []
+```
+
+**What this subsection did not do.** It closed an identification gap and nothing else. No disposition moved, no gate opened, no candidate was promoted, and **no source here is a runtime dependency**. The [research freeze](#149-research-freeze--now-binding) remains active: these two entries were already in the registry as named-but-unidentified, so identifying them admits no new source.
