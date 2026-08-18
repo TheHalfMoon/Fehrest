@@ -2,14 +2,36 @@
 
 **Date:** 2026-08-17
 **Author role:** Principal Architect
-**Phase:** `G3` security reconciliation complete
-**Next gate:** GPT-5.6 Sol **final security delta** review → architecture freeze may then be considered → founder implementation authorization
+**Phase:** `G4` architecture freeze complete
+**Next gate:** **founder authorization of the Headless Rust Thesis-Proof** — blocking all implementation
 
 ---
 
 ## Verdict
 
-# `G3_SECURITY_RECONCILED_READY_FOR_GPT_DELTA_REVIEW`
+# `G4_ARCHITECTURE_FROZEN_READY_FOR_FOUNDER_AUTHORIZATION`
+
+**➤ The authoritative artifact is [docs/canonical/ARCHITECTURE_FREEZE.md](canonical/ARCHITECTURE_FREEZE.md).** This document is the assessment behind it; the freeze is the entry point.
+
+```
+ARCHITECTURE:                 FROZEN
+SECURITY_ARCHITECTURE:        FROZEN_FOR_IMPLEMENTATION_PROOF
+PRODUCT_IMPLEMENTATION:       NOT AUTHORIZED
+HEADLESS_THESIS_PROOF:        READY_FOR_FOUNDER_AUTHORIZATION — NOT STARTED
+```
+
+**17 foundational decisions frozen · 5 hypothesis-gated components · 9 open decisions retained as open.**
+
+The architecture completed four adversarial gates — GPT (G1), Codex (G2), GLM-5.3 security (G3), and GPT delta review at each — and the final security verdict was `G3_SECURITY_FINAL_ACCEPTED` / `SECURITY_RECONCILIATION_CLEAN`.
+
+**Freeze fixes what must be satisfied. It asserts nothing about whether it will be.** Every kill test, every benchmark and every hypothesis gate remains **REQUIRED and NOT RUN** ([freeze §11](canonical/ARCHITECTURE_FREEZE.md#11-required-gates--requirement-frozen-result-not)). "Security accepted" means the *specification* passed review; the implementation properties still have to pass K-01…K-24b.
+
+**Freeze is not authorization.** The founder must explicitly authorize the Headless Rust Thesis-Proof before any scaffold or product code exists — and what is being authorized is **one bounded experiment designed to falsify the thesis cheaply**, not the product.
+
+---
+
+<details>
+<summary>Prior verdict — <code>G3_SECURITY_RECONCILED_READY_FOR_GPT_DELTA_REVIEW</code></summary>
 
 **Read [the G3 security delta](reviews/G3-SECURITY-RECONCILIATION.md) first.**
 
@@ -18,6 +40,8 @@ GLM-5.3's independent adversarial review returned `G3_SECURITY_PASS_WITH_REQUIRE
 **No foundational trust assumption was found invalid.** Plane separation, pre-retrieval frozen grants, the deny-by-default chokepoint, Fehrest-owned identity, the served-item manifest, the single read envelope, four-axis memory, PENDING non-authority and canonical/derived separation all survive unchanged.
 
 **What G3 corrected were claims stronger than their mechanisms.** Three were withdrawn: *"unforgeable provenance"* over an unkeyed hash chain, *"derived corruption is an availability problem"* over a poisonable index, and *"explicit user authority"* with no defined authenticator. Six mechanisms that existed only as prose now have normative specifications. **Four GLM remedies were modified rather than adopted** ([§4](reviews/G3-SECURITY-RECONCILIATION.md)) — most importantly TTY detection as authentication, which would have converted an honest limitation into a false guarantee.
+
+</details>
 
 ---
 
@@ -136,6 +160,14 @@ Where I expect the plan to survive attack.
 **Not blockers, but unproven:** hypotheses [H-1](research/EVIDENCE_LOG.md#h-1--fts5--graph-expansion-beats-dense-retrieval-on-personal-vaults) through [H-5](research/EVIDENCE_LOG.md#h-5--a-single-sidecar-process-is-sufficient-isolation-for-the-extraction-path), each scheduled against a named benchmark.
 
 ---
+
+## Documents added in G4
+
+```
+docs/canonical/ARCHITECTURE_FREEZE.md    # the frozen architecture — authoritative entry point
+```
+
+Modified in G4: `README.md`, `VERDICT.md`.
 
 ## Documents added in G3
 

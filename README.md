@@ -10,7 +10,15 @@
 
 ## Status
 
-**PLANNING ONLY. NO IMPLEMENTATION EXISTS AND NONE IS AUTHORIZED.**
+```
+ARCHITECTURE:            FROZEN
+PRODUCT_IMPLEMENTATION:  NOT AUTHORIZED
+HEADLESS_THESIS_PROOF:   READY_FOR_FOUNDER_AUTHORIZATION — NOT STARTED
+```
+
+**➤ [ARCHITECTURE FREEZE](docs/canonical/ARCHITECTURE_FREEZE.md) — the authoritative entry point.**
+
+**PLANNING ONLY. NO IMPLEMENTATION EXISTS AND NONE IS AUTHORIZED.** Freeze is not authorization: the founder must explicitly authorize the Headless Rust Thesis-Proof before any code is written.
 
 | Phase | State |
 |---|---|
@@ -21,11 +29,12 @@
 | F1-R2 Reconciliation | ✅ Complete — [delta](docs/reviews/F1-R2-RECONCILIATION.md) |
 | GPT-5.6 Sol R2 delta review | ✅ Accepted with two pre-GLM corrections |
 | GLM-5.3 adversarial security review | ✅ `G3_SECURITY_PASS_WITH_REQUIRED_RECONCILIATION` — CRITICAL=0, HIGH=2, MED=7, LOW=5, INFO=4 |
-| **G3 Security Reconciliation** | ✅ **Complete** — [delta](docs/reviews/G3-SECURITY-RECONCILIATION.md) |
-| GPT-5.6 Sol **final security delta** review | ⏳ Next gate |
-| Architecture freeze → founder authorization | Pending |
+| G3 Security Reconciliation | ✅ Complete — [delta](docs/reviews/G3-SECURITY-RECONCILIATION.md) |
+| GPT-5.6 Sol final security delta review | ✅ `G3_SECURITY_FINAL_ACCEPTED` · `SECURITY_RECONCILIATION_CLEAN` |
+| **G4 Architecture Freeze** | ✅ **Complete** — [frozen architecture](docs/canonical/ARCHITECTURE_FREEZE.md) |
+| Founder authorization of the Headless Rust Thesis-Proof | ⏳ **Next gate — blocking all implementation** |
 
-**Verdict:** `G3_SECURITY_RECONCILED_READY_FOR_GPT_DELTA_REVIEW` — see [the G3 delta](docs/reviews/G3-SECURITY-RECONCILIATION.md) and [the verdict](docs/VERDICT.md).
+**Verdict:** `G4_ARCHITECTURE_FROZEN_READY_FOR_FOUNDER_AUTHORIZATION` — see [the freeze](docs/canonical/ARCHITECTURE_FREEZE.md) and [the verdict](docs/VERDICT.md).
 
 **No foundational trust assumption was found invalid.** What G3 corrected were **claims stronger than their mechanisms** — see [what Fehrest v1 does not claim](docs/02-THREAT-MODEL.md#71-security-claims-fehrest-v1-explicitly-does-not-make).
 
@@ -47,7 +56,7 @@ The desktop shell ([ADR-0011](docs/09-TECHNOLOGY-DECISIONS.md#adr-0011--desktop-
 
 **Start here if you are reviewing:**
 
-0. [F1-R2 Reconciliation](docs/reviews/F1-R2-RECONCILIATION.md) — the current delta, and **§3 first**: four proposed remedies were rejected while their findings were accepted, with reasoning.
+0. [**Architecture Freeze**](docs/canonical/ARCHITECTURE_FREEZE.md) — the authoritative statement of what is frozen, what is hypothesis-gated, what is open, and why implementation is not authorized.
 1. [Evidence Log](docs/research/EVIDENCE_LOG.md) — every measurement this plan rests on, with the exact commands. **Attack this first.** If a measurement is wrong, the decisions it supports are void. Its [unmeasured-quantities table](docs/research/EVIDENCE_LOG.md#unmeasured-quantities-recorded-as-such-f1-r2) lists the numbers that are *not* measurements and says so.
 2. [Product Thesis](docs/00-PRODUCT-THESIS.md) — what Fehrest is, is not, and the experiment that would falsify it.
 3. [Architecture Constitution](docs/01-ARCHITECTURE-CONSTITUTION.md) — 15 invariants, each with an enforcing mechanism and a detecting test. Two are amended from the founder's draft, with arguments.
@@ -77,7 +86,8 @@ The desktop shell ([ADR-0011](docs/09-TECHNOLOGY-DECISIONS.md#adr-0011--desktop-
 | [Q — Open Questions](docs/16-OPEN-QUESTIONS.md) | Founder decisions and known weaknesses |
 | [S — Engineering Method](docs/19-ENGINEERING-METHOD.md) | Spec Kit + Ponytail — how implementation proceeds after authorization |
 | [T — Future Capability Gates](docs/20-FUTURE-GATES.md) | Visual/Canvas Engine · Unified Surface Test · Collaboration/CRDT · View Engine — **none authorized** |
-| [G3 Security Reconciliation](docs/reviews/G3-SECURITY-RECONCILIATION.md) | **The security delta — read this first** |
+| [**ARCHITECTURE FREEZE**](docs/canonical/ARCHITECTURE_FREEZE.md) | **What is frozen, conditional, open — and what is not authorized. Start here** |
+| [G3 Security Reconciliation](docs/reviews/G3-SECURITY-RECONCILIATION.md) | The security delta |
 | [Editor Gate](docs/18-EDITOR-GATE.md) | Prototype bake-off deciding the editor |
 | [Failure Conditions](docs/17-FAILURE-CONDITIONS.md) | What would force redesign |
 | [F1-R2 Reconciliation](docs/reviews/F1-R2-RECONCILIATION.md) | **The R2 delta — read this first** |
