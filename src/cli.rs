@@ -59,7 +59,10 @@ fn parse_args(argv: &[String]) -> Args {
 
 impl Args {
     fn get(&self, k: &str) -> Option<&str> {
-        self.flags.get(k).map(String::as_str).filter(|s| !s.is_empty())
+        self.flags
+            .get(k)
+            .map(String::as_str)
+            .filter(|s| !s.is_empty())
     }
     fn require(&self, k: &str) -> Result<&str> {
         self.get(k)
@@ -100,7 +103,11 @@ pub fn run(argv: &[String]) -> Result<i32> {
                 args.require("body")?,
             )?;
             let log = EventLog::open(&v.control_dir())?;
-            log.append(EventKind::ObjectRegistered, &id.to_string(), args.require("path")?)?;
+            log.append(
+                EventKind::ObjectRegistered,
+                &id.to_string(),
+                args.require("path")?,
+            )?;
             println!("{id}");
             Ok(0)
         }
@@ -162,9 +169,12 @@ pub fn run(argv: &[String]) -> Result<i32> {
                 .find(|c| c.id == id)
                 .map(|c| c.rel_path.clone())
                 .or_else(|| {
-                    v.scan()
-                        .ok()
-                        .and_then(|s| s.objects.iter().find(|o| o.id == id).map(|o| o.rel_path.clone()))
+                    v.scan().ok().and_then(|s| {
+                        s.objects
+                            .iter()
+                            .find(|o| o.id == id)
+                            .map(|o| o.rel_path.clone())
+                    })
                 })
                 .ok_or_else(|| crate::Error::Vault(format!("object not found: {id}")))?;
             let content = crate::locator::read_verified(v.root(), &hint, id)?;
@@ -183,7 +193,10 @@ pub fn run(argv: &[String]) -> Result<i32> {
                 .get("budget")
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(limits::MAX_PACKAGE_BYTES);
-            let as_of = args.get("as-of").and_then(|s| s.parse().ok()).unwrap_or(i64::MAX);
+            let as_of = args
+                .get("as-of")
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(i64::MAX);
 
             let items: Vec<SourceItem> = scan
                 .objects

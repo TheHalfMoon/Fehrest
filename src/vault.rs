@@ -350,7 +350,11 @@ mod tests {
         let v = Vault::create(&root).unwrap();
         fs::create_dir_all(root.join(".git")).unwrap();
         let id = ObjectId::generate();
-        fs::write(root.join(".git/config.md"), format!("---\nid: {id}\n---\nsecret\n")).unwrap();
+        fs::write(
+            root.join(".git/config.md"),
+            format!("---\nid: {id}\n---\nsecret\n"),
+        )
+        .unwrap();
         fs::write(
             root.join(CONTROL_DIR).join("internal.md"),
             format!("---\nid: {}\n---\naudit\n", ObjectId::generate()),

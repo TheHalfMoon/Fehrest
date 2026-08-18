@@ -1,6 +1,23 @@
 # Technical Verification Record — Phase T
 
 `TECHNICAL_IMPLEMENTATION: PASS_WITH_ONE_TOOL_GAP_AND_ONE_HOST_CONSTRAINT`
+`SUPERSEDED_IN_PART_BY:` [verification-r1.md](./verification-r1.md)
+
+> **Amendment notice — Phase T-R1.** This document is the record **as observed during
+> Phase T** and is deliberately left standing. Four of its open items have since been
+> closed or changed, and the later evidence lives in
+> [verification-r1.md](./verification-r1.md) rather than being edited into the text
+> below:
+>
+> | Item here | Status now |
+> |---|---|
+> | `cargo fmt --check` `NOT_RUN` | **Ran, failed, was fixed, now passes** on Windows and Linux |
+> | `RUSTSEC_STATUS = NOT_SCANNED` | **Scanned** — 0 vulnerabilities, 0 warnings |
+> | K-12 `PENDING_NATIVE_EXECUTION` | **Executed on Linux/ext4 and passes.** Still pending on Windows |
+> | Release build blocked inside OneDrive | **No longer reproduces.** Both target paths build |
+>
+> Nothing below is retracted. A failure that was really observed stays recorded as
+> really observed, including the one that has stopped reproducing.
 
 **This record covers SC-001…SC-005 only.** It says nothing about the product thesis.
 `cargo test` passing means `TECHNICAL_IMPLEMENTATION_PASS`; it does not mean
@@ -156,6 +173,13 @@ that is the honest number.
 `NOT_YET_EVALUATED`. `bench/harness.rs` is a stub that prints
 `benchmark harness: not yet implemented`. T032, T033 and T034 are open. No thesis
 claim exists yet, positive or negative.
+
+> **Amendment — Phase T-R1.** The harness stopped being a stub in `90205c1`. It was
+> implemented and run as the context-adequacy pilot, whose verdict is `INCONCLUSIVE`
+> — see [bench/RESULTS.md](../../bench/RESULTS.md) and the archival record in
+> [bench/V0/](../../bench/V0/). **The conclusion of this section is unchanged:**
+> `SC-006…SC-008` remain `NOT_YET_EVALUATED`, because the pilot measured context
+> adequacy and not agent continuation, and no model has executed on any arm.
 
 ## Summary of what is not claimed
 

@@ -216,7 +216,10 @@ mod tests {
 
     #[test]
     fn rejects_missing_or_malformed_frontmatter() {
-        assert!(matches!(parse("no fence here\n"), Err(Error::NoFrontmatter)));
+        assert!(matches!(
+            parse("no fence here\n"),
+            Err(Error::NoFrontmatter)
+        ));
         assert!(matches!(
             parse("---\ntitle: no id\n---\nbody"),
             Err(Error::MissingId)

@@ -98,8 +98,8 @@ impl Scope {
             return false;
         }
         match (&self.project, &req.project) {
-            (None, _) => true,                 // unconstrained: applies anywhere in the vault
-            (Some(_), None) => false,          // constrained memory, unconstrained request
+            (None, _) => true,        // unconstrained: applies anywhere in the vault
+            (Some(_), None) => false, // constrained memory, unconstrained request
             (Some(a), Some(b)) => a == b,
         }
     }
@@ -246,7 +246,16 @@ mod tests {
     use super::*;
 
     fn mem(scope: Scope) -> Memory {
-        Memory::new("m1", "s", MemoryType::Fact, Basis::UserAsserted, scope, 1, 0).unwrap()
+        Memory::new(
+            "m1",
+            "s",
+            MemoryType::Fact,
+            Basis::UserAsserted,
+            scope,
+            1,
+            0,
+        )
+        .unwrap()
     }
 
     #[test]

@@ -283,14 +283,29 @@ mod tests {
     use crate::memory::{MemoryType, Scope};
 
     fn m(id: &str, seq: u64, valid_from: i64, basis: Basis, scope: Scope) -> Memory {
-        Memory::new(id, format!("stmt-{id}"), MemoryType::Decision, basis, scope, seq, valid_from)
-            .unwrap()
-            .with_triple("project", "framework")
+        Memory::new(
+            id,
+            format!("stmt-{id}"),
+            MemoryType::Decision,
+            basis,
+            scope,
+            seq,
+            valid_from,
+        )
+        .unwrap()
+        .with_triple("project", "framework")
     }
 
     #[test]
     fn no_answer_when_nothing_matches() {
-        let out = resolve(&[], "project", "framework", &Scope::vault_global("v"), 100, 100);
+        let out = resolve(
+            &[],
+            "project",
+            "framework",
+            &Scope::vault_global("v"),
+            100,
+            100,
+        );
         assert_eq!(out, ResolveOutcome::NoAnswer);
     }
 
@@ -344,10 +359,29 @@ mod tests {
     fn vault_global_never_outranks_conflicting_project_local() {
         // The dangerous direction is structurally unavailable: project-local is
         // strictly more specific, so it wins rung 3 and global cannot.
-        let global = m("global", 5, 10, Basis::UserAsserted, Scope::vault_global("v"));
-        let local = m("local", 1, 10, Basis::UserAsserted, Scope::project("v", "p"));
+        let global = m(
+            "global",
+            5,
+            10,
+            Basis::UserAsserted,
+            Scope::vault_global("v"),
+        );
+        let local = m(
+            "local",
+            1,
+            10,
+            Basis::UserAsserted,
+            Scope::project("v", "p"),
+        );
         let all = vec![global, local];
-        match resolve(&all, "project", "framework", &Scope::project("v", "p"), 100, 100) {
+        match resolve(
+            &all,
+            "project",
+            "framework",
+            &Scope::project("v", "p"),
+            100,
+            100,
+        ) {
             ResolveOutcome::Answer(w) => assert_eq!(w.id.0, "local"),
             o => panic!("project-local must win, got {o:?}"),
         }
@@ -376,9 +410,7 @@ mod tests {
         match o {
             ResolveOutcome::NoAnswer => (0, vec![]),
             ResolveOutcome::Answer(m) => (1, vec![m.id.0.clone()]),
-            ResolveOutcome::Contradiction(ms) => {
-                (2, ms.iter().map(|m| m.id.0.clone()).collect())
-            }
+            ResolveOutcome::Contradiction(ms) => (2, ms.iter().map(|m| m.id.0.clone()).collect()),
         }
     }
 
@@ -520,7 +552,14 @@ mod tests {
         for as_of in [0i64, 1, 5, 100, i64::MAX] {
             assert!(
                 matches!(
-                    resolve(std::slice::from_ref(&mm), "project", "framework", &Scope::vault_global("v"), as_of, u64::MAX),
+                    resolve(
+                        std::slice::from_ref(&mm),
+                        "project",
+                        "framework",
+                        &Scope::vault_global("v"),
+                        as_of,
+                        u64::MAX
+                    ),
                     ResolveOutcome::NoAnswer
                 ),
                 "superseded-without-valid_until must not answer at {as_of}"
@@ -537,7 +576,14 @@ mod tests {
         mm.valid_until = Some(20);
 
         for inside in [10i64, 15, 19] {
-            match resolve(std::slice::from_ref(&mm), "project", "framework", &Scope::vault_global("v"), inside, u64::MAX) {
+            match resolve(
+                std::slice::from_ref(&mm),
+                "project",
+                "framework",
+                &Scope::vault_global("v"),
+                inside,
+                u64::MAX,
+            ) {
                 ResolveOutcome::Answer(w) => assert_eq!(w.id.0, "m"),
                 o => panic!("day {inside} is inside [10, 20), got {o:?}"),
             }
@@ -546,7 +592,14 @@ mod tests {
         for outside in [9i64, 20, 21, i64::MAX] {
             assert!(
                 matches!(
-                    resolve(std::slice::from_ref(&mm), "project", "framework", &Scope::vault_global("v"), outside, u64::MAX),
+                    resolve(
+                        std::slice::from_ref(&mm),
+                        "project",
+                        "framework",
+                        &Scope::vault_global("v"),
+                        outside,
+                        u64::MAX
+                    ),
                     ResolveOutcome::NoAnswer
                 ),
                 "day {outside} is outside [10, 20)"
@@ -565,7 +618,14 @@ mod tests {
         for as_of in [9i64, 10, 15, 19, 20, i64::MAX] {
             assert!(
                 matches!(
-                    resolve(std::slice::from_ref(&mm), "project", "framework", &Scope::vault_global("v"), as_of, u64::MAX),
+                    resolve(
+                        std::slice::from_ref(&mm),
+                        "project",
+                        "framework",
+                        &Scope::vault_global("v"),
+                        as_of,
+                        u64::MAX
+                    ),
                     ResolveOutcome::NoAnswer
                 ),
                 "retracted must not answer at {as_of}"

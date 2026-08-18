@@ -64,13 +64,21 @@ pub struct EventLog {
 /// Result of verifying the chain.
 #[derive(Debug, PartialEq, Eq)]
 pub enum ChainStatus {
-    Intact { events: usize },
+    Intact {
+        events: usize,
+    },
     /// A record's `prev_hash` does not match its predecessor's `hash`, or a
     /// record's own hash does not recompute. Reported with the exact sequence.
-    Broken { at_seq: u64, reason: String },
+    Broken {
+        at_seq: u64,
+        reason: String,
+    },
     /// `seq` is contiguous by construction; a gap means removal or a partial
     /// restore. N §3.3: not normal crash damage, and never silently continued.
-    Gap { from_seq: u64, to_seq: u64 },
+    Gap {
+        from_seq: u64,
+        to_seq: u64,
+    },
 }
 
 impl EventLog {
@@ -187,10 +195,7 @@ mod tests {
             .unwrap();
         log.append(EventKind::MemoryRecorded, "mem-1", "fact")
             .unwrap();
-        assert_eq!(
-            log.verify().unwrap(),
-            ChainStatus::Intact { events: 3 }
-        );
+        assert_eq!(log.verify().unwrap(), ChainStatus::Intact { events: 3 });
         let _ = std::fs::remove_dir_all(&d);
     }
 

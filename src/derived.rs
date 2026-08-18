@@ -107,7 +107,11 @@ impl Derived {
             self.conn
                 .execute(
                     "INSERT INTO object_fts (id, title, body) VALUES (?1, ?2, ?3)",
-                    rusqlite::params![o.id.to_string(), o.title.clone().unwrap_or_default(), o.body],
+                    rusqlite::params![
+                        o.id.to_string(),
+                        o.title.clone().unwrap_or_default(),
+                        o.body
+                    ],
                 )
                 .map_err(|e| Error::Derived(format!("cannot insert fts row: {e}")))?;
         }
@@ -256,9 +260,7 @@ mod tests {
         // compiled in, SQLite rejects the call rather than loading anything.
         let d = tmp();
         let der = Derived::open(&d).unwrap();
-        let r = der
-            .conn
-            .execute("SELECT load_extension('evil')", []);
+        let r = der.conn.execute("SELECT load_extension('evil')", []);
         assert!(r.is_err(), "load_extension must not be callable");
         let _ = std::fs::remove_dir_all(&d);
     }

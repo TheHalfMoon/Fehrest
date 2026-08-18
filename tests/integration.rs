@@ -128,12 +128,21 @@ fn as1_current_decision_is_current_and_superseded_is_labelled() {
     }
 
     // And the package labels them correctly, in both directions.
-    let mut d1_item = source("superseded_decisions", "d1", &d1.statement.clone(), Some(d1));
+    let mut d1_item = source(
+        "superseded_decisions",
+        "d1",
+        &d1.statement.clone(),
+        Some(d1),
+    );
     d1_item.superseded_by = Some("d2".into());
     let d2_item = source("current_decisions", "d2", &d2.statement.clone(), Some(d2));
 
     let pkg = context::compile(
-        &request(Scope::project("v", "core"), i64::MAX, limits::MAX_PACKAGE_BYTES),
+        &request(
+            Scope::project("v", "core"),
+            i64::MAX,
+            limits::MAX_PACKAGE_BYTES,
+        ),
         &[d1_item, d2_item],
     );
 
@@ -227,14 +236,22 @@ fn as3_inseparable_candidates_report_contradiction() {
 
     // The contradiction must reach the package, not stop at the resolver.
     let pkg = context::compile(
-        &request(Scope::project("v", "core"), i64::MAX, limits::MAX_PACKAGE_BYTES),
+        &request(
+            Scope::project("v", "core"),
+            i64::MAX,
+            limits::MAX_PACKAGE_BYTES,
+        ),
         &[
             source("contradictions", "a", &a.statement.clone(), Some(a)),
             source("contradictions", "b", &b.statement.clone(), Some(b)),
         ],
     );
     assert_eq!(pkg.manifest.entries.len(), 2, "both sides must be served");
-    assert!(pkg.manifest.entries.iter().all(|e| e.section == "contradictions"));
+    assert!(pkg
+        .manifest
+        .entries
+        .iter()
+        .all(|e| e.section == "contradictions"));
 
     // And the section must reach the WIRE, not only the manifest. H section 3
     // requires that the AGENT be told the two memories conflict; a manifest the
@@ -321,17 +338,34 @@ fn as5_project_a_memory_never_appears_for_project_b() {
     .unwrap();
 
     let items = vec![
-        source("project_state", "a-only", &a_mem.statement.clone(), Some(a_mem)),
-        source("project_state", "b-only", &b_mem.statement.clone(), Some(b_mem)),
+        source(
+            "project_state",
+            "a-only",
+            &a_mem.statement.clone(),
+            Some(a_mem),
+        ),
+        source(
+            "project_state",
+            "b-only",
+            &b_mem.statement.clone(),
+            Some(b_mem),
+        ),
     ];
 
     let pkg = context::compile(
-        &request(Scope::project("v", "B"), i64::MAX, limits::MAX_PACKAGE_BYTES),
+        &request(
+            Scope::project("v", "B"),
+            i64::MAX,
+            limits::MAX_PACKAGE_BYTES,
+        ),
         &items,
     );
 
     assert!(pkg.manifest.served("b-only"));
-    assert!(!pkg.manifest.served("a-only"), "project A must not leak into B");
+    assert!(
+        !pkg.manifest.served("a-only"),
+        "project A must not leak into B"
+    );
     // Not merely unserved -- absent from the wire entirely.
     assert!(!pkg.wire.contains("rotates keys weekly"));
     assert!(!pkg.wire.contains("a-only"));
@@ -355,10 +389,7 @@ fn as6_budget_is_respected_omissions_recorded_envelopes_intact() {
         .collect();
 
     let budget = 2_000usize;
-    let pkg = context::compile(
-        &request(Scope::vault_global("v"), i64::MAX, budget),
-        &items,
-    );
+    let pkg = context::compile(&request(Scope::vault_global("v"), i64::MAX, budget), &items);
 
     // Bounded -- measured on the actual rendered wire, not an estimate.
     assert!(
@@ -415,7 +446,11 @@ fn as7_manifest_lists_exactly_what_was_emitted() {
         .collect();
 
     let full = context::compile(
-        &request(Scope::vault_global("v"), i64::MAX, limits::MAX_PACKAGE_BYTES),
+        &request(
+            Scope::vault_global("v"),
+            i64::MAX,
+            limits::MAX_PACKAGE_BYTES,
+        ),
         &items,
     );
     let partial = context::compile(
@@ -466,9 +501,24 @@ fn as8_deleting_derived_state_entirely_and_rebuilding_is_equivalent() {
     let vault = Vault::create(&root).unwrap();
 
     let docs = [
-        ("notes/alpha.md", "Alpha", Some("core"), "alpha body about indexing"),
-        ("notes/beta.md", "Beta", Some("core"), "beta body about retrieval"),
-        ("notes/gamma.md", "Gamma", Some("edge"), "gamma body about indexing too"),
+        (
+            "notes/alpha.md",
+            "Alpha",
+            Some("core"),
+            "alpha body about indexing",
+        ),
+        (
+            "notes/beta.md",
+            "Beta",
+            Some("core"),
+            "beta body about retrieval",
+        ),
+        (
+            "notes/gamma.md",
+            "Gamma",
+            Some("edge"),
+            "gamma body about indexing too",
+        ),
     ];
     let mut ids = Vec::new();
     for (path, title, project, body) in docs {
@@ -498,7 +548,11 @@ fn as8_deleting_derived_state_entirely_and_rebuilding_is_equivalent() {
     let before_project = d
         .authoritative_project(&vault, ids[0], "notes/alpha.md")
         .unwrap();
-    assert_eq!(before_hits.len(), 2, "fixture must produce two lexical hits");
+    assert_eq!(
+        before_hits.len(),
+        2,
+        "fixture must produce two lexical hits"
+    );
     drop(d);
 
     // Delete derived state ENTIRELY -- the whole database, not just its rows.
@@ -561,7 +615,14 @@ fn as8_deleting_derived_state_entirely_and_rebuilding_is_equivalent() {
 #[test]
 fn compilation_is_deterministic_for_identical_inputs() {
     let items: Vec<SourceItem> = (0..8)
-        .map(|i| source("project_state", &format!("o-{i}"), &format!("body {i}"), None))
+        .map(|i| {
+            source(
+                "project_state",
+                &format!("o-{i}"),
+                &format!("body {i}"),
+                None,
+            )
+        })
         .collect();
     let req = request(Scope::vault_global("v"), i64::MAX, 4_000);
 
@@ -594,7 +655,11 @@ fn content_claiming_to_be_verified_is_not_verified() {
     assert_eq!(m.verification, Verification::Unverified);
 
     let pkg = context::compile(
-        &request(Scope::vault_global("v"), i64::MAX, limits::MAX_PACKAGE_BYTES),
+        &request(
+            Scope::vault_global("v"),
+            i64::MAX,
+            limits::MAX_PACKAGE_BYTES,
+        ),
         &[source("project_state", "m", &m.statement.clone(), Some(m))],
     );
     let (header, _) = envelope::parse_wire_items(&pkg.wire).remove(0);

@@ -53,9 +53,7 @@ fn reject_unsafe_components(rel: &str) -> Result<PathBuf> {
             Component::ParentDir => {
                 return Err(Error::Containment(format!("parent traversal in {rel:?}")))
             }
-            Component::RootDir => {
-                return Err(Error::Containment(format!("absolute path {rel:?}")))
-            }
+            Component::RootDir => return Err(Error::Containment(format!("absolute path {rel:?}"))),
             Component::Prefix(_) => {
                 return Err(Error::Containment(format!("path prefix in {rel:?}")))
             }
@@ -94,8 +92,8 @@ pub fn open_confined(root: &Path, rel: &str) -> Result<File> {
         return Err(Error::Containment(format!("not a regular file: {rel:?}")));
     }
 
-    let file =
-        File::open(&candidate).map_err(|e| Error::Containment(format!("cannot open {rel:?}: {e}")))?;
+    let file = File::open(&candidate)
+        .map_err(|e| Error::Containment(format!("cannot open {rel:?}: {e}")))?;
 
     // The parent chain must canonicalise inside the root. This catches a symlinked
     // *directory* component, which the final-component check above does not see.
@@ -163,13 +161,7 @@ mod tests {
 
     #[test]
     fn rejects_absolute_and_traversal_and_prefix() {
-        for bad in [
-            "../escape.md",
-            "a/../../escape.md",
-            "/etc/passwd",
-            "",
-            "./",
-        ] {
+        for bad in ["../escape.md", "a/../../escape.md", "/etc/passwd", "", "./"] {
             assert!(
                 reject_unsafe_components(bad).is_err(),
                 "should reject {bad:?}"

@@ -243,8 +243,8 @@ fn arm_b1(docs: &[(String, String)]) -> String {
 /// Stopwords dropped before term search. Without this the arm searches for "What"
 /// and "does" and ranks the whole corpus equally.
 const STOPWORDS: &[&str] = &[
-    "what", "which", "does", "did", "do", "is", "are", "the", "a", "an", "for", "of",
-    "on", "in", "to", "use", "apply", "governs", "that", "and", "or",
+    "what", "which", "does", "did", "do", "is", "are", "the", "a", "an", "for", "of", "on", "in",
+    "to", "use", "apply", "governs", "that", "and", "or",
 ];
 
 fn arm_b3(derived: &Derived, vault: &Vault, q: &Query) -> String {
@@ -255,7 +255,10 @@ fn arm_b3(derived: &Derived, vault: &Vault, q: &Query) -> String {
     let terms: Vec<String> = q
         .question
         .split_whitespace()
-        .map(|t| t.trim_matches(|c: char| !c.is_alphanumeric()).to_lowercase())
+        .map(|t| {
+            t.trim_matches(|c: char| !c.is_alphanumeric())
+                .to_lowercase()
+        })
         .filter(|t| t.len() > 2 && !STOPWORDS.contains(&t.as_str()))
         .collect();
 
@@ -276,7 +279,11 @@ fn arm_b3(derived: &Derived, vault: &Vault, q: &Query) -> String {
         let Ok(content) = fehrest::locator::read_verified(vault.root(), &c.rel_path, c.id) else {
             continue;
         };
-        let body = content.split("---\n").nth(2).unwrap_or(&content).to_string();
+        let body = content
+            .split("---\n")
+            .nth(2)
+            .unwrap_or(&content)
+            .to_string();
         let next = format!("--- {} ---\n{}\n", c.rel_path, body);
         if out.len() + next.len() > BUDGET_BYTES {
             break;
@@ -525,7 +532,9 @@ fn main() {
     ));
     let vault = Vault::create(&work).expect("bench vault");
     for (name, body) in &docs {
-        vault.add_object(name, Some(name), Some("core"), body).unwrap();
+        vault
+            .add_object(name, Some(name), Some("core"), body)
+            .unwrap();
     }
     let scan = vault.scan().unwrap();
     let derived = Derived::open(&vault.control_dir()).unwrap();
@@ -563,7 +572,10 @@ fn main() {
 
     // Per-query detail.
     println!("PER-QUERY ADEQUACY");
-    println!("{:<5} {:<14} {:>4} {:>4} {:>4} {:>4} {:>4}", "QRY", "CLASS", "B0", "B1", "B3", "B4", "B5");
+    println!(
+        "{:<5} {:<14} {:>4} {:>4} {:>4} {:>4} {:>4}",
+        "QRY", "CLASS", "B0", "B1", "B3", "B4", "B5"
+    );
     for q in &queries {
         print!("{:<5} {:<14}", q.id, q.class);
         for arm in arms {
@@ -575,9 +587,15 @@ fn main() {
 
     // Roll-up.
     println!("\nARM TOTALS");
-    println!("{:<5} {:>9} {:>12} {:>12}", "ARM", "ADEQUATE", "MISLEADING", "MEAN_BYTES");
+    println!(
+        "{:<5} {:>9} {:>12} {:>12}",
+        "ARM", "ADEQUATE", "MISLEADING", "MEAN_BYTES"
+    );
     for arm in arms {
-        let ss: Vec<Score> = queries.iter().map(|q| results[&(arm, q.id.clone())]).collect();
+        let ss: Vec<Score> = queries
+            .iter()
+            .map(|q| results[&(arm, q.id.clone())])
+            .collect();
         let adequate = ss.iter().filter(|s| s.adequate).count();
         let misleading = ss.iter().filter(|s| s.misleading).count();
         let mean_bytes = ss.iter().map(|s| s.bytes).sum::<usize>() / ss.len();

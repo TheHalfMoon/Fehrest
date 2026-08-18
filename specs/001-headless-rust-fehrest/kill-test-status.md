@@ -1,6 +1,29 @@
 # G3 Kill-Test Status — Phase T
 
 `STATUS_HONESTY: EXECUTION_EVIDENCE_ONLY`
+`AMENDED_BY:` [verification-r1.md §A3](./verification-r1.md)
+
+> **Amendment notice — Phase T-R1: K-12 has since executed and passed.**
+>
+> Everything below is the record **as observed on the Windows host during Phase T**,
+> and it is left standing unedited — including the statement that K-12's green line
+> was meaningless, which was true of that run and remains true of that run.
+>
+> K-12 has since been executed on a real POSIX filesystem: WSL2 Ubuntu, ext4, with
+> `FEHREST_REQUIRE_NATIVE_FS=1` armed so a skip would have panicked. It passed, and a
+> mutation of the assertion was used to prove the assertion itself was live rather
+> than vacuous. `K12_WSL_LINUX_EXECUTED_PASS`.
+>
+> | | Phase T | Phase T-R1 |
+> |---|---|---|
+> | K-12 | `PENDING_NATIVE_EXECUTION` everywhere | **`PASS`** on Linux/ext4; still `PENDING_CAPABILITY` on Windows |
+> | `EXECUTED_AND_PASSED` | 21 | **22** |
+> | Linux | `PENDING_LINUX_EXECUTION` | **98 tests executed** (K-13 is Windows-only) |
+> | macOS | `PENDING_MACOS_EXECUTION` | unchanged — nothing has run there |
+>
+> Windows symbolic-link capability is still absent (no Developer Mode, non-elevated),
+> and per the standing directive it was **not** enabled to make a test pass. K-13
+> remains a different attack that does not substitute for K-12.
 
 This file records what was **actually executed on this host**, not what the suite
 appears to report. It exists because `cargo test` has no "skipped" state: a test

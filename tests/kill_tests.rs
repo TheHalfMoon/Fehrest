@@ -219,8 +219,14 @@ fn k07_cross_project_contamination_blocked() {
     // Compiler path.
     let mut it = item("current_decisions", "a-secret", "project A secret");
     it.memory = Some(secret);
-    let pkg = context::compile(&req(Scope::project("v", "B"), limits::MAX_PACKAGE_BYTES), &[it]);
-    assert!(pkg.manifest.entries.is_empty(), "cross-project leak in compiler");
+    let pkg = context::compile(
+        &req(Scope::project("v", "B"), limits::MAX_PACKAGE_BYTES),
+        &[it],
+    );
+    assert!(
+        pkg.manifest.entries.is_empty(),
+        "cross-project leak in compiler"
+    );
     assert!(!pkg.wire.contains("secret"));
 }
 
@@ -513,9 +519,7 @@ fn k16_poisoned_derived_index_cannot_grant_authority() {
     assert!(matches!(err, Error::Containment(_)));
 
     // And the authoritative project comes from canonical state, not the index.
-    let project = d
-        .authoritative_project(&v, id, &hits[0].rel_path)
-        .unwrap();
+    let project = d.authoritative_project(&v, id, &hits[0].rel_path).unwrap();
     assert_eq!(project, None, "canonical frontmatter has no project");
 
     drop(v);
@@ -625,14 +629,20 @@ fn k20_budget_pressure_never_strips_security_metadata() {
     // Sweep budgets from far too small to generous. At EVERY size, an emitted
     // item must carry its complete envelope.
     for budget in [10usize, 50, 120, 200, 400, 800, 1600, 3200, 6400] {
-        let pkg = context::compile(&req(Scope::vault_global("v"), budget), std::slice::from_ref(&it));
+        let pkg = context::compile(
+            &req(Scope::vault_global("v"), budget),
+            std::slice::from_ref(&it),
+        );
         assert!(
             pkg.wire.len() <= budget,
             "budget {budget} exceeded: {}",
             pkg.wire.len()
         );
         if pkg.manifest.entries.is_empty() {
-            assert!(!pkg.manifest.omissions.is_empty(), "omission must be recorded");
+            assert!(
+                !pkg.manifest.omissions.is_empty(),
+                "omission must be recorded"
+            );
             assert!(
                 !pkg.wire.contains("IGNORE PRIOR"),
                 "content emitted without an item at budget {budget}"
