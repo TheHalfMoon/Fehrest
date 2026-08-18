@@ -219,7 +219,7 @@ Phase 7    Desktop application
 
 ### 9.1 New sources accepted into the registry
 
-**24 entries, in five groups.** Every one is `STUDY`, `BENCHMARK`, `DEFER`, or a candidate pending a gate.
+**24 new projects across 29 registry entries, in five groups** — the difference being restatements or promotions of sources already present (Tantivy, AFFiNE, Yrs/Yjs, Automerge, JSON Canvas). Every one is `STUDY`, `BENCHMARK`, `DEFER`, or a candidate pending a gate.
 
 | Group | Sources | Gap closed |
 |---|---|---|
@@ -243,7 +243,7 @@ Phase 7    Desktop application
 
 ### 9.5 Pins still pending
 
-**All 17 pinnable entries in registry §14 are `PIN_PENDING_EXTERNAL_VERIFICATION`.** No live upstream verification was performed for them in this session, and **no commit hash was guessed** — a fabricated pin passes a reviewer's eye and fails at the moment it matters. None may transition to `ADAPT` or `USE` before pinning.
+**Every entry in registry §14 is `PIN_PENDING_EXTERNAL_VERIFICATION`** — 29 entries covering 24 new projects. No live upstream verification was performed for them in this session, and **no commit hash was guessed** — a fabricated pin passes a reviewer's eye and fails at the moment it matters. None may transition to `ADAPT` or `USE` before pinning.
 
 Also unpinned by design: **SRC-100 (Spark)** — concepts read from published design documentation, so a pin would imply a code relationship that does not exist. Still needing a pin before use: **SRC-101 (Karpathy LLM Wiki)** before the baseline harness, and **SRC-102/103 (Spec Kit, Ponytail)** at Phase 0.
 

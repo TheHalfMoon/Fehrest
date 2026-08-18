@@ -240,7 +240,7 @@ I confirm that:
 - **Spec Kit was not initialized and Ponytail was not installed.** Both are recorded as decisions and stood up at Phase 0.
 - **No Graphify sidecar was built.** No Graphify port was performed.
 - **No Spark, JVM, or any part of a Spark runtime entered v1.** Concepts only ([SRC-100](research/FEHREST_SOURCE_REGISTRY.md#414-apache-spark--study--defer)).
-- **The final donor-discovery round adopted no runtime dependency.** 24 sources entered the registry as STUDY, BENCHMARK, DEFER or gate-pending; **17 are `PIN_PENDING_EXTERNAL_VERIFICATION` and no commit hash was guessed** ([R2 §9](reviews/F1-R2-RECONCILIATION.md#9-final-donor-discovery-reconciliation)).
+- **The final donor-discovery round adopted no runtime dependency.** 24 new projects entered the registry as STUDY, BENCHMARK, DEFER or gate-pending; **every §14 entry is `PIN_PENDING_EXTERNAL_VERIFICATION` and no commit hash was guessed** ([R2 §9](reviews/F1-R2-RECONCILIATION.md#9-final-donor-discovery-reconciliation)).
 - **Broad donor discovery is now FROZEN.** New sources enter only through a documented gap trigger ([registry §14.9](research/FEHREST_SOURCE_REGISTRY.md#149-research-freeze--now-binding)).
 - **No Yjs, vectors, DuckDB, TimesFM, UI or cloud infrastructure was added.**
 - **Nothing was merged. Nothing was pushed.** The local `origin` was set to the canonical repository so that any future push targets the right remote and can never default to `wepld/Fehrest`; no push occurred.
