@@ -9,7 +9,7 @@
 //! principled rules ran out. That rung does not exist here, and
 //! `test_confidence_cannot_change_outcome` asserts its absence behaviourally.
 
-use crate::memory::{Basis, Lifecycle, Memory, Scope, Verification};
+use crate::memory::{Basis, Lifecycle, Memory, Resolution, Scope, Verification};
 use crate::{Error, Result};
 use std::collections::{HashMap, HashSet};
 
@@ -52,6 +52,39 @@ fn basis_rank(b: Basis) -> u8 {
     }
 }
 
+/// Is this memory admissible as an answer **at `as_of_valid`**?
+///
+/// Deliberately NOT `Memory::is_authoritative`, which answers a different
+/// question: *is this in force now*. Historical resolution needs *was this in
+/// force then*, and collapsing the two makes AS-2 structurally unanswerable --
+/// every superseded record would be invisible at every point in time, including
+/// the interval it actually governed.
+///
+/// The rule that keeps K-10 intact while making history reachable:
+///
+/// | lifecycle | admissible |
+/// |---|---|
+/// | `Active` | yes, subject to the valid-time window |
+/// | `Pending` | never -- not authoritative at any point in valid time |
+/// | `Retracted` | never -- a retraction says the claim was never true, which is exactly what separates it from `Superseded` |
+/// | `Superseded` / `Expired` | **only if `valid_until` is recorded.** That field says *when* it stopped being in force, and the window below then admits it for the interval it governed. Without it we do not know when it stopped, and inventing an interval would be a fabrication -- so it is excluded everywhere |
+fn admissible_at(m: &Memory, as_of_valid: i64) -> bool {
+    if m.resolution == Resolution::Unresolved {
+        return false;
+    }
+    let lifecycle_permits = match m.lifecycle {
+        Lifecycle::Active => true,
+        Lifecycle::Pending | Lifecycle::Retracted => false,
+        Lifecycle::Superseded | Lifecycle::Expired => m.valid_until.is_some(),
+    };
+    // Valid-time window, half-open: `[valid_from, valid_until)`. Keeping it here
+    // rather than at the call site means there is exactly one place where a record
+    // can be admitted, so a future rung cannot quietly bypass it.
+    lifecycle_permits
+        && m.valid_from <= as_of_valid
+        && m.valid_until.is_none_or(|u| u > as_of_valid)
+}
+
 /// Resolve state for a subject/predicate within a scope, at a point in valid time.
 ///
 /// `as_of_valid` selects historical vs current truth. `as_of_recorded` bounds what
@@ -71,12 +104,11 @@ pub fn resolve(
         .filter(|m| m.subject.as_deref() == Some(subject))
         .filter(|m| m.predicate.as_deref() == Some(predicate))
         .filter(|m| m.scope.matches(request_scope))
-        // PENDING and UNRESOLVED are excluded here. This is the single
-        // enforcement point for R-12 on the resolver path.
-        .filter(|m| m.is_authoritative())
+        // PENDING, RETRACTED and UNRESOLVED are excluded here, and SUPERSEDED /
+        // EXPIRED are admitted only for the interval they actually governed. This
+        // is the single enforcement point for R-12 on the resolver path.
+        .filter(|m| admissible_at(m, as_of_valid))
         .filter(|m| m.recorded_seq <= as_of_recorded)
-        .filter(|m| m.valid_from <= as_of_valid)
-        .filter(|m| m.valid_until.is_none_or(|u| u > as_of_valid))
         .collect();
 
     if candidates.is_empty() {
@@ -474,5 +506,70 @@ mod tests {
         let new = m("new", 2, 0, Basis::UserAsserted, s.clone());
         let ms = map(vec![old, new]);
         assert!(validate_supersession(&ms, "new", "old").is_ok());
+    }
+
+    #[test]
+    fn superseded_without_valid_until_is_excluded_at_every_point_in_time() {
+        // The conservative half of `admissible_at`. We know it stopped being in
+        // force; we do NOT know when. Placing it anywhere on the timeline would be
+        // inventing an interval, so it is admissible nowhere -- which is also what
+        // keeps K-10 true.
+        let mut mm = m("m", 1, 1, Basis::UserAsserted, Scope::vault_global("v"));
+        mm.lifecycle = Lifecycle::Superseded;
+        assert!(mm.valid_until.is_none());
+        for as_of in [0i64, 1, 5, 100, i64::MAX] {
+            assert!(
+                matches!(
+                    resolve(std::slice::from_ref(&mm), "project", "framework", &Scope::vault_global("v"), as_of, u64::MAX),
+                    ResolveOutcome::NoAnswer
+                ),
+                "superseded-without-valid_until must not answer at {as_of}"
+            );
+        }
+    }
+
+    #[test]
+    fn superseded_with_valid_until_answers_for_the_interval_it_governed() {
+        // The other half. `valid_until` records when it stopped, so history is
+        // reachable -- and the present is still correctly refused.
+        let mut mm = m("m", 1, 10, Basis::UserAsserted, Scope::vault_global("v"));
+        mm.lifecycle = Lifecycle::Superseded;
+        mm.valid_until = Some(20);
+
+        for inside in [10i64, 15, 19] {
+            match resolve(std::slice::from_ref(&mm), "project", "framework", &Scope::vault_global("v"), inside, u64::MAX) {
+                ResolveOutcome::Answer(w) => assert_eq!(w.id.0, "m"),
+                o => panic!("day {inside} is inside [10, 20), got {o:?}"),
+            }
+        }
+        // Half-open: the closing bound is NOT included.
+        for outside in [9i64, 20, 21, i64::MAX] {
+            assert!(
+                matches!(
+                    resolve(std::slice::from_ref(&mm), "project", "framework", &Scope::vault_global("v"), outside, u64::MAX),
+                    ResolveOutcome::NoAnswer
+                ),
+                "day {outside} is outside [10, 20)"
+            );
+        }
+    }
+
+    #[test]
+    fn retracted_is_never_admissible_even_with_a_valid_interval() {
+        // This is what separates RETRACTED from SUPERSEDED. A supersession says
+        // "true then, not now". A retraction says "never true" -- so no valid-time
+        // window can resurrect it, and giving it one must change nothing.
+        let mut mm = m("m", 1, 10, Basis::UserAsserted, Scope::vault_global("v"));
+        mm.lifecycle = Lifecycle::Retracted;
+        mm.valid_until = Some(20);
+        for as_of in [9i64, 10, 15, 19, 20, i64::MAX] {
+            assert!(
+                matches!(
+                    resolve(std::slice::from_ref(&mm), "project", "framework", &Scope::vault_global("v"), as_of, u64::MAX),
+                    ResolveOutcome::NoAnswer
+                ),
+                "retracted must not answer at {as_of}"
+            );
+        }
     }
 }

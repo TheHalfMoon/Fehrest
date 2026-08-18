@@ -20,7 +20,7 @@ use fehrest::vault::Vault;
 use fehrest::{limits, Error};
 use std::collections::HashMap;
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 fn tmp(tag: &str) -> PathBuf {
     let d = std::env::temp_dir().join(format!("fehrest-k-{tag}-{}", uuid_like()));
@@ -46,7 +46,7 @@ fn uuid_like() -> String {
     ObjectId::generate().to_string()
 }
 
-fn write_obj(root: &PathBuf, rel: &str, id: ObjectId, body: &str) {
+fn write_obj(root: &Path, rel: &str, id: ObjectId, body: &str) {
     let p = root.join(rel);
     if let Some(parent) = p.parent() {
         fs::create_dir_all(parent).unwrap();
@@ -625,7 +625,7 @@ fn k20_budget_pressure_never_strips_security_metadata() {
     // Sweep budgets from far too small to generous. At EVERY size, an emitted
     // item must carry its complete envelope.
     for budget in [10usize, 50, 120, 200, 400, 800, 1600, 3200, 6400] {
-        let pkg = context::compile(&req(Scope::vault_global("v"), budget), &[it.clone()]);
+        let pkg = context::compile(&req(Scope::vault_global("v"), budget), std::slice::from_ref(&it));
         assert!(
             pkg.wire.len() <= budget,
             "budget {budget} exceeded: {}",
