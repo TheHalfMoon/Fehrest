@@ -1,0 +1,122 @@
+//! # Fehrest — Phase T headless thesis-proof
+//!
+//! **This is an experiment, not a product.** Its purpose is to test whether a fresh
+//! agent continues long-running work more correctly with a small local Fehrest Core
+//! than with strong simpler baselines. A negative result is a successful experiment.
+//!
+//! Any persistence format here is `EXPERIMENTAL_PHASE_T_FORMAT` /
+//! `NOT_PRODUCT_FORMAT_FREEZE`.
+//!
+//! ## What is deliberately absent
+//!
+//! No graph, vectors, embeddings, CRDT, sync, MCP, Cedar, UI, automatic memory
+//! promotion, or network code path. Each is either hypothesis-gated or unauthorized
+//! ([ARCHITECTURE_FREEZE §9](../docs/canonical/ARCHITECTURE_FREEZE.md), Phase T
+//! authorization boundary).
+
+pub mod cli;
+pub mod context;
+pub mod derived;
+pub mod envelope;
+pub mod events;
+pub mod identity;
+pub mod locator;
+pub mod memory;
+pub mod temporal;
+pub mod vault;
+
+/// Local resource-safety bounds (F-CORE-15).
+///
+/// **These are technical safety limits, not product quotas.** There is deliberately
+/// no daily limit, no tier, no trial exhaustion, and no vendor-controlled
+/// availability concept anywhere in this codebase — a grep for those concepts is
+/// part of the checklist (CL-55).
+///
+/// Values are Phase T fixtures sized for the experiment, not measured budgets.
+/// Real values come from B-0, which has not run.
+pub mod limits {
+    /// Largest canonical object admitted.
+    pub const MAX_OBJECT_BYTES: usize = 1 << 20; // 1 MiB
+    /// Largest single memory statement.
+    pub const MAX_STATEMENT_BYTES: usize = 8 << 10; // 8 KiB
+    /// Largest event detail payload.
+    pub const MAX_EVENT_BYTES: usize = 16 << 10; // 16 KiB
+    /// Largest compiled context package.
+    pub const MAX_PACKAGE_BYTES: usize = 256 << 10; // 256 KiB
+    /// Largest accepted search query.
+    pub const MAX_QUERY_BYTES: usize = 1 << 10; // 1 KiB
+    /// Largest number of candidates returned from lexical search.
+    pub const MAX_SEARCH_RESULTS: usize = 200;
+}
+
+#[derive(Debug)]
+pub enum Error {
+    Vault(String),
+    /// Filesystem containment refused a locator. Distinct from `IdentityMismatch`
+    /// on purpose: they defend disjoint failures (E §12.1) and collapsing them
+    /// would hide which guarantee actually fired.
+    Containment(String),
+    /// Post-open verification found the opened content is a different object.
+    IdentityMismatch {
+        expected: String,
+        actual: String,
+    },
+    NoFrontmatter,
+    MissingId,
+    InvalidId(String),
+    Derived(String),
+    Event(String),
+    Memory(String),
+    /// An invalid supersession edge. Never silently normalised (F §6.1).
+    InvalidSupersession(String),
+    /// Another process holds the canonical write lock (F-CORE-13).
+    WriterLocked {
+        holder: String,
+        path: String,
+    },
+    /// A local resource-safety bound was exceeded. Explicit, audited, and never a
+    /// silent discard of canonical state.
+    LimitExceeded {
+        what: &'static str,
+        limit: usize,
+        actual: usize,
+    },
+    Scope(String),
+}
+
+impl std::fmt::Display for Error {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Error::Vault(m) => write!(f, "vault error: {m}"),
+            Error::Containment(m) => write!(f, "containment refused: {m}"),
+            Error::IdentityMismatch { expected, actual } => write!(
+                f,
+                "identity mismatch: requested {expected}, opened content claims {actual}"
+            ),
+            Error::NoFrontmatter => write!(f, "no canonical frontmatter"),
+            Error::MissingId => write!(f, "frontmatter has no id"),
+            Error::InvalidId(s) => write!(f, "invalid object id: {s}"),
+            Error::Derived(m) => write!(f, "derived store error: {m}"),
+            Error::Event(m) => write!(f, "event log error: {m}"),
+            Error::Memory(m) => write!(f, "memory error: {m}"),
+            Error::InvalidSupersession(m) => write!(f, "invalid supersession: {m}"),
+            Error::WriterLocked { holder, path } => write!(
+                f,
+                "vault is locked by another writer ({holder}); lock file: {path}"
+            ),
+            Error::LimitExceeded {
+                what,
+                limit,
+                actual,
+            } => write!(
+                f,
+                "resource safety limit exceeded for {what}: {actual} > {limit}"
+            ),
+            Error::Scope(m) => write!(f, "scope error: {m}"),
+        }
+    }
+}
+
+impl std::error::Error for Error {}
+
+pub type Result<T> = std::result::Result<T, Error>;
