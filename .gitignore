@@ -1,0 +1,6 @@
+# Rust
+/target/
+**/*.rs.bk
+
+# Phase T scratch / benchmark output (not canonical)
+/bench/out/

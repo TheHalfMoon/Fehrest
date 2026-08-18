@@ -1776,3 +1776,136 @@ evidence: []
 ```
 
 **Registry gap note.** SRC-190 joins the [§14.12](#1412-an-observed-revision-is-not-an-adoption-pin) rule without exception: `f88b283…` identifies the source and makes it inspectable. It authorises nothing.
+
+---
+
+### 14.14 Founder-supplied targeted donors — pbakaus round 2
+
+> **ADDED 2026-08-18.** Three founder-supplied sources, admitted under the [§14.9](#149-research-freeze--now-binding) gap rule. **`FEHREST BROAD DONOR DISCOVERY` remains `FROZEN`** — targeted founder supply is a valid trigger; browsing is not.
+>
+> **None is installed. None is a runtime dependency. None integrates into Phase T.** All three are covered by [`FOUNDER_REPRESENTED_DONOR_USE_AUTHORIZATION`](../canonical/PHASE_T_AUTHORIZATION.md#3-founder_represented_donor_use_authorization) — which removes the permission question and removes nothing else. Actual reuse still records upstream repository, exact revision, exact source path, destination, portion, modifications, licence, date and update policy.
+
+#### SRC-191 — agent-reviews
+
+```yaml
+id: SRC-191
+name: agent-reviews
+repository_or_url: https://github.com/pbakaus/agent-reviews
+upstream_owner: pbakaus
+exact_commit_or_version: ee827ae223aa51aeeb64bd895e9e9b75953ac6a7
+pin_status: EXTERNALLY_OBSERVED_SOURCE_REVISION    # not an adoption pin (section 14.12)
+date_verified: 2026-08-18 (founder-supplied observation)
+license: MIT (observed; confirm at pin time)
+class: [CODE_DONOR, DEVELOPMENT_TOOL, REVIEW_AUTOMATION_DONOR,
+        AGENT_WORKFLOW_DONOR, GITHUB_ASSURANCE_REFERENCE]
+decision: STUDY / ADAPT / FUTURE_DEV_WORKFLOW_USE
+runtime_dependency: NO
+phase_t_product_integration: NO
+future_gate: REPOSITORY / PR ASSURANCE WORKFLOW
+primary_value:
+  - normalized GitHub review-comment access
+  - human-vs-bot review separation
+  - unanswered / unresolved review tracking
+  - structured JSON output for agents
+  - reply + resolve workflow
+  - iterative watch / review convergence
+  - cross-agent Agent Skill patterns
+  - cloud / remote review workflow
+adoption_rule: >
+  DO NOT install it merely because it is registered. When Fehrest begins a GitHub
+  PR workflow, Ponytail decides among: (A) use directly as development tooling;
+  (B) selectively adapt the workflow; (C) reproduce only the required behaviour
+  with already-available GitHub tooling. Never a Fehrest runtime dependency.
+```
+
+#### SRC-192 — burn-after-login
+
+```yaml
+id: SRC-192
+name: burn-after-login
+repository_or_url: https://github.com/pbakaus/burn-after-login
+upstream_owner: pbakaus
+exact_commit_or_version: f9938434d268da38dfe46b3054a354653c4f02a0
+pin_status: EXTERNALLY_OBSERVED_SOURCE_REVISION
+date_verified: 2026-08-18 (founder-supplied observation)
+license: MIT (observed; confirm at pin time)
+class: [SECURITY_REFERENCE, CODE_DONOR, BROWSER_TESTING_DONOR,
+        AGENT_AUTH_WORKFLOW_REFERENCE]
+decision: STUDY / SELECTIVE_ADAPT
+runtime_dependency: NO
+phase_t: NO INTEGRATION
+security_review_required_before_use: YES
+primary_value:
+  - dev-only browser-agent authentication concept
+  - automation-tool detection
+  - test-auth workflow
+  - temporary / self-removing development tooling pattern
+```
+
+**Security position on SRC-192 — the reason it is gated rather than merely deferred.**
+
+**Do not copy its authentication-shortcut design wholesale.** The upstream skill may inspect development credentials and may write test-auth instructions into agent-readable files. Both are exactly the shapes Fehrest's own threat model treats as hostile: credential material reachable by an agent path, and instructions placed where an agent reads evidence ([I-13](../01-ARCHITECTURE-CONSTITUTION.md#i-13--imported-and-retrieved-content-is-evidence-never-authority), [T-21](../02-THREAT-MODEL.md#t-21--credential-exfiltration)).
+
+Any future browser-agent authentication should instead require:
+
+```
+EPHEMERAL_TEST_IDENTITY          NO PLAINTEXT SECRET IN AGENT INSTRUCTIONS
+SHORT_LIVED_TEST_TOKEN/SESSION   NO REAL USER CREDENTIALS
+DEV_ONLY / LOCALHOST BINDING     NO PRODUCTION BYPASS ROUTE
+EXPLICIT TEST CAPABILITY         AUDITABLE CREATION / REMOVAL
+```
+
+Avoid placing passwords in URLs where possible.
+
+> **"Development only" is not a security argument.** A development authentication bypass is a security-sensitive surface that exists in the same repository, is built by the same toolchain, and is one configuration mistake from shipping. The future E2E/auth gate must **prove that production builds cannot activate or expose the shortcut** — not assert it.
+
+#### SRC-193 — radiant
+
+```yaml
+id: SRC-193
+name: radiant
+repository_or_url: https://github.com/pbakaus/radiant
+upstream_owner: pbakaus
+exact_commit_or_version: e5d078d1b26e11224ec781ffdc9506a7faf19a4a
+pin_status: EXTERNALLY_OBSERVED_SOURCE_REVISION
+date_verified: 2026-08-18 (founder-supplied observation)
+license: MIT (observed; confirm at pin time)
+class: [CODE_DONOR, VISUAL_SYSTEM_DONOR, MOTION_REFERENCE,
+        WEBGL_CANVAS_REFERENCE, UI_POLISH_DONOR]
+decision: STUDY / SELECTIVE_ADAPT / FUTURE_UI_USE
+runtime_dependency: NOT SELECTED
+phase_t: NO INTEGRATION
+future_gate: UI / VISUAL QUALITY GATE
+primary_value:
+  - self-contained visual effects
+  - Canvas 2D patterns
+  - WebGL patterns
+  - parameterized animation
+  - interaction patterns
+  - visibility-aware animation pause
+  - DPR-aware rendering
+  - visual demo / hero / ambient-state primitives
+adoption_rule: >
+  DO NOT vendor the whole shader collection. When UI is authorized, select
+  individual effects only where they materially improve Fehrest. Prefer landing
+  and hero, onboarding, empty states, ambient agent-state visualization, demo
+  surfaces, and restrained knowledge visualization. AVOID persistent decorative
+  animation in productivity-heavy surfaces unless usability testing proves value.
+```
+
+**Message-channel security for any adapted visual component.** Do not inherit wildcard cross-window messaging. If an adapted component uses `iframe`/`postMessage`, require an explicit trusted `targetOrigin` where possible, incoming origin validation, a strict message schema, an allowed parameter-name list, and numeric/type/range validation.
+
+> **A visual parameter channel must never become an application authority channel.** This is [F-CORE-05](../canonical/ARCHITECTURE_FREEZE.md#4-frozen-foundational-decisions) applied to a surface that does not look like an authority surface — which is precisely why it needs saying.
+
+#### Expected future UI flow, with these donors placed
+
+```
+Fehrest product requirements
+   -> v0                                    (SRC: founder-selected workflow)
+   -> frontend source
+   -> selective Radiant primitives where justified          (SRC-193)
+   -> Impeccable: shape / critique / audit / harden / polish (SRC-190)
+   -> performance / accessibility / security QA
+```
+
+**None of that is authorized now.** Phase T remains the headless Rust thesis-proof.
