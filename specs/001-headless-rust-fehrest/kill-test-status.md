@@ -45,7 +45,7 @@ the filesystem kill tests executed:
 FEHREST_REQUIRE_NATIVE_FS=1 cargo test --test kill_tests
 ```
 
-On this host that run reports **`21 passed; 1 failed`** — `k12_symlink_escape_fails`
+On this host that run reports **`22 passed; 1 failed`** — `k12_symlink_escape_fails`
 fails with `PENDING_NATIVE_EXECUTION`, which is the honest result. On a host with
 symlink capability the same command must report all tests passing; until that run
 happens, K-12 has no execution evidence on any platform.
