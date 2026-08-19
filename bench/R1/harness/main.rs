@@ -966,6 +966,151 @@ struct Built {
     packages: BTreeMap<(String, usize, &'static str), String>,
 }
 
+/// Write already-constructed arm packages without changing their bytes.
+///
+/// This is execution plumbing only: package construction remains exclusively in
+/// `build_all` and `arm_b0`..`arm_b5`. The exporter never parses, normalizes,
+/// truncates, ranks, or otherwise transforms a package after construction.
+fn write_built_packages<F>(
+    built: &Built,
+    out: &Path,
+    trajectory: &str,
+    include: F,
+) -> Vec<(String, String)>
+where
+    F: Fn(&str) -> bool,
+{
+    let mut manifest = Vec::new();
+    for ((sid, t, arm), ctx) in &built.packages {
+        if !include(arm) {
+            continue;
+        }
+        let dir = out.join(trajectory).join(arm).join(sid);
+        fs::create_dir_all(&dir).expect("package export dir");
+        let path = dir.join(format!("t{t:02}.txt"));
+        fs::write(&path, ctx.as_bytes()).expect("write exported package");
+        let rel = path
+            .strip_prefix(out)
+            .expect("export path under root")
+            .to_string_lossy()
+            .replace('\\', "/");
+        manifest.push((rel, hash_bytes(ctx.as_bytes())));
+    }
+    manifest
+}
+
+/// Export the exact package bytes constructed by the native R1 harness.
+///
+/// Layout matches the external runner contract:
+/// `<out>/<TRAJECTORY>/<ARM>/<SCENARIO>/t<NN>.txt`. Unmaintained arms are
+/// exported once under T0. Maintained arms are exported separately from the T1
+/// and T2 maintenance-state roots. Missing maintenance files mean "state left
+/// unchanged", exactly as MAINTENANCE.md §7 specifies.
+fn emit_packages(root: &Path, state_root: &Path, out: &Path) -> i32 {
+    let scenarios = load_scenarios(&root.join("scenarios"));
+    let (_contract, tasks) = load_tasks(&root.join("tasks").join("tasks.json"));
+
+    let _ = fs::remove_dir_all(out);
+    fs::create_dir_all(out).expect("package export root");
+
+    let mut manifest: Vec<(String, String)> = Vec::new();
+
+    // B0 and B3 are maintenance-independent. Build once and expose under T0.
+    let unmaintained = build_all(&scenarios, &tasks, false, &state_root.join("T0"));
+    manifest.extend(write_built_packages(&unmaintained, out, "T0", |arm| {
+        matches!(arm, "B0" | "B3")
+    }));
+
+    // Maintained arms are trajectory-specific. The same native fold + arm builder
+    // is invoked for both trajectories; no construction logic exists in the runner.
+    for trajectory in ["T1", "T2"] {
+        let built = build_all(&scenarios, &tasks, false, &state_root.join(trajectory));
+        manifest.extend(write_built_packages(&built, out, trajectory, |arm| {
+            matches!(arm, "B1" | "B4" | "B5")
+        }));
+    }
+
+    manifest.sort_by(|a, b| a.0.cmp(&b.0));
+    let mut text = String::from("# R1 native package export manifest v1\n");
+    text.push_str("# sha256  relative_path\n");
+    for (rel, digest) in &manifest {
+        text.push_str(&format!("{digest}  {rel}\n"));
+    }
+    fs::write(out.join("PACKAGE-MANIFEST.txt"), text.as_bytes()).expect("write package manifest");
+
+    println!("NATIVE_PACKAGE_EXPORT_STATUS=PASS");
+    println!("PACKAGE_COUNT={}", manifest.len());
+    println!("PACKAGE_MANIFEST_SHA256={}", hash_bytes(text.as_bytes()));
+    0
+}
+
+fn parse_arm(id: &str) -> Option<Arm> {
+    match id {
+        "B0" => Some(Arm::B0),
+        "B1" => Some(Arm::B1),
+        "B3" => Some(Arm::B3),
+        "B4" => Some(Arm::B4),
+        "B5" => Some(Arm::B5),
+        _ => None,
+    }
+}
+
+/// Render the current maintained artefact using the same native fold consumed by
+/// package construction. This keeps the external runner from reimplementing B5
+/// memory lifecycle/supersession semantics merely to prepare the next maintainer
+/// prompt.
+fn maintained_view(
+    root: &Path,
+    state_dir: &Path,
+    arm_id: &str,
+    scenario_id: &str,
+    t: usize,
+) -> i32 {
+    let Some(arm) = parse_arm(arm_id) else {
+        eprintln!("maintenance-view requires one of B1, B4, B5");
+        return 2;
+    };
+    if !arm.maintained() {
+        eprintln!("maintenance-view requires a maintained arm");
+        return 2;
+    }
+    let scenarios = load_scenarios(&root.join("scenarios"));
+    let Some(scn) = scenarios.iter().find(|s| s.id == scenario_id) else {
+        eprintln!("unknown scenario: {scenario_id}");
+        return 2;
+    };
+    let m = fold_maintenance(state_dir, arm, scn, t);
+    match arm {
+        Arm::B1 => {
+            for (path, body) in &m.files {
+                println!("--- {path} ---");
+                println!("{body}");
+            }
+        }
+        Arm::B4 => print!("{}", m.wiki),
+        Arm::B5 => {
+            for rec in &m.memories {
+                println!(
+                    concat!(
+                        "id={} | type={:?} | lifecycle={:?} | resolution={:?} | ",
+                        "valid_from={} | valid_until={:?} | supersedes={:?}\n{}\n"
+                    ),
+                    rec.id.0,
+                    rec.memory_type,
+                    rec.lifecycle,
+                    rec.resolution,
+                    rec.valid_from,
+                    rec.valid_until,
+                    rec.supersedes,
+                    rec.statement
+                );
+            }
+        }
+        _ => unreachable!(),
+    }
+    0
+}
+
 fn build_all(scenarios: &[Scenario], tasks: &[Task], plumbing: bool, state_dir: &Path) -> Built {
     let mut packages = BTreeMap::new();
     let work = std::env::temp_dir().join(format!(
@@ -1214,6 +1359,44 @@ fn selftest(root: &Path) -> i32 {
             "arm produced no context at all",
         );
     }
+
+    c.family("[4A] NATIVE PACKAGE EXPORT BYTE IDENTITY");
+    let export_a = std::env::temp_dir().join(format!(
+        "fehrest-r1-export-a-{}",
+        fehrest::identity::ObjectId::generate()
+    ));
+    let export_b = std::env::temp_dir().join(format!(
+        "fehrest-r1-export-b-{}",
+        fehrest::identity::ObjectId::generate()
+    ));
+    let ma = write_built_packages(&built, &export_a, "T0", |_| true);
+    let mb = write_built_packages(&built, &export_b, "T0", |_| true);
+    c.check(
+        "native export manifest is deterministic",
+        ma == mb,
+        "two exports of the same Built package map differed",
+    );
+    for ((sid, t, arm), ctx) in &built.packages {
+        let pa = export_a
+            .join("T0")
+            .join(arm)
+            .join(sid)
+            .join(format!("t{t:02}.txt"));
+        let pb = export_b
+            .join("T0")
+            .join(arm)
+            .join(sid)
+            .join(format!("t{t:02}.txt"));
+        let a = fs::read(&pa).unwrap_or_default();
+        let b = fs::read(&pb).unwrap_or_default();
+        c.check(
+            &format!("{sid} t{t} {arm} export bytes equal canonical in-memory package"),
+            a == ctx.as_bytes() && b == ctx.as_bytes(),
+            "export changed package bytes",
+        );
+    }
+    let _ = fs::remove_dir_all(&export_a);
+    let _ = fs::remove_dir_all(&export_b);
 
     c.family("[5] BASELINE METADATA ISOLATION");
     for ((sid, t, arm), ctx) in &built.packages {
@@ -1529,26 +1712,80 @@ fn walk(dir: &Path) -> Vec<PathBuf> {
     out
 }
 
+fn response_identity(path: &Path) -> Option<(String, String, Option<usize>)> {
+    let stem = path.file_stem()?.to_str()?;
+    if let Some(repeat) = stem.strip_prefix('r').and_then(|n| n.parse::<usize>().ok()) {
+        let task_id = path.parent()?.file_name()?.to_str()?.to_string();
+        let arm = path.parent()?.parent()?.file_name()?.to_str()?.to_string();
+        Some((arm, task_id, Some(repeat)))
+    } else {
+        let arm = path.parent()?.file_name()?.to_str()?.to_string();
+        Some((arm, stem.to_string(), None))
+    }
+}
+
+fn score_jsonl(root: &Path, responses: &Path, out: &Path) -> i32 {
+    let (_c, tasks) = load_tasks(&root.join("tasks").join("tasks.json"));
+    let oracles = load_oracles(&root.join("oracles").join("oracles.json"));
+    let mut paths = walk(responses);
+    paths.sort();
+    let mut lines = String::new();
+    for p in paths {
+        let Some((arm, task_id, repeat_index)) = response_identity(&p) else {
+            continue;
+        };
+        let Some(task) = tasks.iter().find(|t| t.task_id == task_id) else {
+            continue;
+        };
+        let Some(oracle) = oracles.get(&task_id) else {
+            continue;
+        };
+        let text = fs::read_to_string(&p).unwrap_or_default();
+        let score = score_one(task, oracle, &text);
+        let record = serde_json::json!({
+            "arm_id": arm,
+            "task_id": task_id,
+            "repeat_index": repeat_index,
+            "class": score.class,
+            "kind": score.kind,
+            "primary": score.primary,
+            "forbid_hit": score.forbid_hit,
+            "require_missing": score.require_missing,
+            "substantive": score.substantive,
+            "abstained": score.abstained,
+            "false_abstention": score.false_abstention,
+            "conflict_flagged": score.conflict_flagged,
+            "provenance_given": score.provenance_given,
+            "response_sha256": hash_bytes(text.as_bytes()),
+        });
+        lines.push_str(&serde_json::to_string(&record).expect("score record serializes"));
+        lines.push('\n');
+    }
+    if lines.is_empty() {
+        eprintln!("no scorable responses found under {}", responses.display());
+        return 1;
+    }
+    fs::write(out, lines.as_bytes()).expect("write score jsonl");
+    println!("R1_SCORE_JSONL={}", out.display());
+    println!("R1_SCORE_JSONL_SHA256={}", hash_bytes(lines.as_bytes()));
+    0
+}
+
 fn score_dir(root: &Path, responses: &Path) -> i32 {
     let (_c, tasks) = load_tasks(&root.join("tasks").join("tasks.json"));
     let oracles = load_oracles(&root.join("oracles").join("oracles.json"));
 
     let mut per_arm: BTreeMap<String, Vec<TaskScore>> = BTreeMap::new();
-    for p in walk(responses) {
-        // <arm>/<task_id>.txt
-        let Some(task_id) = p.file_stem().and_then(|s| s.to_str()) else {
+    let mut response_paths = walk(responses);
+    response_paths.sort();
+    for p in response_paths {
+        let Some((arm, task_id, _repeat_index)) = response_identity(&p) else {
             continue;
         };
-        let arm = p
-            .parent()
-            .and_then(|d| d.file_name())
-            .and_then(|s| s.to_str())
-            .unwrap_or("UNKNOWN")
-            .to_string();
         let Some(task) = tasks.iter().find(|t| t.task_id == task_id) else {
             continue;
         };
-        let Some(oracle) = oracles.get(task_id) else {
+        let Some(oracle) = oracles.get(&task_id) else {
             continue;
         };
         let text = fs::read_to_string(&p).unwrap_or_default();
@@ -1646,6 +1883,53 @@ fn main() {
                 .unwrap_or_else(|| root.join("bundle"));
             emit_bundle(&root, &out)
         }
+        "export-packages" => {
+            let Some(state_root) = argv.get(1).map(PathBuf::from) else {
+                eprintln!("USAGE: fehrest-r1 export-packages <state-root> <out-dir>");
+                std::process::exit(2);
+            };
+            let Some(out) = argv.get(2).map(PathBuf::from) else {
+                eprintln!("USAGE: fehrest-r1 export-packages <state-root> <out-dir>");
+                std::process::exit(2);
+            };
+            emit_packages(&root, &state_root, &out)
+        }
+        "maintenance-view" => {
+            let Some(state_dir) = argv.get(1).map(PathBuf::from) else {
+                eprintln!(
+                    "USAGE: fehrest-r1 maintenance-view <state-dir> <arm> <scenario> <checkpoint>"
+                );
+                std::process::exit(2);
+            };
+            let Some(arm) = argv.get(2) else {
+                eprintln!(
+                    "USAGE: fehrest-r1 maintenance-view <state-dir> <arm> <scenario> <checkpoint>"
+                );
+                std::process::exit(2);
+            };
+            let Some(scenario) = argv.get(3) else {
+                eprintln!(
+                    "USAGE: fehrest-r1 maintenance-view <state-dir> <arm> <scenario> <checkpoint>"
+                );
+                std::process::exit(2);
+            };
+            let Some(checkpoint) = argv.get(4).and_then(|s| s.parse::<usize>().ok()) else {
+                eprintln!("checkpoint must be an integer");
+                std::process::exit(2);
+            };
+            maintained_view(&root, &state_dir, arm, scenario, checkpoint)
+        }
+        "score-jsonl" => {
+            let dir = argv
+                .get(1)
+                .map(PathBuf::from)
+                .unwrap_or_else(|| root.join("responses"));
+            let out = argv
+                .get(2)
+                .map(PathBuf::from)
+                .unwrap_or_else(|| root.join("score-records.jsonl"));
+            score_jsonl(&root, &dir, &out)
+        }
         "score" => {
             let dir = argv
                 .get(1)
@@ -1654,7 +1938,14 @@ fn main() {
             score_dir(&root, &dir)
         }
         other => {
-            eprintln!("unknown command: {other}\n\nUSAGE:\n  fehrest-r1 selftest\n  fehrest-r1 bundle [dir]\n  fehrest-r1 score <responses-dir>");
+            eprintln!("unknown command: {other}\n");
+            eprintln!("USAGE:");
+            eprintln!("  fehrest-r1 selftest");
+            eprintln!("  fehrest-r1 bundle [dir]");
+            eprintln!("  fehrest-r1 export-packages <state-root> <out-dir>");
+            eprintln!("  fehrest-r1 maintenance-view <state-dir> <arm> <scenario> <checkpoint>");
+            eprintln!("  fehrest-r1 score-jsonl <responses-dir> <out-file>");
+            eprintln!("  fehrest-r1 score <responses-dir>");
             2
         }
     };

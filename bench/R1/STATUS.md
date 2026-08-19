@@ -6,18 +6,36 @@ R1_CORPUS_STATUS:              COMPLETE -- 3 scenarios, 28 checkpoints, 36 evide
 R1_MAINTENANCE_PROTOCOL_STATUS: COMPLETE -- specified, not yet executed
 R1_SCORING_STATUS:             IMPLEMENTED AND VALIDATED
 R1_BLINDING_STATUS:            SPECIFIED -- enforced at execution time
-R1_PREREGISTRATION_STATUS:     v1 SEALED -- unchanged at gate X0, digest reverified
-R1_VARIANCE_PILOT_PROTOCOL:    SEALED
+R1_PREREGISTRATION_STATUS:     v1 SEALED; v1.1 PRE-OUTCOME AMENDMENT -- LOCAL COMMIT IS RUST-GATE-CONDITIONED
+R1_VARIANCE_PILOT_PROTOCOL:    SEALED -- scientific design unchanged by v1.1
 R1_RUNNER_REQUIREMENTS:        SPECIFIED
-R1_INSTRUMENT_PILOT_STATUS:    PASS -- 631 checks, 0 failed
-R1_MODEL_RUNNER:               NONE_AVAILABLE
+R1_INSTRUMENT_PILOT_STATUS:    X0 PASS 631/0; v1.1 extends selftest with native-export byte identity
+R1_MODEL_RUNNER:               v1.1 CONTROLLED RUNNER BUILT -- NOT EXECUTED
 R1_REAL_MODEL_EXECUTION:       NO
-R1_VARIANCE_PILOT_STATUS:      NOT_STARTED -- awaiting a qualifying runner
+R1_VARIANCE_PILOT_STATUS:      NOT_STARTED -- model calls prohibited pending post-commit founder review
 CONFIRMATORY_STATUS:           NOT_STARTED
 PRODUCT_THESIS_STATUS:         NOT_EVALUATED
 ```
 
-**READY_FOR_EXTERNAL_MODEL_EXECUTION.**
+**NOT READY FOR MODEL EXECUTION — a committed v1.1 is evidence that the local Rust
+finalizer gate passed; credentialed preflight still requires post-commit founder review.**
+
+
+## Gate X1 — pre-outcome execution-plumbing amendment
+
+See [PREREGISTRATION-V1.1.md](./PREREGISTRATION-V1.1.md) and
+[ADDENDUM-X1.md](./ADDENDUM-X1.md). X1 repairs native package export, maintained-state
+rendering, repeat-preserving response paths, deterministic repeat-addressed score
+serialization and runner orchestration. The frozen arm builders, maintenance fold,
+response parser and `score_one` predicate remain byte-identical to X0.
+
+No model call is authorized by this amendment. The supplied local finalizer is
+fail-closed: it may create the single X1 commit only after Python, Rust, native-export,
+fileset, scope and secret gates pass. Therefore an X1 commit containing this document
+is itself evidence that those local gates completed; the commit SHA is reported
+externally rather than self-referenced here.
+
+---
 
 ## Gate X0 — external model execution admission
 
@@ -76,21 +94,18 @@ knows the tasks is an answer key, not a maintainer.
 
 ## What an external executor has to do
 
-```bash
-cargo run --bin fehrest-r1 -- bundle          # regenerate the run bundle
-cargo run --bin fehrest-r1 -- selftest        # verify the instrument first
-cargo run --bin fehrest-r1 -- score responses # after the model has run
-```
-
-1. **Fix preregistration v2** — model identity, temperature, repeats per task,
-   confirmatory N from a power analysis, randomisation seed. New digest. v1 retained.
-2. **Run maintenance**, checkpoint by checkpoint, per [MAINTENANCE.md](./MAINTENANCE.md).
-   Task-blind. Write `state/<ARM>/<SCENARIO>/t<NN>.json`. Record cost per session.
-3. **Run B-NULL first**, blind to the other arms, and apply the prompt-answerable
-   exclusion from [PREREGISTRATION.md §11](./PREREGISTRATION.md).
-4. **Run continuation tasks** under neutral arm identifiers, fresh stateless sessions,
-   identical configuration across arms.
-5. **Score** with arm identity stripped, then unblind.
+1. Verify the committed v1.1 filesets and frozen semantics with `verify_v1_1.py`.
+2. Perform the separately authorized credentialed preflight using **no benchmark
+   content**; bind the exact model/reasoning/max-output condition and record unsupported
+   sampling controls as `UNAVAILABLE`.
+3. Execute the fixed 168 task-blind maintenance sessions, then export context packages
+   through the native Rust harness.
+4. Execute the fixed 720 continuation sessions in the sealed blocked/interleaved order;
+   B-NULL is part of that order and is **not** run as a separate early batch.
+5. Seal raw evidence before scoring. Score under neutral arm ids, then explicitly
+   unblind only after deterministic scoring is complete.
+6. Report pilot variance and `psi-hat`, then compute confirmatory N mechanically from
+   `VARIANCE-PILOT.md`. Do not start confirmatory until its separate manifest is sealed.
 
 The bundle at `bench/R1/bundle/` is regenerable and therefore not committed. It
 contains per-checkpoint evidence, task prompts with the output contract, the arm

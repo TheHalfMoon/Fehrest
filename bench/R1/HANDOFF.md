@@ -1,11 +1,18 @@
 # R1 — external runner handoff
 
 ```
-CONTROLLED_RUNNER_STATUS:  UNAVAILABLE on the authoring host
+CONTROLLED_RUNNER_STATUS:  v1.1 BUILT -- LOCAL COMMIT IS RUST-GATE-CONDITIONED, NOT EXECUTED
 R1_REAL_MODEL_EXECUTION:   NO
-NEXT_STAGE:                R1-VARIANCE-PILOT (not confirmatory)
+NEXT_GATE:                 local gate/commit if absent, then post-commit founder review
+NEXT_STAGE_AFTER_GATE:     R1-VARIANCE-PILOT (not confirmatory)
 PRODUCT_THESIS_STATUS:     NOT_EVALUATED
 ```
+
+
+> **X1 STOP:** This handoff contains the pre-outcome v1.1 execution-plumbing amendment.
+> A local X1 commit is permitted only through the fail-closed Rust/Python finalizer.
+> Do not issue a model request until that commit exists and receives post-commit founder
+> review. The original v1 remains preserved.
 
 Everything needed to run the variance pilot elsewhere. Read
 [RUNNER.md](./RUNNER.md) first — a runner that fails §1 there produces numbers that
@@ -39,16 +46,24 @@ protocol documents, and the file manifest. Scoring requires the repository, whic
 ## 2. Preregistration
 
 ```
-R1_PREREGISTRATION_DIGEST  2645806db31dd92beb390dac78b5e2d2ac210d1407b6f37720eddafa8fa80ae3
+ORIGINAL_V1_DECLARED_DIGEST           2645806db31dd92beb390dac78b5e2d2ac210d1407b6f37720eddafa8fa80ae3
+ORIGINAL_V1_CANONICAL_FILESET_SHA256  c7203d3ff0ccdd859a21841ef0cac25b46c5224cf35980cb02fc0c5a1590e28f
+R1_V1_1_CANONICAL_FILESET_SHA256      5463bfddcf076b930e35c3fe5a208b94f0af720e935a3dc8ae5b88432709f6e2
 ```
 
-Recompute and compare before running anything:
+The original v1 aggregate remains historical evidence. X1 found that its published
+aggregate shell pipeline is not cross-platform reproducible even though all eight
+individual file hashes match. v1.1 therefore uses the explicit canonical manifest
+algorithm in `PREREGISTRATION-V1.1.md` and the portable verifier:
 
 ```bash
-for f in bench/R1/scenarios/*.scn bench/R1/tasks/tasks.json bench/R1/oracles/oracles.json bench/R1/harness/main.rs bench/R1/PROTOCOL.md bench/R1/MAINTENANCE.md; do sha256sum "$f"; done | sha256sum
+python bench/R1/seal_digest.py benchmark
+python bench/R1/seal_digest.py benchmark --git-ref 685b390d93fd58c65b8d9e33f4869c6c986259d3
+python bench/R1/verify_v1_1.py
 ```
 
-A mismatch means the benchmark changed. **Stop and reconcile; do not run.**
+A mismatch means the benchmark or frozen semantics changed. **Stop and reconcile; do
+not run.**
 
 ## 3. Frozen Fehrest identity
 
@@ -86,25 +101,34 @@ Full specification in [RUNNER.md](./RUNNER.md). The non-negotiables:
 ## 5. Variance-pilot command sequence
 
 ```bash
-# 0. verify before touching anything
-cargo run --bin fehrest-r1 -- selftest            # expect: 631 passed, 0 failed
-for f in bench/R1/scenarios/*.scn bench/R1/tasks/tasks.json bench/R1/oracles/oracles.json bench/R1/harness/main.rs bench/R1/PROTOCOL.md bench/R1/MAINTENANCE.md; do sha256sum "$f"; done | sha256sum
+# 0. verify the amendment; create/accept its local commit before any credentialed call
+python bench/R1/verify_v1_1.py
+cargo fmt --check
+cargo check
+cargo clippy -- -D warnings
+cargo test
+cargo run --bin fehrest-r1 -- selftest            # extended v1.1 selftest; require 0 failed
 
 # 1. regenerate the model-facing bundle
 cargo run --bin fehrest-r1 -- bundle              # expect: ORACLE_LEAK_CHECK: CLEAN
 
-# 2. maintenance -- 168 sessions, task-blind, per MAINTENANCE.md
-#    3 maintained arms x 2 trajectories x 28 checkpoints
-#    writes bench/R1/state/<ARM>/<SCENARIO>/t<NN>.json
-#    (the runner drives this; the harness folds the ops)
+# 2. credentialed preflight is a separate founder gate. It uses no R1 benchmark
+#    content and binds model/reasoning/max-output plus supported sampling controls.
+#    Only after it passes may the v1.1 runner drive the fixed 168+720 pilot.
+#
+#    maintained state: <scratch>/state/{T1,T2}/<ARM>/<SCENARIO>/t<NN>.json
+#    native packages:  <scratch>/packages/<TRAJECTORY>/<ARM>/<SCENARIO>/t<NN>.txt
+#    responses:        <scratch>/runs/variance-pilot/responses/<ARM_ID>/<TASK_ID>/r<NN>.txt
 
-# 3. continuation -- 720 runs, blocked/interleaved, seeded
-#    5 comparison arms x 30 tasks x 4 repeats  = 600
-#    B-NULL          x 30 tasks x 4 repeats    = 120
-#    writes runs/variance-pilot/responses/<ARM_ID>/<TASK_ID>.txt
+# 3. after execution completes, seal raw/neutral evidence BEFORE scoring/unblinding
+python bench/R1/external-runner/r1_runner.py seal --out <scratch>/runs/variance-pilot
 
-# 4. score, blind
-cargo run --bin fehrest-r1 -- score runs/variance-pilot/responses
+# 4. score while arm identity is still withheld. score_one is unchanged from v1.
+cargo run --bin fehrest-r1 -- score-jsonl <scratch>/runs/variance-pilot/responses <scratch>/runs/variance-pilot/score-records.jsonl
+cargo run --bin fehrest-r1 -- score <scratch>/runs/variance-pilot/responses
+
+# 5. only after blinded scoring completes, materialize the neutral -> real map
+python bench/R1/external-runner/r1_runner.py unblind-map --out <scratch>/runs/variance-pilot --seed <SEALED_SEED>
 ```
 
 Sizes, repeats, trajectories, randomization and the model rules are frozen in
@@ -113,14 +137,18 @@ Sizes, repeats, trajectories, randomization and the model rules are frozen in
 ## 6. Expected output layout
 
 ```
-runs/variance-pilot/
-  records.jsonl              one per-run record, RUNNER.md §3 schema
-  execution-order.jsonl      realized order, appended as it happens
-  arm-map.json               neutral ARM_ID -> real arm. WITHHELD until scoring is done
-  raw/<run_id>.txt           untouched model output -- immutable evidence
-  normalized/<run_id>.txt    only if a normalizer was used; keep both + its version
-  responses/<ARM_ID>/<TASK_ID>.txt
-bench/R1/state/<ARM>/<SCENARIO>/t<NN>.json    maintainer output
+<scratch>/runs/variance-pilot/
+  records.jsonl                         one per-attempt record, RUNNER.md §3 schema
+  execution-order.jsonl                 realized provider-attempt order
+  execution-plan.json                   sealed neutral plan; arm map withheld
+  package-binding.json                  native package manifest -> execution plan binding
+  excluded-cells.json                   symmetric infrastructure exclusions
+  raw/<run_id>.txt                      untouched model output -- immutable evidence
+  responses/<ARM_ID>/<TASK_ID>/r<NN>.txt  complete scorer-visible cells only
+  FILE-MANIFEST.txt                     deterministic self-excluding raw manifest
+  arm-map.json                          ABSENT until explicit post-score unblind
+<scratch>/state/{T1,T2}/<ARM>/<SCENARIO>/t<NN>.json
+<scratch>/packages/<TRAJECTORY>/<ARM>/<SCENARIO>/t<NN>.txt
 ```
 
 ## 7. Verification commands
@@ -140,11 +168,14 @@ The V0 reproduction is a live tripwire for the line-ending defect repaired at th
 | Class | Kind | Action |
 |---|---|---|
 | Timeout, rate limit, network, crash, tool failure, context-limit exceeded | `INFRASTRUCTURE_FAILURE` | Retry ≤2 with backoff. Still failing → exclude that (task, repeat) cell **for every arm** |
-| Empty, malformed, refusal | `TASK_FAILURE` | **No retry.** Score as-is. It is the result |
+| Empty, malformed, refusal in continuation | `TASK_FAILURE` | **No retry.** Score as-is. It is the result |
+| Malformed maintainer JSON | `TASK_FAILURE` | One identical-prompt retry per MAINTENANCE.md §7; then state unchanged |
 
-**Selective retry of one arm is prohibited.** Raw output is never manually repaired. If
-infrastructure failures exceed 10% of attempted sessions, halt: the runner is
-inadmissible, and that is a fact about the runner, not about the arms.
+**Selective retry of one arm is prohibited.** Raw output is never manually repaired.
+Infrastructure exclusion is transactional: a failed maintenance cell advances no
+maintained arm, and a failed continuation `(task, repeat)` cell publishes no arm into
+scorer input. If exhausted infrastructure cells exceed 10% of attempted cells, halt:
+the runner is inadmissible, and that is a fact about the runner, not about the arms.
 
 ## 9. Prohibited at this stage
 
