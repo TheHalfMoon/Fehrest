@@ -329,7 +329,7 @@ This is cross-cutting and must not be left to one late security spec.
 | G-V2-23 Memory benchmark refresh | 009 | COVERED |
 | G-V2-24 Donor rights/provenance registry | program gate + per-spec research | COVERED |
 | G-V2-25 R1 does not test V2 thesis | V2-G0 + 009 broader proof | COVERED HONESTLY |
-| G-V2-26 Missing historical implementation/evidence bytes | G-PROV current blocker | COVERED AS HARD GATE, NOT RESOLVED |
+| G-V2-26 Historical implementation/evidence recovery | G-PROV | RESOLVED: SOURCE + SEAL RECOVERED; ORIGINAL GIT HISTORY PUBLICATION TRACKED SEPARATELY |
 
 ---
 
@@ -543,7 +543,8 @@ A complete program map may still contain explicitly unresolved decisions. These 
 Current examples:
 
 ```text
-exact historical Constitution/Architecture Freeze contents     = BLOCKED_PENDING_RECONCILIATION
+historical Constitution/Architecture Freeze input              = RECOVERED_AND_RECONCILED_CONSERVATIVELY
+GitHub original historical object graph publication           = OPEN_PROVENANCE_CLOSURE
 exact post-R1 V2 authorization                                = NOT YET DECIDED
 production graph mechanism                                    = OWNED BY 004/005 DECISION
 exact Memory lifecycle states                                 = OWNED BY 006
@@ -558,7 +559,7 @@ extension runtime/sandbox policy                              = OWNED BY 021
 Hub hosting architecture                                      = OWNED BY 022
 ```
 
-Explicit ownership of an unresolved decision is considered coverage. Guessing the answer is not.
+Explicit ownership of an unresolved decision is considered coverage. Guessing the answer is not. Recovered historical inputs are recorded as resolved evidence state, not as authorization to execute future specs.
 
 ---
 
@@ -568,7 +569,12 @@ Explicit ownership of an unresolved decision is considered coverage. Guessing th
 PRODUCT_PILLARS_WITH_OWNER=15/15
 CRITICAL_GAPS_WITH_OWNER_OR_HARD_GATE=26/26
 KNOWN_UNOWNED_CRITICAL_CAPABILITIES=0
-KNOWN_HARD_BLOCKERS_RESOLVED=NO
+HISTORICAL_IMPLEMENTATION_EVIDENCE_RECONCILED=YES
+HISTORICAL_CONSTITUTION_ARCHITECTURE_RECONCILED=YES_CONSERVATIVELY
+GITHUB_ORIGINAL_HISTORICAL_OBJECT_GRAPH_PUBLISHED=NO
+KNOWN_EXECUTION_AUTHORIZATION_BLOCKERS_RESOLVED=NO
+PROGRAM_CANONICAL=NO
+IMPLEMENTATION_AUTHORIZED=NO
 ```
 
-The program map is coverage-complete as a proposal, but it is not execution-authorized and it does not claim the historical provenance/constitution blockers are resolved.
+The program map is coverage-complete as a proposal. Historical implementation evidence and the Constitution/Architecture inputs are recovered/reconciled; original-history publication remains a separate provenance closure obligation. Execution remains unauthorized because the live R1 route and the required post-R1 founder/architecture decision are still open.
