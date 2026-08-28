@@ -4,7 +4,7 @@
 **Created:** 2026-08-28  
 **Reviewed inputs:** live `AGENTS.md`, live `specs/CURRENT.md`, canonical Execution Master Plan, Spec 002, V2 vision/UX/catalog/proposals, current upstream Spec Kit 1.0 workflow/templates.
 
-> This review checks the proposed V2 program for internal contradictions, hidden ownership conflicts, missing prerequisites and sequencing errors. It does not resolve current R1/provenance blockers or activate future work.
+> This review checks the proposed V2 program for internal contradictions, hidden ownership conflicts, missing prerequisites and sequencing errors. It does not close R1, publish the original historical Git object graph, or activate future work. Historical governance/implementation inputs have since been recovered and conservatively reconciled; that evidence creates no implementation authority.
 
 ---
 
@@ -20,7 +20,9 @@ Current review status:
 KNOWN_STRUCTURAL_CONFLICTS_IDENTIFIED=12
 KNOWN_STRUCTURAL_CONFLICTS_WITH_PROPOSED_RESOLUTION=12
 KNOWN_CRITICAL_PRODUCT_GAPS_WITH_OWNER_OR_GATE=26/26
-CURRENT_HARD_PROVENANCE_BLOCKER_RESOLVED=NO
+HISTORICAL_GOVERNANCE_RECONCILIATION=RECONCILED_CONSERVATIVELY
+HISTORICAL_IMPLEMENTATION_EVIDENCE=RECOVERED_AND_RECONCILED
+GITHUB_ORIGINAL_HISTORICAL_OBJECT_GRAPH=NOT_YET_PUBLISHED
 CURRENT_R1_GATE_RESOLVED=NO
 PROGRAM_AUTHORIZED=NO
 ```
@@ -51,23 +53,33 @@ Future specs may be documented as plans but remain non-authorizing.
 
 ---
 
-# 3. Conflict C-02 — Missing historical Constitution/Architecture Freeze
+# 3. Conflict C-02 — Historical Constitution/Architecture Freeze reconciliation
 
-### Problem
+### Original problem
 
-Upstream Spec Kit expects a constitution gate, but the GitHub bootstrap mirror does not currently contain the full historical Architecture Freeze/Constitution set. `AGENTS.md` forbids reconstructing missing historical sources from memory.
+At V2 planning start, the GitHub bootstrap mirror did not contain the full historical Architecture Freeze/Constitution source set. `AGENTS.md` correctly forbids reconstructing missing historical sources from memory.
 
-### Risk
+### Live reconciliation
 
-Generating a fresh constitution from V2 vision could silently weaken historical frozen invariants.
+The historical Architecture Freeze / Constitution source set has since been recovered and conservatively reconciled against operational bootstrap governance. The sealed implementation tree and R1 evidence identities were also recovered and independently verified.
+
+Current status:
+
+```text
+G-CONST=RECONCILED_CONSERVATIVELY
+G-PROV=HISTORICAL_SOURCE_AND_SEAL_RECOVERED
+G-PROV-GITHUB-ORIGINAL-HISTORY=NOT_YET_PUBLISHED
+```
+
+### Risk retained
+
+A fresh V2 constitution or bootstrap convenience must still never replace, weaken, or silently reinterpret the recovered historical frozen invariants.
 
 ### Resolution
 
-Add `G-CONST` Constitution/Architecture Reconciliation before architecture-semantic V2 activation.
+Keep `G-CONST` as the explicit historical-architecture input boundary for any future V2 canonicalization. Treat the recovered sources as authoritative historical inputs; do not regenerate them from V2 vision. Track original Git object-graph publication separately until its provenance closure criteria are met.
 
-Until then, current live governance is used conservatively without claiming it reconstructs the missing historical constitution.
-
-**Status:** OWNER/GATE DEFINED; SOURCE BLOCKER REMAINS
+**Status:** RECONCILED CONSERVATIVELY / NO AUTHORIZATION EFFECT
 
 ---
 
@@ -385,33 +397,34 @@ UNVERIFIED_MUST_REQUIREMENTS=0
 
 # 15. Remaining genuine blockers / unresolved points
 
-The planning system deliberately does not pretend these are solved:
+The planning system deliberately does not pretend open gates or future design choices are solved:
 
 ```text
 R1 exact terminal result                         = unresolved
-historical implementation/R1 evidence mirror    = unresolved
-historical Constitution/Architecture Freeze      = not fully present/reconciled
 V2 founder post-R1 authorization                 = not yet effective
-production graph result                          = future experiment
-exact memory lifecycle                           = future Spec 006
-exact workspace object mapping                   = future Spec 010
-editor technology                                = future Spec 011 research/gate
-AI provider implementation set                   = future Spec 013
-WebMCP production API shape                      = future Spec 014 research
+GitHub original historical object graph          = not yet published; separate provenance closure obligation
+historical implementation/R1 evidence             = recovered and reconciled
+historical Constitution/Architecture Freeze       = recovered and reconciled conservatively
+production graph result                           = future experiment
+exact memory lifecycle                            = future Spec 006
+exact workspace object mapping                    = future Spec 010
+editor technology                                 = future Spec 011 research/gate
+AI provider implementation set                    = future Spec 013
+WebMCP production API shape                       = future Spec 014 research
 authorized collaboration mechanism               = future Spec 016
-multi-writer evolution of writer semantics       = future Spec 017 + architecture review
-E2EE/compliance/server-search trade-off           = future Spec 017/018 security/product decision
+multi-writer evolution of writer semantics        = future Spec 017 + architecture review
+E2EE/compliance/server-search trade-off            = future Spec 017/018 security/product decision
 ```
 
-These are not plan gaps because each has an explicit owner/gate. They remain real execution unknowns.
+The recovered historical implementation and architecture inputs are no longer unresolved. The remaining open execution/authorization gates and future design choices each have an explicit owner or closure condition.
 
 ---
 
 # 16. Final consistency verdict
 
-The proposed Spec Kit V2 planning layer is internally consistent at the **program architecture** level if interpreted with the ownership/dependency documents.
+The proposed Spec Kit V2 planning layer is internally consistent at the **program architecture** level if interpreted with the ownership/dependency documents and the live-base reconciliation record.
 
-It is not yet canonical because the live governance gates have not closed.
+It is not yet canonical because R1 is open and the required post-R1 founder/architecture decision has not closed.
 
 ```text
 PLAN_STRUCTURE=CONSISTENT_PROPOSAL
@@ -420,4 +433,6 @@ KNOWN_CRITICAL_CAPABILITY_WITHOUT_OWNER=0
 KNOWN_DEPENDENCY_CYCLE=0
 KNOWN_AUTHORIZATION_BYPASS=0
 CURRENT_EXECUTION_BLOCKERS_RESOLVED=NO
+PROGRAM_CANONICAL=NO
+IMPLEMENTATION_AUTHORIZED=NO
 ```
