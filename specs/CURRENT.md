@@ -11,10 +11,17 @@ ARCHITECTURE=FROZEN
 PHASE_T_IMPLEMENTATION=TECHNICALLY_COMPLETE
 PHASE_T_PRODUCT_THESIS=NOT_YET_TERMINAL
 ACTIVE_EXECUTION_FRONTIER=R1
+ACTIVE_R1_SUBGATE=REPLACEMENT_VARIANCE_PILOT_EXECUTION
+R1_REPLACEMENT_EXECUTOR_SHA256=9c53e45e41a0be5766779129a45e55aef4399d02395a1b4309e9d97114bef969
+R1_REPLACEMENT_EXECUTION_RESULT=NOT_PRESENT
 NEXT_PRODUCT_SPEC=002-post-r1-canonical-core-convergence
 NEXT_PRODUCT_SPEC_STATUS=BLOCKED_BY_R1_TERMINAL_GATE_AND_FOUNDER_AUTHORIZATION
 GITHUB_BOOTSTRAP_MODE=VERIFIED_SNAPSHOT_MIRROR
 ```
+
+The current R1 sub-gate is evidence-backed by `docs/canonical/R1_REPLACEMENT_EXECUTION_RUNBOOK.md`. The first variance-pilot batch is preserved as invalidated infrastructure-contaminated evidence. The valid same-protocol replacement has not yet produced its required execution result or raw seal.
+
+Do not infer success from the existence of the executor.
 
 ## Sealed R1 v1.1 historical anchor
 
@@ -49,7 +56,7 @@ variance pilot
 → terminal verdict
 ```
 
-The exact current sub-gate must be read from live R1 evidence. Do not infer it from this pointer.
+The active sub-gate is the valid replacement variance-pilot execution. The replacement must retain the sealed v1.1 design, seed and model condition and must produce actual execution evidence before the frontier can advance.
 
 ## What is blocked
 
@@ -75,7 +82,7 @@ After the terminal verdict:
 |---|---|
 | `THESIS_SUPPORTED` | Founder may authorize Spec 002 |
 | `THESIS_SUPPORTED_ON_COST` | Founder may authorize Spec 002; preserve cost as a primary design constraint |
-| `THESIS_SUPPORTED_ON_SAFETY` | Founder may authorize Spec 002; safety mechanism remains a primary acceptance dimension |
+| `THESIS_SUPPORTED_ON_SAFETY` | Founder may authorize Spec 002 with stale-use/constraint safety retained as a primary acceptance dimension |
 | `THESIS_SUPPORTED_WITH_COST_CAVEAT` | Do not expand expensive capabilities; require explicit founder decision and cost-reduction plan |
 | `THESIS_NOT_SUPPORTED` | Trigger F-1 review. Do not begin Spec 002 by default |
 | `THESIS_FAIL` | Halt product expansion and perform architecture/product reconsideration |
@@ -91,11 +98,13 @@ It is deliberately present before activation so the repository contains the next
 SPECIFIED != AUTHORIZED
 ```
 
-Its first executable task is blocked until this file is updated with evidence of the R1 terminal gate and founder authorization.
+Its first remaining activation task is T038. T037 is closed with exact recovered implementation-baseline evidence; T038 cannot close before the R1 terminal verdict exists.
 
 ## Bootstrap integrity rule
 
 Before any post-R1 product implementation begins from the GitHub mirror, reconcile the working implementation/evidence snapshot against the historical R1 anchor and record the exact source of that evidence. A GitHub bootstrap SHA must never be substituted for an old sealed SHA merely for convenience.
+
+T037 now records the selected implementation baseline and durable recovery bundle. That reconciliation creates no product implementation authority while R1 remains open.
 
 ## Update rule
 
