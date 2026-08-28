@@ -12,11 +12,12 @@
 
 ```text
 1. PROGRAM_BLUEPRINT.md
-2. CROSS_SPEC_INVARIANTS_AND_OWNERSHIP.md
-3. SPEC_SEQUENCE_AND_DEPENDENCIES.md
-4. TRACEABILITY_AND_COVERAGE_MATRIX.md
-5. CONFLICT_AND_GAP_REVIEW.md
-6. SPEC_AUTHORING_CHECKLIST.md
+2. RUST_PLATFORM_ARCHITECTURE.md
+3. CROSS_SPEC_INVARIANTS_AND_OWNERSHIP.md
+4. SPEC_SEQUENCE_AND_DEPENDENCIES.md
+5. TRACEABILITY_AND_COVERAGE_MATRIX.md
+6. CONFLICT_AND_GAP_REVIEW.md
+7. SPEC_AUTHORING_CHECKLIST.md
 ```
 
 Then read the broader V2 product documents:
@@ -39,15 +40,29 @@ docs/proposals/EXECUTION_MASTER_PLAN_V2_PROPOSAL.md
 
 V2 is treated as a program/assessment, not one giant feature spec.
 
-### 2. Constitution reconciliation gate
+### 2. Rust-first platform direction
+
+Founder technical direction is now explicit:
+
+```text
+RUST_PRIMARY_PRODUCT_LANGUAGE=YES
+RUST_OWNS_CANONICAL_SEMANTICS=YES
+RUST_OWNS_SECURITY_AND_AUTHORIZATION=YES
+RUST_OWNS_MEMORY_SEARCH_SYNC_GATEWAYS=YES
+NON_RUST_INTEROP=THIN_ONLY_WHEN_JUSTIFIED
+```
+
+UI, sync, search and provider libraries remain subject to their own future Spec Kit research/benchmark gates. Rust-first does not pre-authorize a framework or dependency.
+
+### 3. Constitution reconciliation gate
 
 Missing historical Constitution/Architecture Freeze sources are treated as a hard reconciliation gate, not reconstructed from memory.
 
-### 3. Single semantic ownership
+### 4. Single semantic ownership
 
 Every durable entity/lifecycle/contract/authorization responsibility gets one owning future spec.
 
-### 4. Graph separation
+### 5. Graph separation
 
 ```text
 Graph Intelligence experiment/provider != Graph visualization UX
@@ -55,7 +70,7 @@ Graph Intelligence experiment/provider != Graph visualization UX
 
 A useful Obsidian-style graph interface may exist over explicit canonical links even when derived graph intelligence is rejected/deferred.
 
-### 5. Gateway/AI separation
+### 6. Gateway/AI separation
 
 ```text
 007 Universal Context/Memory Gateway
@@ -65,7 +80,7 @@ A useful Obsidian-style graph interface may exist over explicit canonical links 
 
 Core context/authorization remains model-independent.
 
-### 6. Organization before team communication
+### 7. Organization before team communication
 
 The refined order is:
 
@@ -78,15 +93,15 @@ collaboration experiment
 
 This removes a security dependency inversion in the earlier proposal.
 
-### 7. Workspace object foundation before UI
+### 8. Workspace object foundation before UI
 
 Canonical Note/Task/Project/Space/open-format semantics are specified before desktop presentation owns them accidentally.
 
-### 8. WebMCP separated into an external-evidence/tool spec
+### 9. WebMCP separated into an external-evidence/tool spec
 
 WebMCP remains a provider candidate under Fehrest-owned authorization/origin/prompt-injection controls.
 
-### 9. Traceability and converge requirements
+### 10. Traceability and converge requirements
 
 Every MUST requirement must trace through acceptance/test/tasks/evidence and close with no orphan requirements or tasks.
 
@@ -96,6 +111,7 @@ Every MUST requirement must trace through acceptance/test/tasks/evidence and clo
 
 ```text
 V2_PROGRAM_REFINEMENT=PREPARED
+FOUNDER_LANGUAGE_DIRECTION=RUST
 V2_PROGRAM_CANONICAL=NO
 R1_CHANGED=NO
 CURRENT_CHANGED=NO
