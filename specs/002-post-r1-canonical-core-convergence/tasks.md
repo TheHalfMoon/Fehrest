@@ -6,7 +6,7 @@ Tick tasks only after evidence exists.
 
 ## Gate A — Activation
 
-- [ ] **T037** Record live GitHub/local implementation state used for work and reconcile it against the historical R1 v1.1 anchor.
+- [x] **T037** Record live GitHub/local implementation state used for work and reconcile it against the historical R1 v1.1 anchor.
 - [ ] **T038** Record the R1 terminal verdict and the route it authorizes.
 - [ ] **T039** Record explicit founder authorization for Spec 002.
 - [ ] **T040** Update `specs/CURRENT.md` from `BLOCKED` to `ACTIVE` in the activation commit.
