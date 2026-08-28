@@ -109,6 +109,31 @@ Any copied/adapted donor code retains exact source repository/revision/path and 
 
 A failed graph/collaboration/provider experiment remains evidence and cannot be relabeled to justify implementation.
 
+## I-19 — Rust owns product semantics
+
+Founder technical direction requires Rust to own Fehrest product semantics across the program.
+
+```text
+canonical semantics      -> Rust
+authorization/grants     -> Rust
+memory/provenance        -> Rust
+search/context logic     -> Rust
+sync/collaboration policy-> Rust
+agent/tool gateways      -> Rust
+server/CLI/native logic  -> Rust
+```
+
+Non-Rust code is permitted only as an explicit, typed, replaceable presentation/platform/provider bridge when the active spec proves the need.
+
+```text
+NON_RUST_CANONICAL_AUTHORITY=0
+NON_RUST_GRANT_AUTHORITY=0
+NON_RUST_MEMORY_AUTHORITY=0
+UNJUSTIFIED_POLYGLOT_PRODUCT_LOGIC=0
+```
+
+Every future executable Spec Kit must pass the Rust language gate defined in `RUST_PLATFORM_ARCHITECTURE.md`, `RUST_SPEC_TRACEABILITY_MATRIX.md`, and `SPEC_AUTHORING_CHECKLIST.md`.
+
 ---
 
 # 3. Canonical persistence classes
@@ -329,14 +354,14 @@ AUTHORIZATION_BOUNDARY
 Examples:
 
 ```text
-CTX-PACKAGE-v1       owner=007
-GITHUB-LINK-v1       owner=008
-MEMORY-PROPOSAL-v1   owner=006
-AI-PROVIDER-v1       owner=013
-WEB-TOOL-v1          owner=014
-SYNC-v1              owner=017
-ORG-POLICY-v1        owner=018
-CHANNEL-EVENT-v1     owner=019
+CTX-PACKAGE-v1        owner=007
+GITHUB-LINK-v1        owner=008
+MEMORY-PROPOSAL-v1    owner=006
+AI-PROVIDER-v1        owner=013
+WEB-TOOL-v1           owner=014
+SYNC-v1               owner=017
+ORG-POLICY-v1         owner=018
+CHANNEL-EVENT-v1      owner=019
 EXTENSION-MANIFEST-v1 owner=021
 ```
 
@@ -379,7 +404,7 @@ Search result UI state       = CACHE/CONFIGURATION
 
 ```text
 User research task           = CANONICAL workspace object if saved
-Web page bytes/snapshot       = EVIDENCE_ARTIFACT or canonical Source payload per spec
+Web page bytes/snapshot      = EVIDENCE_ARTIFACT or canonical Source payload per spec
 Normalized page              = EVIDENCE/DERIVED with provenance
 LLM answer                   = DRAFT/derived unless explicitly saved
 Memory Proposal              = CANONICAL proposal record
@@ -414,6 +439,10 @@ Before a new spec is authorized:
 [ ] Security scope is enforced below presentation.
 [ ] Migration and recovery ownership are known.
 [ ] Donor/library selection is not embedded prematurely in product requirements.
+[ ] Rust-owned semantic paths are explicit.
+[ ] Non-Rust paths are declared and limited to approved bridge/presentation/provider roles.
+[ ] No non-Rust component owns canonical, grant, memory, search authority or sync policy.
+[ ] FFI/native/unsafe boundaries are declared and reviewed.
 ```
 
 ---
@@ -423,6 +452,7 @@ Before a new spec is authorized:
 ```text
 CROSS_SPEC_INVARIANTS=PROPOSED
 OWNERSHIP_MATRIX=PROPOSED
+RUST_SEMANTIC_OWNERSHIP_INVARIANT=PROPOSED
 CANONICAL_GOVERNANCE_CHANGED=NO
 IMPLEMENTATION_AUTHORIZED=NO
 ```
