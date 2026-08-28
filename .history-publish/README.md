@@ -1,1 +1,0 @@
-This temporary branch is isolated from canonical `main` and may contain transport experiments. No file on this branch is publication evidence by itself. Issue #1 remains authoritative until the archival ref is live at the exact sealed commit.
