@@ -13,7 +13,7 @@
 
 The V2 planning package is structurally converged enough to serve as the input to a future post-R1 founder/architecture reconciliation.
 
-It is **not executable today** because current repository authority remains blocked by R1 and historical provenance/governance reconciliation.
+It is **not executable today** because the live R1 terminal route is still open and the V2 founder/architecture decision is not closed. Historical governance/implementation sources have been recovered and conservatively reconciled; the unpublished original historical Git object graph remains a separate provenance closure obligation and does not create execution authority.
 
 Planning verdict:
 
@@ -57,16 +57,17 @@ no force push/rebase/destructive history rewrite
 canonical truth outranks derived/provider state
 ```
 
-### New V2 planning gates
+### V2 planning gate state
 
 ```text
-G-R1    R1 terminal verdict
-G-PROV  historical implementation/evidence provenance reconciliation
-G-CONST Constitution/Architecture Freeze reconciliation
-G-V2    founder V2 product decision
+G-R1    R1 terminal verdict                                    = OPEN
+G-PROV  historical source and sealed implementation recovery   = RECOVERED
+G-PROV-GITHUB-ORIGINAL-HISTORY                                 = NOT_YET_PUBLISHED
+G-CONST Constitution/Architecture Freeze reconciliation        = RECONCILED_CONSERVATIVELY
+G-V2    founder V2 product/architecture decision               = NOT_CANONICALIZED
 ```
 
-No V2 architecture-semantic implementation may bypass these gates.
+No V2 architecture-semantic implementation may bypass the open R1 or founder/architecture authorization gates. Recovered provenance and governance inputs remain evidence, not implementation authorization.
 
 **Verdict:** CONVERGED
 
@@ -462,16 +463,17 @@ For non-Rust donors that would otherwise own Fehrest semantics, default path is 
 
 ## 15. Remaining blockers and unknowns
 
-### Current hard blockers
+### Current gate state
 
 ```text
 R1_TERMINAL_GATE=NOT_RECORDED_ON_LIVE_GITHUB
-HISTORICAL_IMPLEMENTATION_EVIDENCE_RECONCILED=NO
-HISTORICAL_CONSTITUTION_ARCHITECTURE_RECONCILED=NO
 V2_FOUNDER_ARCHITECTURE_DECISION_CLOSED=NO
+HISTORICAL_IMPLEMENTATION_EVIDENCE=RECOVERED_AND_RECONCILED
+HISTORICAL_CONSTITUTION_ARCHITECTURE=RECONCILED_CONSERVATIVELY
+GITHUB_ORIGINAL_HISTORICAL_OBJECT_GRAPH=NOT_YET_PUBLISHED
 ```
 
-These are not planning defects. They are real authority/evidence gates.
+The first two lines are the current execution/authorization blockers for V2. The recovered historical implementation and Constitution/Architecture inputs are no longer missing. Original-history publication remains an open provenance/repository-closure obligation and must not be hidden or rewritten, but its absence does not turn recovered evidence back into `NOT_RECONCILED`.
 
 ### Intentionally unresolved implementation choices
 
@@ -514,4 +516,4 @@ PROGRAM_MAY_BECOME_CANONICAL=NO
 IMPLEMENTATION_MAY_BEGIN=NO
 ```
 
-The correct next repository action is **not** to start Spec 003–022. The correct future action, after the live R1/provenance/governance gates close, is to run the V2 founder/architecture reconciliation and then activate exactly one eligible Spec Kit through `specs/CURRENT.md`.
+The correct next repository action is **not** to start Spec 003–022. The correct future action, after the live R1 route and required founder/architecture decision close, is to activate exactly one eligible Spec Kit through `specs/CURRENT.md`. Original-history publication must remain tracked separately until its own provenance closure criteria are met.
