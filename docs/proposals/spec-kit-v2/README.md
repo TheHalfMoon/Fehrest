@@ -13,11 +13,13 @@
 ```text
 1. PROGRAM_BLUEPRINT.md
 2. RUST_PLATFORM_ARCHITECTURE.md
-3. CROSS_SPEC_INVARIANTS_AND_OWNERSHIP.md
-4. SPEC_SEQUENCE_AND_DEPENDENCIES.md
-5. TRACEABILITY_AND_COVERAGE_MATRIX.md
-6. CONFLICT_AND_GAP_REVIEW.md
-7. SPEC_AUTHORING_CHECKLIST.md
+3. RUST_SPEC_TRACEABILITY_MATRIX.md
+4. RUST_CONVERGENCE_REVIEW.md
+5. CROSS_SPEC_INVARIANTS_AND_OWNERSHIP.md
+6. SPEC_SEQUENCE_AND_DEPENDENCIES.md
+7. TRACEABILITY_AND_COVERAGE_MATRIX.md
+8. CONFLICT_AND_GAP_REVIEW.md
+9. SPEC_AUTHORING_CHECKLIST.md
 ```
 
 Then read the broader V2 product documents:
@@ -42,7 +44,7 @@ V2 is treated as a program/assessment, not one giant feature spec.
 
 ### 2. Rust-first platform direction
 
-Founder technical direction is now explicit:
+Founder technical direction is explicit and now traceable across every proposed future spec:
 
 ```text
 RUST_PRIMARY_PRODUCT_LANGUAGE=YES
@@ -52,7 +54,9 @@ RUST_OWNS_MEMORY_SEARCH_SYNC_GATEWAYS=YES
 NON_RUST_INTEROP=THIN_ONLY_WHEN_JUSTIFIED
 ```
 
-UI, sync, search and provider libraries remain subject to their own future Spec Kit research/benchmark gates. Rust-first does not pre-authorize a framework or dependency.
+`RUST_SPEC_TRACEABILITY_MATRIX.md` maps Specs 002–022 to their Rust-owned semantics, allowed adapter boundaries and required evidence. `RUST_CONVERGENCE_REVIEW.md` checks the program for language/authority leakage.
+
+UI, editor, sync, search and provider libraries remain subject to future Spec Kit research/benchmark gates. Rust-first does not pre-authorize a framework or dependency.
 
 ### 3. Constitution reconciliation gate
 
@@ -105,6 +109,19 @@ WebMCP remains a provider candidate under Fehrest-owned authorization/origin/pro
 
 Every MUST requirement must trace through acceptance/test/tasks/evidence and close with no orphan requirements or tasks.
 
+### 11. Rust language gate
+
+Every future executable Spec Kit must declare:
+
+```text
+PRIMARY_LANGUAGE_RUST=YES
+SEMANTIC_AUTHORITY_OUTSIDE_RUST=NO
+UNJUSTIFIED_NON_RUST_PRODUCT_LOGIC=0
+UNDECLARED_FFI_BOUNDARIES=0
+```
+
+A blocked language gate prevents implementation unless the founder/architecture governance explicitly changes the Rust direction.
+
 ---
 
 ## Current state
@@ -112,6 +129,8 @@ Every MUST requirement must trace through acceptance/test/tasks/evidence and clo
 ```text
 V2_PROGRAM_REFINEMENT=PREPARED
 FOUNDER_LANGUAGE_DIRECTION=RUST
+RUST_TRACEABILITY_002_TO_022=YES
+RUST_CONVERGENCE_REVIEW=PREPARED
 V2_PROGRAM_CANONICAL=NO
 R1_CHANGED=NO
 CURRENT_CHANGED=NO
