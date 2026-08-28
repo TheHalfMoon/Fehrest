@@ -139,6 +139,61 @@ No donor enters production because it is popular or because code reuse permissio
 
 ---
 
+# H-RUST. Rust-first language architecture gate
+
+Every executable Fehrest plan must apply `RUST_PLATFORM_ARCHITECTURE.md` and `RUST_SPEC_TRACEABILITY_MATRIX.md`.
+
+Required declaration:
+
+```text
+Primary language: Rust
+Rust toolchain: <repository-pinned toolchain>
+Rust edition: <repository-pinned edition>
+Rust-owned semantic paths: <exact paths/crates>
+Non-Rust code required: YES|NO
+Non-Rust paths: <exact paths or N/A>
+Reason non-Rust is required: <evidence or N/A>
+Interop contract owner: <Rust module/crate or N/A>
+Semantic authority outside Rust: NO
+Unsafe in Fehrest Core: NO
+FFI/native dependencies: <explicit list or NONE>
+WASM/browser bridge: <explicit list or NONE>
+```
+
+Checklist:
+
+- [ ] Rust is the primary product implementation language for the spec.
+- [ ] Rust-owned semantic responsibilities are listed explicitly.
+- [ ] Canonical state semantics remain Rust-owned.
+- [ ] Authorization/grant semantics remain Rust-owned.
+- [ ] Memory/provenance semantics remain Rust-owned where applicable.
+- [ ] Search/context/sync/provider semantics remain Rust-owned where applicable.
+- [ ] Every non-Rust file/path is declared.
+- [ ] Every non-Rust boundary is presentation/platform/provider interoperability only.
+- [ ] Non-Rust code cannot mint identity, grants, memory state or canonical authority.
+- [ ] Rust validates all untrusted data crossing a foreign boundary before authority-sensitive use.
+- [ ] Rust alternatives were evaluated before approving a foreign runtime/component.
+- [ ] Donor code in another language is ported/adapted to Rust when it would otherwise own Fehrest semantics.
+- [ ] FFI/native dependencies have explicit trust, safety, update and exit analysis.
+- [ ] `unsafe` remains absent from Fehrest Core under current governance.
+- [ ] UI/editor/mobile/browser bridges have typed/versioned Rust-owned contracts.
+- [ ] No UI or foreign runtime maintains an independent authoritative search, permission, memory or sync model.
+- [ ] Rust/WASM/native platform test requirements are included where applicable.
+
+Required activation condition:
+
+```text
+RUST_LANGUAGE_GATE=PASS
+PRIMARY_LANGUAGE_RUST=YES
+SEMANTIC_AUTHORITY_OUTSIDE_RUST=NO
+UNJUSTIFIED_NON_RUST_PRODUCT_LOGIC=0
+UNDECLARED_FFI_BOUNDARIES=0
+```
+
+A blocked Rust language gate prevents implementation unless the founder/architecture governance explicitly changes the language direction.
+
+---
+
 # I. Contract quality
 
 Every contract declares:
@@ -314,6 +369,8 @@ Before implementation:
 - [ ] No security gate was deferred to “later” when it is required now.
 - [ ] No benchmark threshold was chosen after seeing results.
 - [ ] No unresolved critical ambiguity remains.
+- [ ] Rust language ownership declarations match the implementation plan and task paths.
+- [ ] No foreign/UI path silently owns semantics assigned to Rust.
 
 ---
 
@@ -351,6 +408,8 @@ REJECT
 - [ ] Generated artifacts identified.
 - [ ] Raw benchmark/security/fault evidence preserved.
 - [ ] Native-platform claims backed by genuine native execution.
+- [ ] Rust/non-Rust path inventory matches the approved plan.
+- [ ] New FFI/unsafe/native boundaries match the approved review.
 
 ---
 
@@ -367,9 +426,11 @@ Before close:
 - [ ] Benchmark thresholds pass or route honestly to fail/defer/reject.
 - [ ] Performance/resource limits pass.
 - [ ] Native platform matrix is truthful.
+- [ ] Applicable Rust/WASM/FFI boundaries have their required tests.
 - [ ] `verification.md` records exact commands/results/heads/artifacts.
 - [ ] Final `analyze.md` finds no unexplained drift.
 - [ ] Converge compares spec/plan/tasks/contracts/code/tests.
+- [ ] Converge confirms semantic authority did not move outside Rust.
 - [ ] Deferred items have explicit owners and are not silently omitted.
 
 Required closeout conditions:
@@ -381,6 +442,8 @@ ORPHAN_CONTRACTS=0
 ORPHAN_TASKS=0
 UNVERIFIED_MUST_REQUIREMENTS=0
 UNEXPLAINED_SPEC_IMPLEMENTATION_DRIFT=0
+UNJUSTIFIED_NON_RUST_PRODUCT_LOGIC=0
+UNDECLARED_FFI_BOUNDARIES=0
 ```
 
 ---
@@ -404,6 +467,7 @@ CLARIFICATIONS=PASS|BLOCKED
 REQUIREMENT_COMPLETENESS=PASS|BLOCKED
 OWNERSHIP_OVERLAP=PASS|BLOCKED
 DATA_MODEL=PASS|BLOCKED
+RUST_LANGUAGE_GATE=PASS|BLOCKED
 CONTRACTS=PASS|BLOCKED
 SECURITY=PASS|BLOCKED|N/A
 MIGRATION=PASS|BLOCKED|N/A
