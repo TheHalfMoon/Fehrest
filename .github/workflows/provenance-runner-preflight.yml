@@ -1,0 +1,16 @@
+name: provenance-runner-preflight
+
+on:
+  push:
+    branches:
+      - ops/publish-historical-r1
+
+permissions:
+  contents: read
+
+jobs:
+  runner:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Prove hosted runner allocation
+        run: echo "PROVENANCE_HOSTED_RUNNER_PREFLIGHT=PASS"
