@@ -19,7 +19,8 @@
 6. SPEC_SEQUENCE_AND_DEPENDENCIES.md
 7. TRACEABILITY_AND_COVERAGE_MATRIX.md
 8. CONFLICT_AND_GAP_REVIEW.md
-9. SPEC_AUTHORING_CHECKLIST.md
+9. PROGRAM_CONVERGENCE_REVIEW.md
+10. SPEC_AUTHORING_CHECKLIST.md
 ```
 
 Then read the broader V2 product documents:
@@ -44,7 +45,7 @@ V2 is treated as a program/assessment, not one giant feature spec.
 
 ### 2. Rust-first platform direction
 
-Founder technical direction is explicit and now traceable across every proposed future spec:
+Founder technical direction is explicit and traceable across every proposed future spec:
 
 ```text
 RUST_PRIMARY_PRODUCT_LANGUAGE=YES
@@ -122,6 +123,10 @@ UNDECLARED_FFI_BOUNDARIES=0
 
 A blocked language gate prevents implementation unless the founder/architecture governance explicitly changes the Rust direction.
 
+### 12. Program-level convergence verdict
+
+`PROGRAM_CONVERGENCE_REVIEW.md` records one consolidated planning verdict across governance, Spec Kit methodology, dependency order, semantic ownership, Rust, human/agent UX, GitHub, Search/Graph, AI, WebMCP, collaboration and donor discipline.
+
 ---
 
 ## Current state
@@ -131,6 +136,7 @@ V2_PROGRAM_REFINEMENT=PREPARED
 FOUNDER_LANGUAGE_DIRECTION=RUST
 RUST_TRACEABILITY_002_TO_022=YES
 RUST_CONVERGENCE_REVIEW=PREPARED
+PROGRAM_CONVERGENCE_REVIEW=PREPARED
 V2_PROGRAM_CANONICAL=NO
 R1_CHANGED=NO
 CURRENT_CHANGED=NO
