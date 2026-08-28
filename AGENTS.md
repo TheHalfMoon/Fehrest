@@ -4,16 +4,22 @@ This file is the mandatory entry point for any human or agent doing repository w
 
 ## 1. Canonical reading order
 
-Before changing anything, read in this order:
+### Current GitHub bootstrap mode
+
+The GitHub remote was empty before 2026-08-28. The current remote therefore begins as a transparent operational bootstrap/mirror; historical pre-bootstrap R1 identifiers remain evidence and are not rewritten to match new GitHub commit SHAs.
+
+Before changing anything, read **the files that are currently present on GitHub** in this order:
 
 1. `specs/CURRENT.md`
-2. `docs/canonical/ARCHITECTURE_FREEZE.md`
-3. `docs/canonical/PHASE_T_AUTHORIZATION.md`
-4. `docs/canonical/EXECUTION_MASTER_PLAN.md`
-5. The active Spec Kit named by `specs/CURRENT.md`
-6. The active benchmark/protocol files named by `specs/CURRENT.md`
-7. `docs/19-ENGINEERING-METHOD.md`
-8. Relevant security, recovery, benchmark, and failure-condition documents
+2. `docs/canonical/GITHUB_BOOTSTRAP_PROVENANCE.md`
+3. `docs/canonical/EXECUTION_MASTER_PLAN.md`
+4. The active or next Spec Kit named by `specs/CURRENT.md`
+5. `README.md`
+6. Any historical architecture/security/benchmark documents that have been reconciled and mirrored into this GitHub repository.
+
+If a historical document referenced by an older plan is not yet present on GitHub, **do not invent or reconstruct its contents from memory**. Treat it as historical evidence pending reconciliation/mirroring. The master plan and `CURRENT` file may constrain work more tightly; they may not silently weaken historical frozen invariants.
+
+When the full historical documentation set is mirrored, the intended extended reading set includes Architecture Freeze, Phase T Authorization, Engineering Method, Threat Model, Recovery Model, Failure Conditions, Benchmark Plan and the active benchmark protocol.
 
 If live repository truth conflicts with a handoff, prompt, old report, or this file's examples, **live repository truth wins**.
 
@@ -33,7 +39,7 @@ PLANNED != AUTHORIZED
 
 ## 3. Current hard boundary
 
-The sealed R1 v1.1 benchmark is immutable.
+The historical sealed R1 v1.1 benchmark is immutable evidence.
 
 Before the current R1 experiment reaches its canonical terminal gate:
 
@@ -78,15 +84,15 @@ Do not skip directly from an idea to code.
 
 ## 5. Change-control class
 
-Before changing frozen material, classify the change using `docs/canonical/ARCHITECTURE_FREEZE.md §13`.
+Until the full historical Architecture Freeze is mirrored, use these conservative classes and choose the higher class when uncertain:
 
-- Class A: editorial.
-- Class B: implementation detail inside frozen invariants.
+- Class A: editorial, non-semantic.
+- Class B: implementation detail inside already-frozen invariants.
 - Class C: architecture-semantic — ADR + review.
 - Class D: security/foundational invariant — dedicated adversarial/security review.
 - Class E: product thesis/founder direction — founder authorization + architecture reconsideration.
 
-When uncertain, use the higher class.
+No bootstrap document may be used to weaken a historical frozen invariant.
 
 ## 6. Repository rules
 
@@ -95,11 +101,12 @@ When uncertain, use the higher class.
 - No rebase used to rewrite accepted history.
 - No destructive history rewriting.
 - No remote push, PR, merge, release, or publication unless separately authorized.
-- Prefer one local atomic commit per completed, verified task or narrowly coherent slice.
+- Prefer one atomic commit per completed, verified task or narrowly coherent slice.
 - Never claim PASS/MERGED/CLOSED without evidence.
 - Keep technical repository text, code, comments, commit messages, and reports in English.
 - Preserve negative results and failed experiments.
 - Never repair evidence by deleting inconvenient history.
+- Never substitute a GitHub bootstrap SHA for a pre-bootstrap sealed evidence SHA.
 
 ## 7. Canonical versus derived
 
@@ -125,6 +132,7 @@ agent inference → user-confirmed memory
 - A model, parser, retriever, graph system, vector store, crawler, or external agent cannot mint user authority.
 - Secrets never enter memory, context bodies, trajectories, event detail, or logs.
 - Third-party code reuse requires exact provenance and license review.
+- Historical pre-bootstrap evidence must be cited by its historical identifiers, not rewritten to fit GitHub bootstrap history.
 
 ## 9. Donor discipline
 
@@ -139,7 +147,7 @@ DEFER
 REJECT
 ```
 
-Presence in the source registry is not dependency authorization.
+Presence in a plan is not dependency authorization.
 
 Current high-value systems include Mem0, Letta Code, Graphiti, Chroma, Aider, Graphify, Code-Graph-RAG, Qdrant, LangGraph, LangChain, LlamaIndex, Firecrawl, Hermes Agent, DeepSeek Harness, OpenSandbox, mini-SWE-agent, OpenHands, Braintrust, LLMLingua, E2B, Daytona, and evaluation/observability systems.
 
@@ -152,10 +160,11 @@ Stop product implementation immediately when:
 - `specs/CURRENT.md` says the frontier is blocked;
 - an R1 or later experiment is not at the required gate;
 - a frozen invariant would need to change without its required review;
-- the worktree is not the expected clean state;
+- required implementation/evidence bytes are not present or reconciled;
 - source evidence is stale and load-bearing;
 - a benchmark failure invokes a failure condition;
-- execution evidence is ambiguous due to concurrency or partial persistence.
+- execution evidence is ambiguous due to concurrency or partial persistence;
+- a historical source is missing and proceeding would require guessing its content.
 
 Report the exact blocker. Do not route around it.
 
