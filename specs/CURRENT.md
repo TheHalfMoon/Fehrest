@@ -12,7 +12,10 @@ PHASE_T_IMPLEMENTATION=TECHNICALLY_COMPLETE
 PHASE_T_PRODUCT_THESIS=NOT_YET_TERMINAL
 ACTIVE_EXECUTION_FRONTIER=R1
 ACTIVE_R1_SUBGATE=REPLACEMENT_VARIANCE_PILOT_EXECUTION
-R1_REPLACEMENT_EXECUTOR_SHA256=9c53e45e41a0be5766779129a45e55aef4399d02395a1b4309e9d97114bef969
+R1_REPLACEMENT_EXECUTOR_VERSION=9
+R1_REPLACEMENT_EXECUTOR_SHA256=48da655c6e30da77a1073ffa149a360929a407d25ecbb8fb01d4c8a26429ef2a
+R1_REPLACEMENT_V8_PREPARE_RESULT=FAIL_CLOSED_BEFORE_MODEL_CALLS
+R1_REPLACEMENT_V9_QUALIFICATION=BOM_METADATA_READ_COMPATIBILITY_ONLY
 R1_REPLACEMENT_EXECUTION_RESULT=NOT_PRESENT
 NEXT_PRODUCT_SPEC=002-post-r1-canonical-core-convergence
 NEXT_PRODUCT_SPEC_STATUS=BLOCKED_BY_R1_TERMINAL_GATE_AND_FOUNDER_AUTHORIZATION
@@ -20,6 +23,8 @@ GITHUB_BOOTSTRAP_MODE=VERIFIED_SNAPSHOT_MIRROR
 ```
 
 The current R1 sub-gate is evidence-backed by `docs/canonical/R1_REPLACEMENT_EXECUTION_RUNBOOK.md`. The first variance-pilot batch is preserved as invalidated infrastructure-contaminated evidence. The valid same-protocol replacement has not yet produced its required execution result or raw seal.
+
+V8 failed closed during the no-API prepare gate because existing Windows-produced JSON metadata contained a UTF-8 BOM and the V8 supervisor decoded that metadata as plain `utf-8`. The observed failure occurred before credential capture and before any model call. V9 supersedes V8 only by accepting UTF-8 BOM when reading the pre-existing arming metadata and JSONL audit inputs. It does not change the sealed repository head, R1 v1.1 digest, runner fileset, external bundle, model, reasoning effort, seed, arm construction, corpus, task set, oracle set, scoring rule, session counts, or confirmatory plan.
 
 Do not infer success from the existence of the executor.
 

@@ -2,10 +2,11 @@
 
 **Status:** ACTIVE R1 EXECUTION RUNBOOK / NON-SCORING  
 **Recorded:** 2026-08-28  
-**Execution package:** `FEHREST-R1-X1-REPLACEMENT-V8.zip`  
-**Package SHA-256:** `9c53e45e41a0be5766779129a45e55aef4399d02395a1b4309e9d97114bef969`
+**Updated:** 2026-08-29  
+**Execution package:** `FEHREST-R1-X1-REPLACEMENT-V9.zip`  
+**Package SHA-256:** `48da655c6e30da77a1073ffa149a360929a407d25ecbb8fb01d4c8a26429ef2a`
 
-> This runbook records the exact already-prepared replacement-pilot execution boundary. It does not change the sealed R1 v1.1 protocol, model condition, seed, scoring rule, arm construction, corpus, task set, oracle set, or confirmatory plan.
+> This runbook records the exact replacement-pilot execution boundary. It does not change the sealed R1 v1.1 protocol, model condition, seed, scoring rule, arm construction, corpus, task set, oracle set, or confirmatory plan.
 
 ## 1. Why a replacement exists
 
@@ -28,9 +29,54 @@ SOURCE_BATCH_DISPOSITION=INVALIDATED_DO_NOT_SCORE_DO_NOT_USE_FOR_VARIANCE
 
 The invalidated batch must not be repaired by deleting, deduplicating, renumbering, or reinterpreting evidence.
 
-## 2. Immutable execution bindings
+## 2. V8 fail-closed attempt and V9 compatibility repair
 
-V8 requires all of these exact bindings before any model call:
+The V8 package remains preserved as a failed pre-execution attempt:
+
+```text
+V8_PACKAGE=FEHREST-R1-X1-REPLACEMENT-V8.zip
+V8_PACKAGE_SHA256=9c53e45e41a0be5766779129a45e55aef4399d02395a1b4309e9d97114bef969
+V8_PREPARE_STATUS=FAIL
+V8_FAILURE_CLASS=JSONDecodeError
+V8_FAILURE_REASON=Unexpected UTF-8 BOM while decoding existing JSON metadata as plain utf-8
+V8_OPENAI_API_KEY_CLEARED_FROM_POWERSHELL=YES
+V8_MODEL_CALLS_STARTED_AFTER_FAILURE=NO
+V8_SCORING_AUTHORIZED=NO
+V8_UNBLINDING_AUTHORIZED=NO
+V8_CONFIRMATORY_AUTHORIZED=NO
+```
+
+The failure occurred in `supervisor.py prepare` after repository/seal verification but before credential capture and before any model call. It therefore produced no scientific observation and does not alter the R1 design.
+
+V9 is a parser-compatibility repair only. Relative to V8:
+
+```text
+SUPERVISOR_CHANGE_1=load_jsonl reads existing JSONL with encoding=utf-8-sig
+SUPERVISOR_CHANGE_2=ARMING-MANIFEST.json reads with encoding=utf-8-sig
+CANONICAL_R1_RUNNER_CHANGED=NO
+SEALED_REPOSITORY_CONTENT_CHANGED=NO
+R1_V1_1_DIGEST_CHANGED=NO
+RUNNER_FILESET_CHANGED=NO
+EXTERNAL_BUNDLE_CHANGED=NO
+MODEL_CHANGED=NO
+REASONING_EFFORT_CHANGED=NO
+SEED_CHANGED=NO
+ARM_CONSTRUCTION_CHANGED=NO
+CORPUS_CHANGED=NO
+TASK_SET_CHANGED=NO
+ORACLE_SET_CHANGED=NO
+SCORING_RULE_CHANGED=NO
+SESSION_COUNTS_CHANGED=NO
+CONFIRMATORY_PLAN_CHANGED=NO
+```
+
+`utf-8-sig` accepts both BOM-prefixed UTF-8 and ordinary UTF-8 while the supervisor continues to hash the original file bytes with SHA-256 before interpretation. V9 does not rewrite, normalize, or strip bytes from the preserved source evidence.
+
+A bounded local regression probe against the V9 sidecar passed for both a BOM-prefixed JSON object and a BOM-prefixed first JSONL record. This is parser qualification only; it is not an R1 execution result.
+
+## 3. Immutable execution bindings
+
+V9 requires all of these exact bindings before any model call:
 
 ```text
 EXPECTED_HEAD=ed79d8ecee08e4ce4dd384edaffc4a27cfd6d37c
@@ -54,9 +100,9 @@ REPLACEMENT_MODEL_CONDITION_CHANGE=NO
 REPLACEMENT_USES_SAME_V1_1_PROTOCOL=YES
 ```
 
-## 3. Model/runtime condition
+## 4. Model/runtime condition
 
-The V8 supervisor invokes the sealed runner with exactly:
+The V9 supervisor invokes the sealed runner with exactly:
 
 ```text
 model=gpt-5.6-terra
@@ -75,14 +121,14 @@ repository path=C:\Users\Shehr\OneDrive\Desktop\Fehrest
 repository HEAD=ed79d8ecee08e4ce4dd384edaffc4a27cfd6d37c
 repository worktree=CLEAN
 Python 3.11 base=C:\Users\Shehr\AppData\Roaming\uv\python\cpython-3.11-windows-x86_64-none\python.exe
-isolated virtual environment=created under %LOCALAPPDATA%\Fehrest\R1-X1\replacement-runtime-v8
+isolated virtual environment=created under %LOCALAPPDATA%\Fehrest\R1-X1\replacement-runtime-v9
 openai SDK=3.3.0 exactly
 active r1_runner.py run processes=0
 ```
 
 The launcher may install `openai==3.3.0` into its isolated replacement runtime if that exact SDK is not already present there. This does not modify repository dependencies.
 
-## 4. Credential boundary
+## 5. Credential boundary
 
 The launcher deliberately clears `OPENAI_API_KEY` before preparation and does not request a credential until every no-API preflight gate passes.
 
@@ -100,9 +146,9 @@ clipboard is overwritten with FEHREST_API_KEY_CAPTURED_REDACTED after capture
 
 Do not paste an API key into GitHub, repository files, issues, PRs, logs, or chat transcripts.
 
-## 5. Execution package contents
+## 6. Execution package contents
 
-The verified V8 package contains:
+The verified V9 package contains:
 
 ```text
 RUN_THIS_NOW.cmd
@@ -113,14 +159,14 @@ supervisor.py
 Package identity:
 
 ```text
-FILENAME=FEHREST-R1-X1-REPLACEMENT-V8.zip
-SIZE_BYTES=9245
-SHA256=9c53e45e41a0be5766779129a45e55aef4399d02395a1b4309e9d97114bef969
+FILENAME=FEHREST-R1-X1-REPLACEMENT-V9.zip
+SIZE_BYTES=9262
+SHA256=48da655c6e30da77a1073ffa149a360929a407d25ecbb8fb01d4c8a26429ef2a
 ```
 
-A retained copy is preserved with the project's 2026-08-28 Fehrest recovery artifacts.
+V9 was constructed from V8 with only the two BOM-tolerant metadata-read changes plus launcher/runtime version labels and a fresh isolated runtime directory name.
 
-## 6. No-API prepare gate
+## 7. No-API prepare gate
 
 Before credential capture, `supervisor.py prepare` must verify:
 
@@ -149,7 +195,7 @@ REPLACEMENT_MODEL_CALLS_EXECUTED=0
 
 Any mismatch fails closed before a credential is accepted.
 
-## 7. Execution command
+## 8. Execution command
 
 The human-facing package entry point is:
 
@@ -165,7 +211,7 @@ supervisor.py run
 
 The supervisor invokes the sealed external runner only after acquiring the single-runner lock.
 
-## 8. Evidence integrity gates after execution
+## 9. Evidence integrity gates after execution
 
 A runner exit code of zero is not sufficient by itself.
 
@@ -190,9 +236,9 @@ raw archive exists
 raw archive SHA-256 equals the reproducible seal digest
 ```
 
-No scoring, power analysis, unblinding, or confirmatory execution occurs in V8.
+No scoring, power analysis, unblinding, or confirmatory execution occurs in V9.
 
-## 9. Required success artifact
+## 10. Required success artifact
 
 The launcher writes the result to:
 
@@ -219,7 +265,7 @@ NEXT_GATE=FOUNDER_REVIEW_BEFORE_BLINDED_SCORING
 
 The actual result file and raw archive digest are required evidence. The intended success markers in this runbook are not substitutes for them.
 
-## 10. Failure routing
+## 11. Failure routing
 
 The supervisor records specific fail-closed states, including:
 
@@ -233,9 +279,11 @@ REVIEW_REPLACEMENT_SUPERVISOR_FAILURE
 
 A failed or incomplete replacement is preserved and reviewed. Do not silently retry in a way that deletes attempt evidence or changes the scientific condition.
 
-## 11. Current execution blocker
+A pre-API parser failure such as the preserved V8 BOM failure may be superseded only by a non-semantic compatibility repair that preserves all sealed experiment bindings and is separately recorded before execution.
 
-The repository/provenance side is now recoverable and verified, but the connected repository execution environment does not supply the required combination of:
+## 12. Current execution blocker
+
+The repository/provenance side is recoverable and verified, but the connected repository execution environment does not supply the required combination of:
 
 ```text
 user's Windows Fehrest host state
@@ -249,14 +297,14 @@ Therefore the next R1 scientific action cannot be truthfully executed by reposit
 Current state:
 
 ```text
-R1_REPLACEMENT_EXECUTOR=RECOVERED_AND_VERIFIED
-R1_REPLACEMENT_EXECUTOR_SHA256=9c53e45e41a0be5766779129a45e55aef4399d02395a1b4309e9d97114bef969
-R1_REPLACEMENT_PREPARE_LOGIC=VERIFIED
+R1_REPLACEMENT_EXECUTOR=V9_RECOVERED_AND_PARSER_QUALIFIED
+R1_REPLACEMENT_EXECUTOR_SHA256=48da655c6e30da77a1073ffa149a360929a407d25ecbb8fb01d4c8a26429ef2a
+R1_REPLACEMENT_V8_RESULT=FAIL_CLOSED_PREPARE_BOM_NO_MODEL_CALLS
 R1_REPLACEMENT_EXECUTION_RESULT=NOT_PRESENT
 R1_TERMINAL_VERDICT=NOT_VERIFIED
 ```
 
-## 12. After a successful replacement
+## 13. After a successful replacement
 
 Do not jump to product implementation.
 
