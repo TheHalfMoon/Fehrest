@@ -56,6 +56,49 @@ Issue #1 tracks this remaining provenance-transport obligation. Closing that iss
 
 The publication gate is separate from the active R1 experiment gate owned by Issue #8. Publishing historical Git objects does not create an R1 execution result, authorize scoring, or activate Spec 002.
 
+## Transport qualification evidence — 2026-08-29
+
+Two repository-native transport paths were exercised and preserved as negative evidence without mutating canonical `main` or the sealed R1 experiment.
+
+### GitHub-hosted runner probe
+
+A temporary branch from canonical `main` tested fresh `windows-latest` and `ubuntu-latest` jobs rather than relying only on the earlier historical workflow.
+
+```text
+PROBE_BRANCH=ops/runner-probe-20260829
+PROBE_TRIGGER_HEAD=ea32166bde9c75086f7ce61746a27730e455c0e2
+PROBE_RUN_ID=33250476412
+WINDOWS_JOB_ID=99095174621
+WINDOWS_EXECUTABLE_STEPS=0
+UBUNTU_JOB_ID=99095174732
+UBUNTU_EXECUTABLE_STEPS=0
+JOB_LOG_BLOBS_CREATED=NO
+PROBE_CLOSEOUT_HEAD=a224092c837695877f75b36181446ee5961fc69f
+PROBE_CLOSEOUT_WORKFLOW_PRESENT=NO
+CANONICAL_MAIN_MUTATED_BY_PROBE=NO
+```
+
+Both jobs failed before any executable step was reported and no job log blob was created. This evidence proves that GitHub-hosted runner transport was unavailable for this repository at the time of the probe. It does **not** prove a specific account-side root cause such as billing, policy, or capacity, because the available connected interface did not expose a qualifying diagnostic beyond the pre-step failure state.
+
+### Git Data text-transfer probe
+
+The connected Git Data API can create Git blobs, but model-mediated transfer was tested against a known historical governance blob and failed byte identity.
+
+```text
+HISTORICAL_PATH=.specify/memory/constitution.md
+EXPECTED_HISTORICAL_BLOB_SHA=eb427abed358fefb2a12890748e5c9ececa68c0b
+CONNECTOR_CREATED_BLOB_SHA=fc643fde784d7606ba0a2cade6deca43fd6d0f62
+BLOB_SHA_MATCH=NO
+HISTORICAL_TEXT=Neither substitutes for the other.
+TRANSFERRED_TEXT=Neether substitutes for the other.
+MISMATCHED_BLOB_REFERENCED_BY_TREE_OR_REF=NO
+CANONICAL_MAIN_MUTATED_BY_PROBE=NO
+```
+
+The recovered Git bundle independently verifies the expected historical blob SHA and historical text. Because the connector-created blob differed, no remaining historical blobs were transferred by that method and the mismatched object was never attached to a tree, commit, branch, tag, or canonical path.
+
+Therefore repository-native text reconstruction is disqualified as a provenance publication mechanism. The historical gate still requires transport of the existing Git objects themselves, preserving the original commit, tree and blob identities. The prepared normal non-force publication package remains the safe path when an execution environment with direct authenticated Git network access is available.
+
 ## Integrity rule
 
 Never:
