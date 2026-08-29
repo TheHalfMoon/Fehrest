@@ -44,7 +44,11 @@ valid replacement R1 variance pilot
 → execution review
 → blinded scoring when authorized
 → power analysis
-→ confirmatory execution path
+→ confirmatory N
+→ confirmatory manifest seal
+→ confirmatory execution
+→ raw seal
+→ blinded scoring
 → scoring seal
 → unblind
 → terminal verdict
@@ -53,36 +57,50 @@ valid replacement R1 variance pilot
 
 ## 2026-08-29 live-base checkpoint
 
-The proposal branch was merge-forwarded after canonical PR #14 authorized the BOM-compatible V9 replacement executor as a parser-only repair of the fail-closed V8 prepare attempt.
+The proposal branch was merge-forwarded from the then-current proposal head to canonical `main` after PR #16 authorized V11 as SDK-verification plumbing only. No rebase, force update, or destructive history rewrite was used.
 
 ```text
-CANONICAL_MAIN=d980af8303e038df62f974eec898bc1123f83c77
-CANONICAL_MAIN_TREE=6b12dd20d38b48710f9f44de98e4b2bf3f5790de
-PRE_MERGE_PROPOSAL_HEAD=a692cb0baf27f4f301d31d86ff6785c158464e8b
-MERGE_FORWARD_COMMIT=e80dce50b6fc00c9eff6de90026e48fac981a1bf
-MERGE_FORWARD_FIRST_PARENT=a692cb0baf27f4f301d31d86ff6785c158464e8b
-MERGE_FORWARD_SECOND_PARENT=d980af8303e038df62f974eec898bc1123f83c77
+CANONICAL_MAIN=ca0bfa61de6cf92e5e6758731126e8274404de67
+CANONICAL_MAIN_TREE=c97ae0eb53be97c35c62ba7c6c956c9e95f01f1e
+PRE_MERGE_PROPOSAL_HEAD=0f200ad999a37805708d4ad18052cae6298effac
+MERGE_FORWARD_COMMIT=34a95950704a83db34f25a4e3570aaaa787db58f
+MERGE_FORWARD_FIRST_PARENT=0f200ad999a37805708d4ad18052cae6298effac
+MERGE_FORWARD_SECOND_PARENT=ca0bfa61de6cf92e5e6758731126e8274404de67
 BEHIND_CANONICAL_MAIN_AFTER_MERGE_FORWARD=0
 FORCE_PUSH_USED=NO
 REBASE_USED=NO
 DESTRUCTIVE_HISTORY_REWRITE_USED=NO
 ```
 
-The merge-forward adopted canonical `specs/CURRENT.md` and `docs/canonical/R1_REPLACEMENT_EXECUTION_RUNBOOK.md` exactly from `main`. The proposal branch does not alter those files relative to canonical main.
+The merge-forward adopted the following canonical R1 authority files byte-identically from `main`:
+
+```text
+specs/CURRENT.md
+docs/canonical/R1_REPLACEMENT_EXECUTION_RUNBOOK.md
+docs/canonical/R1_REPLACEMENT_EXECUTION_RUNBOOK_V11.md
+docs/canonical/R1_V11_RUNTIME_COMPATIBILITY.md
+```
 
 Canonical R1 state now records:
 
 ```text
-R1_REPLACEMENT_EXECUTOR_VERSION=9
-R1_REPLACEMENT_EXECUTOR_SHA256=48da655c6e30da77a1073ffa149a360929a407d25ecbb8fb01d4c8a26429ef2a
+R1_REPLACEMENT_EXECUTOR_VERSION=11
+R1_REPLACEMENT_EXECUTOR_SHA256=92ee711067d65bd7d68a0204becc916d3e9322fa975d815d8da6126e8c31dd89
 R1_REPLACEMENT_V8_PREPARE_RESULT=FAIL_CLOSED_BEFORE_MODEL_CALLS
-R1_REPLACEMENT_V9_QUALIFICATION=BOM_METADATA_READ_COMPATIBILITY_ONLY
+R1_REPLACEMENT_V9_PREPARE_RESULT=PASS
+R1_REPLACEMENT_V9_RUNTIME_RESULT=FAIL_CLOSED_DURING_ISOLATED_RUNTIME_BOOTSTRAP_BEFORE_MODEL_CALLS
+R1_REPLACEMENT_V10_PREPARE_RESULT=PASS
+R1_REPLACEMENT_V10_RUNTIME_RESULT=UV_VENV_AND_OPENAI_3_3_0_INSTALL_PASS
+R1_REPLACEMENT_V10_VERIFY_RESULT=FAIL_CLOSED_PYTHON_C_ARGUMENT_QUOTING_BEFORE_MODEL_CALLS
+R1_REPLACEMENT_V11_QUALIFICATION=RUNTIME_LOCAL_SDK_VERIFY_SCRIPT_ONLY
 R1_REPLACEMENT_EXECUTION_RESULT=NOT_PRESENT
 ```
 
-V8's BOM decode failure occurred before credential capture and before any model call. V9 changes only BOM-compatible reads of pre-existing arming/JSONL metadata while preserving byte hashing and every sealed scientific binding. This does not create an R1 result, does not authorize scoring, and does not change the V2 proposal's authority state.
+V10 proved the uv-managed isolated runtime and pinned `openai==3.3.0` installation, then failed closed because PowerShell split the Python `-c` verification payload so Python received bare `import`. V11 preserves the V10/V9 supervisor byte-for-byte and changes only SDK verification plumbing by executing a runtime-local UTF-8-without-BOM `verify-openai-sdk.py` instead of Python `-c`.
 
-After this merge-forward, the proposal diff against canonical `main` remains limited to the 19 V2 proposal/research/review files under `docs/**`; it contains no canonical `docs/canonical/**`, `specs/CURRENT.md`, Spec 002, R1 runbook, or product-code diff.
+No V11 scientific execution result or raw seal is present in canonical repository truth. These compatibility facts do not close R1, authorize scoring, or change the V2 proposal's authority state.
+
+After this merge-forward, the intended proposal diff against canonical `main` remains limited to the 19 V2 proposal/research/review files under `docs/**`; canonical `docs/canonical/**`, `specs/CURRENT.md`, Spec 002, and product code are inherited from `main` and are not proposal changes.
 
 ## V2 proposal disposition
 
