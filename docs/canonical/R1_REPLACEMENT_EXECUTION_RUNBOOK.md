@@ -3,8 +3,8 @@
 **Status:** ACTIVE R1 EXECUTION RUNBOOK / NON-SCORING  
 **Recorded:** 2026-08-28  
 **Updated:** 2026-08-29  
-**Execution package:** `FEHREST-R1-X1-REPLACEMENT-V9.zip`  
-**Package SHA-256:** `48da655c6e30da77a1073ffa149a360929a407d25ecbb8fb01d4c8a26429ef2a`
+**Execution package:** `FEHREST-R1-X1-REPLACEMENT-V10.zip`  
+**Package SHA-256:** `67c5f4a943084eef069397468c41c3ec2547660dea212d735394e260f72841a3`
 
 > This runbook records the exact replacement-pilot execution boundary. It does not change the sealed R1 v1.1 protocol, model condition, seed, scoring rule, arm construction, corpus, task set, oracle set, or confirmatory plan.
 
@@ -29,9 +29,11 @@ SOURCE_BATCH_DISPOSITION=INVALIDATED_DO_NOT_SCORE_DO_NOT_USE_FOR_VARIANCE
 
 The invalidated batch must not be repaired by deleting, deduplicating, renumbering, or reinterpreting evidence.
 
-## 2. V8 fail-closed attempt and V9 compatibility repair
+## 2. Preserved V8 and V9 fail-closed attempts
 
-The V8 package remains preserved as a failed pre-execution attempt:
+### V8
+
+V8 remains preserved as a failed pre-execution attempt:
 
 ```text
 V8_PACKAGE=FEHREST-R1-X1-REPLACEMENT-V8.zip
@@ -46,13 +48,47 @@ V8_UNBLINDING_AUTHORIZED=NO
 V8_CONFIRMATORY_AUTHORIZED=NO
 ```
 
-The failure occurred in `supervisor.py prepare` after repository/seal verification but before credential capture and before any model call. It therefore produced no scientific observation and does not alter the R1 design.
+The failure occurred in `supervisor.py prepare` after repository/seal verification but before credential capture and before any model call. It therefore produced no scientific observation and did not alter the R1 design.
 
-V9 is a parser-compatibility repair only. Relative to V8:
+### V9
+
+V9 changed only metadata decoding in `supervisor.py` so pre-existing BOM-prefixed UTF-8 JSON/JSONL could be interpreted without rewriting their bytes. On the required Windows host, V9 proved that compatibility repair:
 
 ```text
-SUPERVISOR_CHANGE_1=load_jsonl reads existing JSONL with encoding=utf-8-sig
-SUPERVISOR_CHANGE_2=ARMING-MANIFEST.json reads with encoding=utf-8-sig
+V9_PACKAGE=FEHREST-R1-X1-REPLACEMENT-V9.zip
+V9_PACKAGE_SHA256=48da655c6e30da77a1073ffa149a360929a407d25ecbb8fb01d4c8a26429ef2a
+V9_PREPARE_STATUS=PASS
+V9_NO_API_PREPARE_GATE=PASS
+V9_INCIDENT_SHA256=3c70cef6cc74304703e46a2135121f06b6a4aa039e366b6edab7d0ecd71063e2
+V9_REPLACEMENT_ARMING_MANIFEST_SHA256=a7ae52b503d6c7b66cf03624aa78bd82b0349d5b02e9e0537b6a7985e1eff2ae
+V9_REPLACEMENT_MODEL_CALLS_EXECUTED=0
+V9_RUNTIME_PHASE=CREATING_ISOLATED_PYTHON_RUNTIME
+V9_LAUNCHER_STATUS=FAIL
+V9_FAILURE_REASON=Traceback (most recent call last):
+V9_OPENAI_API_KEY_CLEARED_FROM_POWERSHELL=YES
+V9_MODEL_CALLS_STARTED_AFTER_FAILURE=NO
+```
+
+The V9 launcher preserved only the first traceback line in its catch-path `FAILURE_REASON`. The repository therefore does **not** claim an unverified root cause for the runtime-bootstrap failure. The evidence proves only that no-API prepare passed, isolated-runtime creation began, the launcher failed closed there, no model call started after the failure, and the PowerShell environment cleared `OPENAI_API_KEY`.
+
+## 3. V10 launcher/runtime compatibility repair
+
+V10 preserves the V9 `supervisor.py` byte-for-byte:
+
+```text
+V9_SUPERVISOR_SHA256=c63bca3157068a22c82b95c5613417c745715dc5eb9d54d9a9c92f3b0ab641b7
+V10_SUPERVISOR_SHA256=c63bca3157068a22c82b95c5613417c745715dc5eb9d54d9a9c92f3b0ab641b7
+SUPERVISOR_BYTE_IDENTITY=PASS
+```
+
+V10 changes only `replacement.ps1` runtime bootstrap and diagnostics:
+
+```text
+V9_REPLACEMENT_PS1_SHA256=694db9b8cdd484bb788c54f4313426d45c7d69c181331fb18285370a8d09cfae
+V10_REPLACEMENT_PS1_SHA256=5c4dec69867f9e281f18218b0d2a62f68b4a7992292a20f8377c3dd929002b46
+V10_RUNTIME_BOOTSTRAP=uv venv --clear --python <exact required uv-managed CPython> <isolated venv>
+V10_PINNED_SDK_INSTALL=uv pip install --python <isolated python> openai==3.3.0
+V10_DIAGNOSTICS=complete uv venv / uv pip / SDK verification stdout+stderr plus PowerShell failure type and stack
 CANONICAL_R1_RUNNER_CHANGED=NO
 SEALED_REPOSITORY_CONTENT_CHANGED=NO
 R1_V1_1_DIGEST_CHANGED=NO
@@ -70,13 +106,11 @@ SESSION_COUNTS_CHANGED=NO
 CONFIRMATORY_PLAN_CHANGED=NO
 ```
 
-`utf-8-sig` accepts both BOM-prefixed UTF-8 and ordinary UTF-8 while the supervisor continues to hash the original file bytes with SHA-256 before interpretation. V9 does not rewrite, normalize, or strip bytes from the preserved source evidence.
+The exact required Python base is already a uv-managed CPython installation. V10 delegates creation of the isolated environment and installation of the pinned `openai==3.3.0` SDK to `uv` rather than invoking `python -m venv`. This is launcher/runtime plumbing only. It does not change the scientific executor or any experiment input.
 
-A bounded local regression probe against the V9 sidecar passed for both a BOM-prefixed JSON object and a BOM-prefixed first JSONL record. This is parser qualification only; it is not an R1 execution result.
+## 4. Immutable execution bindings
 
-## 3. Immutable execution bindings
-
-V9 requires all of these exact bindings before any model call:
+V10 requires all of these exact bindings before any model call:
 
 ```text
 EXPECTED_HEAD=ed79d8ecee08e4ce4dd384edaffc4a27cfd6d37c
@@ -100,9 +134,9 @@ REPLACEMENT_MODEL_CONDITION_CHANGE=NO
 REPLACEMENT_USES_SAME_V1_1_PROTOCOL=YES
 ```
 
-## 4. Model/runtime condition
+## 5. Model/runtime condition
 
-The V9 supervisor invokes the sealed runner with exactly:
+The V10 supervisor invokes the sealed runner with exactly:
 
 ```text
 model=gpt-5.6-terra
@@ -121,16 +155,17 @@ repository path=C:\Users\Shehr\OneDrive\Desktop\Fehrest
 repository HEAD=ed79d8ecee08e4ce4dd384edaffc4a27cfd6d37c
 repository worktree=CLEAN
 Python 3.11 base=C:\Users\Shehr\AppData\Roaming\uv\python\cpython-3.11-windows-x86_64-none\python.exe
-isolated virtual environment=created under %LOCALAPPDATA%\Fehrest\R1-X1\replacement-runtime-v9
+isolated virtual environment=created under %LOCALAPPDATA%\Fehrest\R1-X1\replacement-runtime-v10
+uv executable=resolved from PATH or known per-user uv installation paths
 openai SDK=3.3.0 exactly
 active r1_runner.py run processes=0
 ```
 
-The launcher may install `openai==3.3.0` into its isolated replacement runtime if that exact SDK is not already present there. This does not modify repository dependencies.
+V10 creates the isolated runtime through `uv venv` using the exact required Python executable and installs `openai==3.3.0` through `uv pip` when that exact SDK is not already importable inside the isolated runtime. This does not modify repository dependencies.
 
-## 5. Credential boundary
+## 6. Credential boundary
 
-The launcher deliberately clears `OPENAI_API_KEY` before preparation and does not request a credential until every no-API preflight gate passes.
+The launcher deliberately clears `OPENAI_API_KEY` before preparation and does not request a credential until every no-API preflight and isolated-runtime gate passes.
 
 Credential requirements:
 
@@ -146,9 +181,9 @@ clipboard is overwritten with FEHREST_API_KEY_CAPTURED_REDACTED after capture
 
 Do not paste an API key into GitHub, repository files, issues, PRs, logs, or chat transcripts.
 
-## 6. Execution package contents
+## 7. Execution package contents
 
-The verified V9 package contains:
+The verified V10 package contains:
 
 ```text
 RUN_THIS_NOW.cmd
@@ -159,14 +194,14 @@ supervisor.py
 Package identity:
 
 ```text
-FILENAME=FEHREST-R1-X1-REPLACEMENT-V9.zip
-SIZE_BYTES=9262
-SHA256=48da655c6e30da77a1073ffa149a360929a407d25ecbb8fb01d4c8a26429ef2a
+FILENAME=FEHREST-R1-X1-REPLACEMENT-V10.zip
+SIZE_BYTES=10040
+SHA256=67c5f4a943084eef069397468c41c3ec2547660dea212d735394e260f72841a3
 ```
 
-V9 was constructed from V8 with only the two BOM-tolerant metadata-read changes plus launcher/runtime version labels and a fresh isolated runtime directory name.
+V10 was constructed from V9 with the exact V9 supervisor and command entrypoint unchanged. Only `replacement.ps1` changed for uv-based isolated-runtime bootstrap and complete diagnostic capture.
 
-## 7. No-API prepare gate
+## 8. No-API prepare gate
 
 Before credential capture, `supervisor.py prepare` must verify:
 
@@ -185,7 +220,7 @@ external bundle archive exact
 replacement preflight byte-identical to source preflight
 ```
 
-Success produces a write-once incident record and replacement arming manifest with:
+Success produces or verifies the write-once incident record and replacement arming manifest with:
 
 ```text
 PREPARE_STATUS=PASS
@@ -195,7 +230,20 @@ REPLACEMENT_MODEL_CALLS_EXECUTED=0
 
 Any mismatch fails closed before a credential is accepted.
 
-## 8. Execution command
+## 9. Isolated-runtime gate
+
+After prepare and still before credential capture, V10 must establish and verify the runtime:
+
+```text
+UV_EXECUTABLE_FOUND=YES
+ISOLATED_PYTHON_RUNTIME=READY
+OPENAI_SDK_VERSION=3.3.0
+REPLACEMENT_MODEL_CALLS_EXECUTED=0
+```
+
+Any `uv venv`, `uv pip`, SDK import, or version failure is captured with its complete subprocess stdout/stderr and fails closed before credential capture. Such a failure is infrastructure/runtime evidence only and is not an R1 scientific observation.
+
+## 10. Execution command
 
 The human-facing package entry point is:
 
@@ -211,7 +259,7 @@ supervisor.py run
 
 The supervisor invokes the sealed external runner only after acquiring the single-runner lock.
 
-## 9. Evidence integrity gates after execution
+## 11. Evidence integrity gates after execution
 
 A runner exit code of zero is not sufficient by itself.
 
@@ -236,9 +284,9 @@ raw archive exists
 raw archive SHA-256 equals the reproducible seal digest
 ```
 
-No scoring, power analysis, unblinding, or confirmatory execution occurs in V9.
+No scoring, power analysis, unblinding, or confirmatory execution occurs in V10.
 
-## 10. Required success artifact
+## 12. Required success artifact
 
 The launcher writes the result to:
 
@@ -265,7 +313,7 @@ NEXT_GATE=FOUNDER_REVIEW_BEFORE_BLINDED_SCORING
 
 The actual result file and raw archive digest are required evidence. The intended success markers in this runbook are not substitutes for them.
 
-## 11. Failure routing
+## 13. Failure routing
 
 The supervisor records specific fail-closed states, including:
 
@@ -279,9 +327,9 @@ REVIEW_REPLACEMENT_SUPERVISOR_FAILURE
 
 A failed or incomplete replacement is preserved and reviewed. Do not silently retry in a way that deletes attempt evidence or changes the scientific condition.
 
-A pre-API parser failure such as the preserved V8 BOM failure may be superseded only by a non-semantic compatibility repair that preserves all sealed experiment bindings and is separately recorded before execution.
+Pre-API compatibility failures may be superseded only by non-semantic launcher/parser/runtime repairs that preserve all sealed experiment bindings and are separately recorded before execution.
 
-## 12. Current execution blocker
+## 14. Current execution blocker
 
 The repository/provenance side is recoverable and verified, but the connected repository execution environment does not supply the required combination of:
 
@@ -297,14 +345,15 @@ Therefore the next R1 scientific action cannot be truthfully executed by reposit
 Current state:
 
 ```text
-R1_REPLACEMENT_EXECUTOR=V9_RECOVERED_AND_PARSER_QUALIFIED
-R1_REPLACEMENT_EXECUTOR_SHA256=48da655c6e30da77a1073ffa149a360929a407d25ecbb8fb01d4c8a26429ef2a
+R1_REPLACEMENT_EXECUTOR=V10_RUNTIME_BOOTSTRAP_QUALIFIED_FOR_EXTERNAL_ATTEMPT
+R1_REPLACEMENT_EXECUTOR_SHA256=67c5f4a943084eef069397468c41c3ec2547660dea212d735394e260f72841a3
 R1_REPLACEMENT_V8_RESULT=FAIL_CLOSED_PREPARE_BOM_NO_MODEL_CALLS
+R1_REPLACEMENT_V9_RESULT=PREPARE_PASS_THEN_FAIL_CLOSED_RUNTIME_BOOTSTRAP_NO_MODEL_CALLS
 R1_REPLACEMENT_EXECUTION_RESULT=NOT_PRESENT
 R1_TERMINAL_VERDICT=NOT_VERIFIED
 ```
 
-## 13. After a successful replacement
+## 15. After a successful replacement
 
 Do not jump to product implementation.
 
