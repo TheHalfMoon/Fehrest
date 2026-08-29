@@ -2,6 +2,7 @@
 
 **Status:** DRAFT / NON-AUTHORIZING  
 **Recorded:** 2026-08-28  
+**Updated:** 2026-08-29  
 **Proposal:** Fehrest V2  
 **Canonical execution frontier:** R1
 
@@ -52,26 +53,36 @@ valid replacement R1 variance pilot
 
 ## 2026-08-29 live-base checkpoint
 
-The proposal branch was merge-forwarded again after canonical provenance transport qualification merged through PR #13.
+The proposal branch was merge-forwarded after canonical PR #14 authorized the BOM-compatible V9 replacement executor as a parser-only repair of the fail-closed V8 prepare attempt.
 
 ```text
-CANONICAL_MAIN=8f364c10244b4dce6f8b3d027184e7b4c10107b9
-CANONICAL_MAIN_TREE=a3a18360b62ef19cc0134a70476d1a2f221b4c73
-PRE_MERGE_PROPOSAL_HEAD=18a48fc03afd3c906c3ef0606f6a75411967a1c1
-MERGE_FORWARD_COMMIT=8c9c3078b686b5ea430b5d8cc0c58f3ff1a82ae2
-MERGE_FORWARD_FIRST_PARENT=18a48fc03afd3c906c3ef0606f6a75411967a1c1
-MERGE_FORWARD_SECOND_PARENT=8f364c10244b4dce6f8b3d027184e7b4c10107b9
+CANONICAL_MAIN=d980af8303e038df62f974eec898bc1123f83c77
+CANONICAL_MAIN_TREE=6b12dd20d38b48710f9f44de98e4b2bf3f5790de
+PRE_MERGE_PROPOSAL_HEAD=a692cb0baf27f4f301d31d86ff6785c158464e8b
+MERGE_FORWARD_COMMIT=e80dce50b6fc00c9eff6de90026e48fac981a1bf
+MERGE_FORWARD_FIRST_PARENT=a692cb0baf27f4f301d31d86ff6785c158464e8b
+MERGE_FORWARD_SECOND_PARENT=d980af8303e038df62f974eec898bc1123f83c77
 BEHIND_CANONICAL_MAIN_AFTER_MERGE_FORWARD=0
 FORCE_PUSH_USED=NO
 REBASE_USED=NO
 DESTRUCTIVE_HISTORY_REWRITE_USED=NO
 ```
 
-Before the merge-forward, the only path present on canonical `main` and absent from the proposal branch was the PR #13 update to `docs/canonical/GITHUB_BOOTSTRAP_PROVENANCE.md`. The merge-forward adopted that canonical blob without editing it.
+The merge-forward adopted canonical `specs/CURRENT.md` and `docs/canonical/R1_REPLACEMENT_EXECUTION_RUNBOOK.md` exactly from `main`. The proposal branch does not alter those files relative to canonical main.
 
-After the merge-forward, the proposal diff against canonical `main` contains only the 19 V2 proposal/research/review files under `docs/**`; it contains no `docs/canonical/**`, `specs/CURRENT.md`, Spec 002, R1 runbook, or product-code diff.
+Canonical R1 state now records:
 
-Canonical provenance now records that both fresh hosted-runner transport and model-mediated Git Data text reconstruction were fail-closed / unsuitable for exact historical object publication. This strengthens provenance evidence only. It does not close historical publication Issue #1, does not create an R1 result, and does not change the V2 proposal's authority state.
+```text
+R1_REPLACEMENT_EXECUTOR_VERSION=9
+R1_REPLACEMENT_EXECUTOR_SHA256=48da655c6e30da77a1073ffa149a360929a407d25ecbb8fb01d4c8a26429ef2a
+R1_REPLACEMENT_V8_PREPARE_RESULT=FAIL_CLOSED_BEFORE_MODEL_CALLS
+R1_REPLACEMENT_V9_QUALIFICATION=BOM_METADATA_READ_COMPATIBILITY_ONLY
+R1_REPLACEMENT_EXECUTION_RESULT=NOT_PRESENT
+```
+
+V8's BOM decode failure occurred before credential capture and before any model call. V9 changes only BOM-compatible reads of pre-existing arming/JSONL metadata while preserving byte hashing and every sealed scientific binding. This does not create an R1 result, does not authorize scoring, and does not change the V2 proposal's authority state.
+
+After this merge-forward, the proposal diff against canonical `main` remains limited to the 19 V2 proposal/research/review files under `docs/**`; it contains no canonical `docs/canonical/**`, `specs/CURRENT.md`, Spec 002, R1 runbook, or product-code diff.
 
 ## V2 proposal disposition
 
