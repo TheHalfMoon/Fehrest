@@ -2,6 +2,7 @@
 
 **Status:** PROPOSAL CONTROL INDEX / NON-AUTHORIZING  
 **Created:** 2026-08-28  
+**Updated:** 2026-08-31  
 **Canonical authority:** unchanged; see `AGENTS.md`, `specs/CURRENT.md`, and `docs/canonical/EXECUTION_MASTER_PLAN.md`.
 
 > The files in this directory refine the earlier V2 planning proposal into a Spec Kit-compatible program decomposition. Within the non-canonical V2 proposal branch only, if these files conflict with older V2 proposal sequencing or ownership language, this directory is the newer planning refinement. It does not supersede canonical repository governance.
@@ -17,19 +18,22 @@
 4. RUST_CONVERGENCE_REVIEW.md
 5. CROSS_SPEC_INVARIANTS_AND_OWNERSHIP.md
 6. SPEC_SEQUENCE_AND_DEPENDENCIES.md
-7. TRACEABILITY_AND_COVERAGE_MATRIX.md
-8. CONFLICT_AND_GAP_REVIEW.md
-9. PROGRAM_CONVERGENCE_REVIEW.md
-10. SPEC_AUTHORING_CHECKLIST.md
+7. LINEAR_ADDITIVE_PRODUCT_EXECUTION_TRACK.md
+8. TRACEABILITY_AND_COVERAGE_MATRIX.md
+9. CONFLICT_AND_GAP_REVIEW.md
+10. PROGRAM_CONVERGENCE_REVIEW.md
+11. SPEC_AUTHORING_CHECKLIST.md
 ```
 
 Then read the broader V2 product documents:
 
 ```text
 docs/product/FOUNDER_PRODUCT_VISION_V2.md
+docs/product/FOUNDER_DIRECTION_ADDENDUM_LINEAR_2026-08-31.md
 docs/product/UX_BLUEPRINT_V2.md
 docs/product/HUMAN_AGENT_FEATURE_CATALOG_V2.md
 docs/research/COMPETITIVE_CAPABILITY_MATRIX_2026-08-28.md
+docs/research/LINEAR_CAPABILITY_BASELINE_2026-08-31.md
 docs/reviews/PRODUCT_GAP_REVIEW_V2_2026-08-28.md
 docs/proposals/AI_SEARCH_WEBMCP_PROVIDER_ARCHITECTURE.md
 docs/proposals/EXECUTION_MASTER_PLAN_V2_PROPOSAL.md
@@ -127,6 +131,24 @@ A blocked language gate prevents implementation unless the founder/architecture 
 
 `PROGRAM_CONVERGENCE_REVIEW.md` records one consolidated planning verdict across governance, Spec Kit methodology, dependency order, semantic ownership, Rust, human/agent UX, GitHub, Search/Graph, AI, WebMCP, collaboration and donor discipline.
 
+### 13. Linear added as a mandatory product-execution benchmark
+
+The founder clarified on 2026-08-31 that Linear must be **added to**, not substituted for, the existing Fehrest V2 direction.
+
+The additive rule is:
+
+```text
+EXISTING_FEHREST_V2_SCOPE=RETAIN
+LINEAR_CLASS_PRODUCT_EXECUTION=ADD
+MEMORY_REPOSITORY_CORE=RETAIN
+```
+
+`LINEAR_ADDITIVE_PRODUCT_EXECUTION_TRACK.md` adds explicit planning ownership for Linear-class work management, initiatives, cycles, milestones, roadmaps, triage, internal requests, customer intelligence, views, insights, code review, agentic delivery, verification, automation, API/mobile requirements and replacement proof without deleting Specs 002–022 or the Obsidian/Notion/Slack/GitHub/agent-memory targets.
+
+`docs/research/LINEAR_CAPABILITY_BASELINE_2026-08-31.md` records the dated capability baseline and requires a future living capability registry so material Linear features cannot remain implicitly unmapped.
+
+This planning addendum is non-authorizing and does not alter R1 or `specs/CURRENT.md`.
+
 ---
 
 ## Current state
@@ -137,6 +159,9 @@ FOUNDER_LANGUAGE_DIRECTION=RUST
 RUST_TRACEABILITY_002_TO_022=YES
 RUST_CONVERGENCE_REVIEW=PREPARED
 PROGRAM_CONVERGENCE_REVIEW=PREPARED
+LINEAR_ADDITIVE_TRACK=PREPARED
+LINEAR_MANDATORY_PRODUCT_EXECUTION_BASELINE=YES
+LINEAR_REPLACES_EXISTING_V2_SCOPE=NO
 V2_PROGRAM_CANONICAL=NO
 R1_CHANGED=NO
 CURRENT_CHANGED=NO
