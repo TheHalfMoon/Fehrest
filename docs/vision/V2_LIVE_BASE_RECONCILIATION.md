@@ -2,11 +2,11 @@
 
 **Status:** DRAFT / NON-AUTHORIZING  
 **Recorded:** 2026-08-28  
-**Updated:** 2026-08-29  
+**Updated:** 2026-08-31  
 **Proposal:** Fehrest V2  
 **Canonical execution frontier:** R1
 
-This record updates the V2 proposal's evidence assumptions after the historical governance and implementation reconciliation work merged to operational `main`.
+This record updates the V2 proposal's evidence assumptions after the historical governance and implementation reconciliation work merged to operational `main` and records the later documentation-only proposal hardening without widening authority.
 
 ## Live evidence now available
 
@@ -81,7 +81,7 @@ docs/canonical/R1_REPLACEMENT_EXECUTION_RUNBOOK_V11.md
 docs/canonical/R1_V11_RUNTIME_COMPATIBILITY.md
 ```
 
-Canonical R1 state now records:
+Canonical R1 state records:
 
 ```text
 R1_REPLACEMENT_EXECUTOR_VERSION=11
@@ -100,7 +100,32 @@ V10 proved the uv-managed isolated runtime and pinned `openai==3.3.0` installati
 
 No V11 scientific execution result or raw seal is present in canonical repository truth. These compatibility facts do not close R1, authorize scoring, or change the V2 proposal's authority state.
 
-After this merge-forward, the intended proposal diff against canonical `main` remains limited to the 19 V2 proposal/research/review files under `docs/**`; canonical `docs/canonical/**`, `specs/CURRENT.md`, Spec 002, and product code are inherited from `main` and are not proposal changes.
+## 2026-08-31 proposal hardening checkpoint
+
+The proposal branch later received documentation-only additive planning for Linear-class product execution plus targeted product-evidence hardening. The latter adds explicit planning contracts for product/adoption metrics, time-to-value, privacy-preserving telemetry, migration fidelity, and profile-scoped replacement proof.
+
+The exact branch head immediately before this reconciliation-file refresh was:
+
+```text
+PRE_RECONCILIATION_REFRESH_PROPOSAL_HEAD=447960321ccbb579f807b97e8d3ef0fea8332256
+CANONICAL_MAIN_AT_REFRESH=ca0bfa61de6cf92e5e6758731126e8274404de67
+CANONICAL_MAIN_TREE_AT_REFRESH=c97ae0eb53be97c35c62ba7c6c956c9e95f01f1e
+MERGE_BASE_AT_REFRESH=ca0bfa61de6cf92e5e6758731126e8274404de67
+BEHIND_CANONICAL_MAIN_AT_REFRESH=0
+CHANGED_FILES_AT_REFRESH=24
+CHANGED_FILE_CLASS=DOCUMENTATION_ONLY
+```
+
+Current PR metadata is the authority for the moving proposal head itself; this document intentionally does not attempt to embed its own commit SHA.
+
+The 24-file proposal diff remains confined to `docs/**`. It includes the additive Linear planning artifacts and:
+
+```text
+docs/proposals/spec-kit-v2/PRODUCT_MEASUREMENT_PRIVACY_AND_MIGRATION_EVIDENCE.md
+docs/proposals/spec-kit-v2/PRODUCT_EVIDENCE_HARDENING_REVIEW_2026-08-31.md
+```
+
+Canonical `docs/canonical/**`, `AGENTS.md`, `specs/CURRENT.md`, Spec 002, and product code remain unchanged relative to `main`.
 
 ## V2 proposal disposition
 
@@ -123,8 +148,10 @@ This reconciliation does not change:
 - the V2 product vision;
 - the proposed Rust-first semantic ownership model;
 - the one-active-spec rule;
+- the additive Linear direction;
+- the product measurement/privacy/migration evidence contracts;
 - the requirement that graph/vector/AI remain behind evidence and authorization gates;
 - the prohibition on using derived state as authority;
 - the R1 experiment semantics.
 
-It only refreshes the proposal's provenance assumptions to match live repository truth.
+It only refreshes the proposal's provenance and diff assumptions to match live repository truth.
