@@ -19,10 +19,11 @@
 5. CROSS_SPEC_INVARIANTS_AND_OWNERSHIP.md
 6. SPEC_SEQUENCE_AND_DEPENDENCIES.md
 7. LINEAR_ADDITIVE_PRODUCT_EXECUTION_TRACK.md
-8. TRACEABILITY_AND_COVERAGE_MATRIX.md
-9. CONFLICT_AND_GAP_REVIEW.md
-10. PROGRAM_CONVERGENCE_REVIEW.md
-11. SPEC_AUTHORING_CHECKLIST.md
+8. PRODUCT_MEASUREMENT_PRIVACY_AND_MIGRATION_EVIDENCE.md
+9. TRACEABILITY_AND_COVERAGE_MATRIX.md
+10. CONFLICT_AND_GAP_REVIEW.md
+11. PROGRAM_CONVERGENCE_REVIEW.md
+12. SPEC_AUTHORING_CHECKLIST.md
 ```
 
 Then read the broader V2 product documents:
@@ -149,6 +150,28 @@ MEMORY_REPOSITORY_CORE=RETAIN
 
 This planning addendum is non-authorizing and does not alter R1 or `specs/CURRENT.md`.
 
+### 14. Product measurement, privacy, and migration evidence hardening
+
+`PRODUCT_MEASUREMENT_PRIVACY_AND_MIGRATION_EVIDENCE.md` adds a cross-program evidence contract for:
+
+```text
+activation and product-value metrics
+time-to-value measurement
+efficiency/adoption evidence
+privacy-preserving and data-minimized telemetry
+explicit telemetry consent/policy boundaries
+migration source binding
+field/object/relationship fidelity classes
+zero silent critical migration loss
+idempotency/repeatability
+profile-scoped replacement claims
+Linear migration/replacement proof hardening
+```
+
+It deliberately does not invent numerical adoption targets before a baseline exists and does not create a new analytics implementation owner. Remote analytics cannot require raw canonical content merely to measure adoption, and telemetry remains derived operational evidence rather than canonical memory or authority.
+
+This evidence contract is also non-authorizing and does not alter R1, `specs/CURRENT.md`, or Spec 002.
+
 ---
 
 ## Current state
@@ -162,6 +185,10 @@ PROGRAM_CONVERGENCE_REVIEW=PREPARED
 LINEAR_ADDITIVE_TRACK=PREPARED
 LINEAR_MANDATORY_PRODUCT_EXECUTION_BASELINE=YES
 LINEAR_REPLACES_EXISTING_V2_SCOPE=NO
+PRODUCT_MEASUREMENT_CONTRACT=PREPARED
+PRIVACY_PRESERVING_TELEMETRY_POLICY=PREPARED
+MIGRATION_FIDELITY_ACCEPTANCE=PREPARED
+TIME_TO_VALUE_MEASUREMENT=PREPARED
 V2_PROGRAM_CANONICAL=NO
 R1_CHANGED=NO
 CURRENT_CHANGED=NO
