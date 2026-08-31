@@ -23,7 +23,8 @@
 9. TRACEABILITY_AND_COVERAGE_MATRIX.md
 10. CONFLICT_AND_GAP_REVIEW.md
 11. PROGRAM_CONVERGENCE_REVIEW.md
-12. SPEC_AUTHORING_CHECKLIST.md
+12. PRODUCT_EVIDENCE_HARDENING_REVIEW_2026-08-31.md
+13. SPEC_AUTHORING_CHECKLIST.md
 ```
 
 Then read the broader V2 product documents:
@@ -170,7 +171,9 @@ Linear migration/replacement proof hardening
 
 It deliberately does not invent numerical adoption targets before a baseline exists and does not create a new analytics implementation owner. Remote analytics cannot require raw canonical content merely to measure adoption, and telemetry remains derived operational evidence rather than canonical memory or authority.
 
-This evidence contract is also non-authorizing and does not alter R1, `specs/CURRENT.md`, or Spec 002.
+`PRODUCT_EVIDENCE_HARDENING_REVIEW_2026-08-31.md` records the targeted reassessment that led to these additions and confirms that a major architecture replacement is not justified by the identified planning gaps.
+
+This evidence hardening is non-authorizing and does not alter R1, `specs/CURRENT.md`, or Spec 002.
 
 ---
 
@@ -182,6 +185,7 @@ FOUNDER_LANGUAGE_DIRECTION=RUST
 RUST_TRACEABILITY_002_TO_022=YES
 RUST_CONVERGENCE_REVIEW=PREPARED
 PROGRAM_CONVERGENCE_REVIEW=PREPARED
+PRODUCT_EVIDENCE_HARDENING_REVIEW=PREPARED
 LINEAR_ADDITIVE_TRACK=PREPARED
 LINEAR_MANDATORY_PRODUCT_EXECUTION_BASELINE=YES
 LINEAR_REPLACES_EXISTING_V2_SCOPE=NO
