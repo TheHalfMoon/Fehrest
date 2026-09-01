@@ -41,18 +41,18 @@ A fresh materialization from this bundle reproduces the sealed commit/tree with 
 
 The operational GitHub snapshot mirror and the recovered historical bundle are distinct facts.
 
-Current publication state:
+Current publication state (updated 2026-09-01 after live verification):
 
 ```text
 HISTORICAL_SOURCE_AND_SEAL_RECOVERED=YES
 HISTORICAL_GIT_BUNDLE_VERIFIED=YES
-HISTORICAL_OBJECT_GRAPH_REACHABLE_ON_GITHUB=NO
-SEALED_R1_COMMIT_REACHABLE_ON_GITHUB=NO
-SEALED_R1_TREE_REACHABLE_ON_GITHUB=NO
-GITHUB_ORIGINAL_HISTORICAL_OBJECT_GRAPH_PUBLISHED=NO
+HISTORICAL_OBJECT_GRAPH_REACHABLE_ON_GITHUB=YES
+SEALED_R1_COMMIT_REACHABLE_ON_GITHUB=YES
+SEALED_R1_TREE_REACHABLE_ON_GITHUB=YES
+GITHUB_ORIGINAL_HISTORICAL_OBJECT_GRAPH_PUBLISHED=YES
 ```
 
-Issue #1 tracks this remaining provenance-transport obligation. Closing that issue requires the existing original Git objects to become reachable on GitHub with their historical identities unchanged. An equivalent newly created commit is not a substitute.
+Issue #1 is closed with verified evidence (see below). Closing that issue required the existing original Git objects to become reachable on GitHub with their historical identities unchanged; no equivalent substitute commit was created.
 
 The publication gate is separate from the active R1 experiment gate owned by Issue #8. Publishing historical Git objects does not create an R1 execution result, authorize scoring, or activate Spec 002.
 
@@ -99,6 +99,39 @@ The recovered Git bundle independently verifies the expected historical blob SHA
 
 Therefore repository-native text reconstruction is disqualified as a provenance publication mechanism. The historical gate still requires transport of the existing Git objects themselves, preserving the original commit, tree and blob identities. The prepared normal non-force publication package remains the safe path when an execution environment with direct authenticated Git network access is available.
 
+## Publication evidence — 2026-09-01
+
+The historical object graph was published with the repository-owned fail-closed publisher `scripts/recovery/publish-historical-objects.ps1` (tooling mirrored in #19, output-indexing repair in #20). The publisher verified the exact bundle SHA-256, cloned it into a disposable area, ran `git fsck --full --strict`, verified the sealed commit/tree, then performed a normal non-force push and re-read the remote ref.
+
+```text
+PUBLICATION_DATE=2026-09-01
+BUNDLE_SHA256=a36639da9731cd4778777e14b980ca04784f9a00890a57d0a3fc10591f54f5f9
+DESTINATION_REF=refs/heads/historical/r1-v1.1
+REMOTE_REF_SHA=ed79d8ecee08e4ce4dd384edaffc4a27cfd6d37c
+SEALED_TREE=f7ea7e0f57019c8061a4019ac614730f68750f19
+TREE_ENTRY_COUNT=171
+HISTORICAL_PARENT=685b390d93fd58c65b8d9e33f4869c6c986259d3
+HISTORICAL_AUTHOR_COMMITTER=Abdulaziz <alshehriofficial@gmail.com> @ 2026-08-19T15:02:32Z
+FORCE_PUSH_USED=NO
+REBASE_USED=NO
+DESTRUCTIVE_HISTORY_REWRITE_USED=NO
+OPERATIONAL_MAIN_MUTATED=NO
+```
+
+Independent GitHub API re-verification after publication:
+
+```text
+REF_TYPE=commit
+TREE_REACHABLE=YES (f7ea7e0... resolved via /git/trees with recursive=1)
+PREREGISTRATION_FILESET_DIGEST_RECHECK=PASS
+  method=sha256 over sorted "{sha256(blob_content)}  rel\n" manifest of the 8
+  benchmark files (bench/R1/seal_digest.py rule), blobs fetched from GitHub API
+  result=5463bfddcf076b930e35c3fe5a208b94f0af720e935a3dc8ae5b88432709f6e2
+  match_with_sealed_anchor=YES
+```
+
+Repository completeness (artifact mirroring) evidence: `artifacts/ARTIFACT-MANIFEST.md`; the V11 executor, evidence collector and historical bundle are reconstructible byte-for-byte from GitHub-only bytes (`scripts/recovery/verify-artifacts.ps1` → PASS on a fresh clone of merged `main`; issues #18 closed via PR #19/#20).
+
 ## Integrity rule
 
 Never:
@@ -134,11 +167,17 @@ GITHUB_BOOTSTRAP_HISTORY=TRANSPARENT_MIRROR_HISTORY
 PRE_BOOTSTRAP_R1_SHAS=PRESERVED_AS_HISTORICAL_EVIDENCE
 HISTORICAL_SOURCE_RECOVERY=COMPLETE
 HISTORICAL_GIT_BUNDLE=COMPLETE_AND_VERIFIED
-GITHUB_ORIGINAL_HISTORICAL_OBJECT_GRAPH_PUBLISHED=NO
+GITHUB_ORIGINAL_HISTORICAL_OBJECT_GRAPH_PUBLISHED=YES
+HISTORICAL_REF=refs/heads/historical/r1-v1.1 (=ed79d8ecee08e4ce4dd384edaffc4a27cfd6d37c)
+ISSUE_1=CLOSED_WITH_VERIFIED_EVIDENCE
+ISSUE_18=CLOSED_WITH_VERIFIED_EVIDENCE
+REPOSITORY_ARTIFACT_SELF_CONTAINMENT=YES
 SPEC_002_T037=CLOSED
 ACTIVE_EXECUTION_FRONTIER=R1
 ACTIVE_R1_SUBGATE=REPLACEMENT_VARIANCE_PILOT_EXECUTION
 POST_R1_PRODUCT_IMPLEMENTATION=BLOCKED
 ```
+
+Publication of the historical object graph does not create an R1 execution result and does not authorize scoring, unblinding, power analysis, confirmatory execution, or Spec 002 activation.
 
 When the original historical object graph is eventually published, update this record from live GitHub verification. Do not infer publication from bundle existence alone.
