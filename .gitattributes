@@ -1,0 +1,4 @@
+# Exact-byte artifact and recovery paths: disable all text conversion so a
+# fresh checkout from GitHub reproduces the canonical bytes exactly.
+artifacts/** -text
+scripts/recovery/** -text
