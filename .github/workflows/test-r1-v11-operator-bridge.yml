@@ -1,0 +1,96 @@
+name: test-r1-v11-operator-bridge
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/recovery/run-r1-v11-and-collect.ps1'
+      - '.github/workflows/test-r1-v11-operator-bridge.yml'
+
+jobs:
+  windows-powershell-5-1:
+    runs-on: windows-latest
+    steps:
+      - name: Check out exact PR head
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Parse with Windows PowerShell 5.1
+        shell: powershell
+        run: |
+          $script = Join-Path $PWD 'scripts/recovery/run-r1-v11-and-collect.ps1'
+          $tokens = $null
+          $errors = $null
+          [void][System.Management.Automation.Language.Parser]::ParseFile($script, [ref]$tokens, [ref]$errors)
+          if ($errors.Count -ne 0) {
+            $errors | ForEach-Object { Write-Error $_.Message }
+            exit 1
+          }
+          Write-Host 'POWERSHELL_5_1_PARSE=PASS'
+
+      - name: Prove missing repository fails closed
+        shell: powershell
+        run: |
+          $script = Join-Path $PWD 'scripts/recovery/run-r1-v11-and-collect.ps1'
+          $stdout = Join-Path $env:RUNNER_TEMP 'missing-repo.stdout.txt'
+          $stderr = Join-Path $env:RUNNER_TEMP 'missing-repo.stderr.txt'
+          $missing = Join-Path $env:RUNNER_TEMP 'definitely-missing-fehrest-repo'
+          $p = Start-Process powershell.exe -ArgumentList @(
+            '-NoProfile',
+            '-ExecutionPolicy', 'Bypass',
+            '-File', $script,
+            '-Repository', $missing
+          ) -Wait -PassThru -RedirectStandardOutput $stdout -RedirectStandardError $stderr
+          $text = ((Get-Content $stdout -Raw -ErrorAction SilentlyContinue) + "`n" + (Get-Content $stderr -Raw -ErrorAction SilentlyContinue))
+          if ($p.ExitCode -ne 1) { throw "Expected exit 1, got $($p.ExitCode)" }
+          if ($text -notmatch 'FAIL_CLOSED=REPOSITORY_NOT_FOUND') { throw 'Expected REPOSITORY_NOT_FOUND fail-closed marker' }
+          Write-Host 'MISSING_REPOSITORY_FAIL_CLOSED=PASS'
+
+      - name: Prove exact sealed head is reachable and missing package fails closed
+        shell: powershell
+        run: |
+          $expected = 'ed79d8ecee08e4ce4dd384edaffc4a27cfd6d37c'
+          git cat-file -e "$expected^{commit}"
+          if ($LASTEXITCODE -ne 0) { throw 'Historical sealed commit is not reachable in checkout' }
+
+          $sealed = Join-Path $env:RUNNER_TEMP 'fehrest-r1-v1.1-sealed'
+          git worktree add --detach $sealed $expected
+          if ($LASTEXITCODE -ne 0) { throw 'Failed to create sealed-head worktree' }
+
+          try {
+            $actual = (git -C $sealed rev-parse HEAD).Trim()
+            if ($actual -ne $expected) { throw "Sealed head mismatch: $actual" }
+            if ((git -C $sealed status --porcelain=v1 --untracked-files=all | Out-String).Trim().Length -ne 0) {
+              throw 'Sealed worktree is not clean'
+            }
+
+            $script = Join-Path $PWD 'scripts/recovery/run-r1-v11-and-collect.ps1'
+            $stdout = Join-Path $env:RUNNER_TEMP 'missing-package.stdout.txt'
+            $stderr = Join-Path $env:RUNNER_TEMP 'missing-package.stderr.txt'
+            $missingPackage = Join-Path $env:RUNNER_TEMP 'FEHREST-R1-X1-REPLACEMENT-V11.zip'
+            $p = Start-Process powershell.exe -ArgumentList @(
+              '-NoProfile',
+              '-ExecutionPolicy', 'Bypass',
+              '-File', $script,
+              '-Repository', $sealed,
+              '-PackagePath', $missingPackage
+            ) -Wait -PassThru -RedirectStandardOutput $stdout -RedirectStandardError $stderr
+            $text = ((Get-Content $stdout -Raw -ErrorAction SilentlyContinue) + "`n" + (Get-Content $stderr -Raw -ErrorAction SilentlyContinue))
+            if ($p.ExitCode -ne 1) { throw "Expected exit 1, got $($p.ExitCode)" }
+            if ($text -notmatch 'PASS=EXACT_SEALED_HEAD_PRECHECK') { throw 'Exact sealed head precheck did not pass' }
+            if ($text -notmatch 'PASS=REPOSITORY_WORKTREE_CLEAN') { throw 'Clean-worktree precheck did not pass' }
+            if ($text -notmatch 'FAIL_CLOSED=V11_PACKAGE_NOT_FOUND') { throw 'Expected V11 package missing fail-closed marker' }
+            Write-Host 'SEALED_HEAD_PACKAGE_BOUNDARY_FAIL_CLOSED=PASS'
+          }
+          finally {
+            git worktree remove --force $sealed
+          }
+
+      - name: Assert no scientific execution occurred
+        shell: powershell
+        run: |
+          Write-Host 'MODEL_CALLS_EXECUTED_BY_TEST=0'
+          Write-Host 'SCORING_EXECUTED_BY_TEST=NO'
+          Write-Host 'UNBLINDING_EXECUTED_BY_TEST=NO'
+          Write-Host 'POWER_ANALYSIS_EXECUTED_BY_TEST=NO'
+          Write-Host 'CONFIRMATORY_EXECUTION_BY_TEST=NO'
