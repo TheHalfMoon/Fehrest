@@ -93,8 +93,9 @@ AUTHORITY_STATUS=CANONICAL_HISTORICAL_OBJECT_AUTHORITY
 FILENAME=publish-historical-objects.ps1
 ROLE=HISTORICAL_BUNDLE_PUBLISHER_TOOL
 REPOSITORY_PATH=scripts/recovery/publish-historical-objects.ps1
-SIZE_BYTES=5655
-GIT_BLOB_SHA1=2c67d62d40df65249024f587da0e5e836284b661
+GIT_BLOB_SHA1=c1f3edac481a8b3fab7c54cb77f117e12ae0595f
+RUNTIME_REQUIREMENT=PowerShell 7+ (pwsh). Under Windows PowerShell 5.1 the EAP=Stop + native-stderr + 2>&1 combination turns harmless git progress lines (e.g. "Cloning into ...") into a terminating NativeCommandError and halts the publisher.
+LAYOUT_REQUIREMENT=The publisher resolves the bundle next to itself (ScriptRoot). Before running from a repo checkout, place the bundle alongside it, e.g. copy artifacts/recovery/historical-r1-v1.1/Fehrest-historical-r1-v1.1-ed79.bundle next to scripts/recovery/publish-historical-objects.ps1, or run from any temp directory holding both files.
 SOURCE_PROVENANCE=Repository-native fail-closed publisher: verifies bundle SHA-256, clones to a disposable bare work area, runs git fsck --full --strict, verifies SEALED_COMMIT/SEALED_TREE, then performs a normal non-force push of refs/heads/recovered/r1-v1.1 to refs/heads/historical/r1-v1.1 and re-reads the remote ref
 AUTHORITY_STATUS=REPOSITORY_OWNED_PUBLICATION_TOOLING
 ```
@@ -132,10 +133,13 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/recovery/verify-arti
 
 The verifier fails closed unless, for every path above, the exact size, SHA-256 (where recorded), and Git blob identity match this manifest, and the `supervisor.py` member inside the V11 zip is byte-identical to the sealed supervisor identity. A successful run prints `FEHREST_ARTIFACT_VERIFICATION_STATUS=PASS`.
 
-For the historical bundle, before any publication attempt:
+For the historical bundle, before any publication attempt (requires PowerShell 7+):
 
 ```text
-powershell -NoProfile -ExecutionPolicy Bypass -File scripts/recovery/publish-historical-objects.ps1
+# stage the bundle next to the publisher, then run it
+copy artifacts/recovery/historical-r1-v1.1/Fehrest-historical-r1-v1.1-ed79.bundle scripts/recovery/
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/recovery/publish-historical-objects.ps1
+del scripts/recovery/Fehrest-historical-r1-v1.1-ed79.bundle
 ```
 
 The publisher verifies the bundle SHA-256, clones from the bundle into a disposable area, runs `git fsck --full --strict`, verifies the sealed commit/tree identities, then performs a normal non-force push of `refs/heads/recovered/r1-v1.1` to `refs/heads/historical/r1-v1.1` and re-reads the remote ref. It never force-pushes, rebases, or rewrites history, and it never mutates operational `main`.

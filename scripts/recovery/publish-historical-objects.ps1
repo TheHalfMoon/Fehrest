@@ -31,7 +31,11 @@ function Invoke-Git([string[]]$GitArgs, [switch]$AllowOutput) {
         throw "git failed (exit=$exitCode): git $($GitArgs -join ' ') :: $safe"
     }
     if ($AllowOutput) {
-        return @($output | ForEach-Object { $_.ToString() })
+        # The comma operator preserves the array across the function return
+        # boundary, so callers index output lines rather than characters of a
+        # single-line string (PowerShell unrolls single-element arrays on
+        # plain return).
+        , @($output | ForEach-Object { $_.ToString() })
     }
 }
 
