@@ -205,8 +205,8 @@ HISTORICAL_SEALED_COMMIT_REPRODUCED=YES
 HISTORICAL_GOVERNANCE_BYTES_RECOVERED=YES
 HISTORICAL_GOVERNANCE_IDENTITIES_RECORDED=YES
 HISTORICAL_GOVERNANCE_SEMANTIC_RECONCILIATION=PASS_CONSERVATIVE
-HISTORICAL_GOVERNANCE_FILES_MIRRORED_INTO_GITHUB=NO
-HISTORICAL_GIT_OBJECT_GRAPH_PUBLISHED_TO_GITHUB=NO
+HISTORICAL_GOVERNANCE_FILES_MIRRORED_INTO_GITHUB=YES
+HISTORICAL_GIT_OBJECT_GRAPH_PUBLISHED_TO_GITHUB=YES
 R1_TERMINAL_GATE=OPEN
 CURRENT_CHANGED=NO
 SPEC_002_ACTIVATED=NO
@@ -214,6 +214,35 @@ V2_PROGRAM_CANONICAL=NO
 ```
 
 `PASS_CONSERVATIVE` means the recovered governance sources were checked against the current bootstrap rules and no weakening conflict was identified. It does **not** mean the historical files are already mirrored into GitHub, nor does it close any execution gate that separately requires R1 evidence or implementation-state reconciliation.
+
+## 7.1 Mirror and publication evidence — 2026-09-01
+
+```text
+HISTORICAL_OBJECT_GRAPH_PUBLISHED=YES
+  archival_ref=refs/heads/historical/r1-v1.1
+  archival_ref_sha=ed79d8ecee08e4ce4dd384edaffc4a27cfd6d37c
+  sealed_tree=f7ea7e0f57019c8061a4019ac614730f68750f19 (171 entries)
+  published_by=repository-owned fail-closed publisher (non-force push; see GITHUB_BOOTSTRAP_PROVENANCE.md)
+GOVERNANCE_FILES_MIRRORED=YES
+  method=git restore --source=<archival ref> with core.autocrlf=false; no re-encoding, no line-ending conversion
+  verified_blob_identities (13/13 exact match, see issue #10 closeout):
+    .specify/memory/constitution.md            eb427abed358fefb2a12890748e5c9ececa68c0b
+    docs/00-PRODUCT-THESIS.md                  16c3fe7ef701ac070b883ee6325c57f1fdd6e8b0
+    docs/01-ARCHITECTURE-CONSTITUTION.md       4f578716eed80edc5b6a2c160a2f24e5cd9c5886
+    docs/02-THREAT-MODEL.md                    6fb931c7a1d17cfad62cba8443862df432a318cd
+    docs/10-BENCHMARK-PLAN.md                  5347b765e7147735122c0d796c1e760506d6569d
+    docs/11-SECURITY-VERIFICATION-PLAN.md      153bb5f86b1761c165ee37bfeee75c8a856f3ce3
+    docs/13-RECOVERY-MODEL.md                  d7ea66876ad3f926af23bc09884e63b72cc2f81a
+    docs/17-FAILURE-CONDITIONS.md              6633cf29b17279663cdc7e1828a09502f5fb032c
+    docs/19-ENGINEERING-METHOD.md              3fea95dc100a950f986db4f5db31afbccb7233be
+    docs/20-FUTURE-GATES.md                    99cb8dbda9164a4ee4e3a9127e0ae218b1983cbc
+    docs/canonical/ARCHITECTURE_FREEZE.md      cb7d392ac05c080d39092de68a1cfacc64d728ab
+    docs/canonical/PHASE_T_AUTHORIZATION.md    c0eb3407d1d75d0d86ea696148325aebf0b31a15
+    docs/reviews/G3-SECURITY-RECONCILIATION.md 32808b4056bf8dd1a416f184cf72d8785c5e4047
+HISTORICAL_CONTENT_EDITED=NO
+R1_SEMANTICS_CHANGED=NO
+SPEC_002_ACTIVATED=NO
+```
 
 ## 8. Next evidence-preserving actions
 
