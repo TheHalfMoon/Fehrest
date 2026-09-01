@@ -1,0 +1,21 @@
+name: verify-artifacts
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  verify-artifacts:
+    runs-on: windows-latest
+    steps:
+      - name: Check out exact head
+        uses: actions/checkout@v4
+
+      - name: Verify mirrored artifact identities (fail closed)
+        shell: pwsh
+        run: pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/recovery/verify-artifacts.ps1
+
+      - name: Verify historical bundle identity
+        shell: pwsh
+        run: git bundle verify "artifacts/recovery/historical-r1-v1.1/Fehrest-historical-r1-v1.1-ed79.bundle"

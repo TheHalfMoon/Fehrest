@@ -78,7 +78,21 @@ PROBE_CLOSEOUT_WORKFLOW_PRESENT=NO
 CANONICAL_MAIN_MUTATED_BY_PROBE=NO
 ```
 
-Both jobs failed before any executable step was reported and no job log blob was created. This evidence proves that GitHub-hosted runner transport was unavailable for this repository at the time of the probe. It does **not** prove a specific account-side root cause such as billing, policy, or capacity, because the available connected interface did not expose a qualifying diagnostic beyond the pre-step failure state.
+Both jobs failed before any executable step was reported and no job log blob was created. This evidence proved that GitHub-hosted runner transport was unavailable for this repository at the time of the probe. It did **not** prove a specific account-side root cause such as billing, policy, or capacity, because the available connected interface did not expose a qualifying diagnostic beyond the pre-step failure state.
+
+### Runner availability re-probe — 2026-09-01
+
+The same probe workflow was re-run against the original probe head:
+
+```text
+RE_PROBE_RUN_ID=33250476412
+RE_PROBE_DATE=2026-09-01
+WINDOWS_JOB=success
+UBUNTU_JOB=success
+GITHUB_HOSTED_RUNNERS_AVAILABLE=PASS
+```
+
+Both jobs completed successfully. Runner availability is therefore a live, changing platform condition — the 2026-08-29 negative result was preserved as evidence and is now superseded by this positive result. A repository-native `verify-artifacts` CI workflow was added to canonical `main` to enforce artifact identity on every push/PR (`.github/workflows/verify-artifacts.yml`).
 
 ### Git Data text-transfer probe
 

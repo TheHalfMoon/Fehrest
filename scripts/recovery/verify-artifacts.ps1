@@ -86,8 +86,8 @@ $expected = @(
     @{
         Path   = "scripts/recovery/publish-historical-objects.ps1"
         Role   = "HISTORICAL_BUNDLE_PUBLISHER_TOOL"
-        Size   = 5655
-        Blob   = "2c67d62d40df65249024f587da0e5e836284b661"
+        Size   = 5903
+        Blob   = "c1f3edac481a8b3fab7c54cb77f117e12ae0595f"
     }
 )
 
