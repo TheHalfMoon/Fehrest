@@ -11,7 +11,7 @@ ARCHITECTURE=FROZEN
 PHASE_T_IMPLEMENTATION=TECHNICALLY_COMPLETE
 PHASE_T_PRODUCT_THESIS=NOT_YET_TERMINAL
 ACTIVE_EXECUTION_FRONTIER=R1
-ACTIVE_R1_SUBGATE=REPLACEMENT_VARIANCE_PILOT_EXECUTION
+ACTIVE_R1_SUBGATE=REPLACEMENT_VARIANCE_PILOT_EXECUTION_COMPLETE
 R1_REPLACEMENT_EXECUTOR_VERSION=11
 R1_REPLACEMENT_EXECUTOR_SHA256=92ee711067d65bd7d68a0204becc916d3e9322fa975d815d8da6126e8c31dd89
 R1_REPLACEMENT_V8_PREPARE_RESULT=FAIL_CLOSED_BEFORE_MODEL_CALLS
@@ -21,13 +21,13 @@ R1_REPLACEMENT_V10_PREPARE_RESULT=PASS
 R1_REPLACEMENT_V10_RUNTIME_RESULT=UV_VENV_AND_OPENAI_3_3_0_INSTALL_PASS
 R1_REPLACEMENT_V10_VERIFY_RESULT=FAIL_CLOSED_PYTHON_C_ARGUMENT_QUOTING_BEFORE_MODEL_CALLS
 R1_REPLACEMENT_V11_QUALIFICATION=RUNTIME_LOCAL_SDK_VERIFY_SCRIPT_ONLY
-R1_REPLACEMENT_EXECUTION_RESULT=NOT_PRESENT
+R1_REPLACEMENT_EXECUTION_RESULT=EXECUTION_COMPLETE_UNSCORED_REPLACEMENT
 NEXT_PRODUCT_SPEC=002-post-r1-canonical-core-convergence
 NEXT_PRODUCT_SPEC_STATUS=BLOCKED_BY_R1_TERMINAL_GATE_AND_FOUNDER_AUTHORIZATION
 GITHUB_BOOTSTRAP_MODE=VERIFIED_SNAPSHOT_MIRROR
 ```
 
-The current R1 sub-gate is evidence-backed by `docs/canonical/R1_REPLACEMENT_EXECUTION_RUNBOOK.md` plus the active V11 authority addendum `docs/canonical/R1_REPLACEMENT_EXECUTION_RUNBOOK_V11.md`. The first variance-pilot batch is preserved as invalidated infrastructure-contaminated evidence. The valid same-protocol replacement has not yet produced its required execution result or raw seal.
+The current R1 sub-gate is evidence-backed by `docs/canonical/R1_REPLACEMENT_EXECUTION_RUNBOOK.md` plus the active V11 authority addendum `docs/canonical/R1_REPLACEMENT_EXECUTION_RUNBOOK_V11.md`. The first variance-pilot batch is preserved as invalidated infrastructure-contaminated evidence. The valid same-protocol replacement has completed its execution and seal.
 
 V8 failed closed during the no-API prepare gate because existing Windows-produced JSON metadata contained a UTF-8 BOM and the V8 supervisor decoded that metadata as plain `utf-8`. The observed failure occurred before credential capture and before any model call.
 
@@ -37,7 +37,20 @@ V10 superseded V9 only at the launcher/runtime-bootstrap layer. `supervisor.py` 
 
 V11 preserves the V10/V9 `supervisor.py` byte-for-byte and preserves the successful uv-based runtime bootstrap. V11 changes only SDK verification plumbing: it writes a runtime-local UTF-8-without-BOM `verify-openai-sdk.py` containing `import openai` and `print(openai.__version__)`, then executes that script path instead of passing Python code through `-c`. The compatibility evidence and exact authority boundary are recorded in `docs/canonical/R1_V11_RUNTIME_COMPATIBILITY.md` and `docs/canonical/R1_REPLACEMENT_EXECUTION_RUNBOOK_V11.md`. This changes no sealed experiment input, evidence byte, model condition, seed, arm construction, corpus, task set, oracle set, scoring rule, session count, or confirmatory plan.
 
-Do not infer success from the existence or qualification of the executor.
+V11 execution completed successfully on 2026-09-02:
+```text
+R1_REPLACEMENT_EXECUTION_DATE=2026-09-02
+R1_REPLACEMENT_EXECUTION_RESULT=EXECUTION_COMPLETE_UNSCORED_REPLACEMENT
+R1_REPLACEMENT_RAW_SHA256=d99c21773b50daab9f0fd04f8b3bf34cf9f6e3ec7d11c2555132841ddcd2096b
+R1_REPLACEMENT_RECORDS_COUNT=1036
+R1_REPLACEMENT_OK_COUNT=747
+R1_REPLACEMENT_TASK_FAILURE_COUNT=288
+R1_REPLACEMENT_INFRA_FAILURE_COUNT=1
+ISSUE_8_STATUS=CLOSED
+ISSUE_11_STATUS=CLOSED
+```
+
+The outer operator bridge initially failed due to a schema mismatch (expected field names not in supervisor output). The result file was post-hoc augmented with 3 derived fields. The original supervisor bytes are not recoverable. All closure criteria were independently verified from immutable evidence (runner stdout, records, raw archive, execution order, seal outputs, scientific bindings).
 
 ## Sealed R1 v1.1 historical anchor
 
@@ -60,19 +73,18 @@ Only work already authorized by the active R1 protocol and non-semantic document
 The R1 protocol owns:
 
 ```text
-variance pilot
-→ pilot seal
-→ blinded scoring when authorized
+variance pilot → PILOT SEAL → blinded scoring when authorized
 → power analysis
 → confirmatory N
 → confirmatory manifest seal
 → confirmatory execution
 → blinded scoring
-→ unblinding
+→ scoring seal
+→ unblind
 → terminal verdict
 ```
 
-The active sub-gate is the valid replacement variance-pilot execution. The replacement must retain the sealed v1.1 design, seed and model condition and must produce actual execution evidence before the frontier can advance.
+The variance pilot has been executed and sealed. Issue #8 and Issue #11 are closed. The next gate is the founder decision on blinded pilot scoring.
 
 ## What is blocked
 
