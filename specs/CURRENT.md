@@ -11,7 +11,7 @@ ARCHITECTURE=FROZEN
 PHASE_T_IMPLEMENTATION=TECHNICALLY_COMPLETE
 PHASE_T_PRODUCT_THESIS=NOT_YET_TERMINAL
 ACTIVE_EXECUTION_FRONTIER=R1
-ACTIVE_R1_SUBGATE=REPLACEMENT_VARIANCE_PILOT_EXECUTION
+ACTIVE_R1_SUBGATE=FOUNDER_DECISION_ON_BLINDED_PILOT_SCORING
 R1_REPLACEMENT_EXECUTOR_VERSION=11
 R1_REPLACEMENT_EXECUTOR_SHA256=92ee711067d65bd7d68a0204becc916d3e9322fa975d815d8da6126e8c31dd89
 R1_REPLACEMENT_V8_PREPARE_RESULT=FAIL_CLOSED_BEFORE_MODEL_CALLS
@@ -21,23 +21,43 @@ R1_REPLACEMENT_V10_PREPARE_RESULT=PASS
 R1_REPLACEMENT_V10_RUNTIME_RESULT=UV_VENV_AND_OPENAI_3_3_0_INSTALL_PASS
 R1_REPLACEMENT_V10_VERIFY_RESULT=FAIL_CLOSED_PYTHON_C_ARGUMENT_QUOTING_BEFORE_MODEL_CALLS
 R1_REPLACEMENT_V11_QUALIFICATION=RUNTIME_LOCAL_SDK_VERIFY_SCRIPT_ONLY
-R1_REPLACEMENT_EXECUTION_RESULT=NOT_PRESENT
+R1_REPLACEMENT_EXECUTION_RESULT=VALID_UNSCORED_REPLACEMENT
+R1_REPLACEMENT_EXECUTION_REVIEW=PASS
+BLINDED_PILOT_SCORING_AUTHORIZED=NO
+SCORING_STATUS=NOT_STARTED
+UNBLINDING_STATUS=NOT_STARTED
+POWER_ANALYSIS_STATUS=NOT_PERFORMED
+CONFIRMATORY_STATUS=NOT_STARTED
 NEXT_PRODUCT_SPEC=002-post-r1-canonical-core-convergence
 NEXT_PRODUCT_SPEC_STATUS=BLOCKED_BY_R1_TERMINAL_GATE_AND_FOUNDER_AUTHORIZATION
 GITHUB_BOOTSTRAP_MODE=VERIFIED_SNAPSHOT_MIRROR
 ```
 
-The current R1 sub-gate is evidence-backed by `docs/canonical/R1_REPLACEMENT_EXECUTION_RUNBOOK.md` plus the active V11 authority addendum `docs/canonical/R1_REPLACEMENT_EXECUTION_RUNBOOK_V11.md`. The first variance-pilot batch is preserved as invalidated infrastructure-contaminated evidence. The valid same-protocol replacement has not yet produced its required execution result or raw seal.
+Issue #8 is closed on preserved immutable execution evidence. The V11 replacement execution completed as a valid unscored scientific execution with the disclosed wrapper/result-schema defect and post-hoc result-file augmentation explicitly excluded as scientific evidence. The raw execution archive SHA-256 is:
 
-V8 failed closed during the no-API prepare gate because existing Windows-produced JSON metadata contained a UTF-8 BOM and the V8 supervisor decoded that metadata as plain `utf-8`. The observed failure occurred before credential capture and before any model call.
+```text
+R1_VARIANCE_PILOT_RAW_SHA256=d99c21773b50daab9f0fd04f8b3bf34cf9f6e3ec7d11c2555132841ddcd2096b
+```
 
-V9 superseded that parser defect only. On the required Windows host, V9 then proved the repaired no-API preparation path by recording `PREPARE_STATUS=PASS`, `NO_API_PREPARE_GATE=PASS`, `REPLACEMENT_MODEL_CALLS_EXECUTED=0`, incident SHA-256 `3c70cef6cc74304703e46a2135121f06b6a4aa039e366b6edab7d0ecd71063e2`, and replacement arming manifest SHA-256 `a7ae52b503d6c7b66cf03624aa78bd82b0349d5b02e9e0537b6a7985e1eff2ae`. V9 then failed closed while creating the isolated Python runtime. Its launcher preserved only the first traceback line in `FAILURE_REASON`, so the repository does **not** claim an unverified root cause. No model call started after that failure and the PowerShell environment cleared `OPENAI_API_KEY`.
+Issue #11 is also closed after execution-integrity review. The review recorded:
 
-V10 superseded V9 only at the launcher/runtime-bootstrap layer. `supervisor.py` remained byte-identical (`SHA256=c63bca3157068a22c82b95c5613417c745715dc5eb9d54d9a9c92f3b0ab641b7`). On the required Windows host V10 proved that `uv venv` created the isolated Python 3.11.15 runtime and `uv pip` installed `openai==3.3.0`. Its final SDK import/version check then failed closed because PowerShell `Start-Process -ArgumentList` split the Python `-c` payload so Python observed bare `import`, producing `SyntaxError: invalid syntax`. This occurred before credential capture and before any model call.
+```text
+EXECUTION_REVIEW=PASS
+RAW_EXECUTION_EVIDENCE_ACCEPTED_FOR_BLINDED_SCORING_REVIEW=YES
+SCORING_STATUS=NOT_STARTED
+UNBLINDING_STATUS=NOT_STARTED
+POWER_ANALYSIS_STATUS=NOT_PERFORMED
+CONFIRMATORY_STATUS=NOT_STARTED
+NEXT_GATE=FOUNDER_DECISION_ON_BLINDED_PILOT_SCORING
+```
 
-V11 preserves the V10/V9 `supervisor.py` byte-for-byte and preserves the successful uv-based runtime bootstrap. V11 changes only SDK verification plumbing: it writes a runtime-local UTF-8-without-BOM `verify-openai-sdk.py` containing `import openai` and `print(openai.__version__)`, then executes that script path instead of passing Python code through `-c`. The compatibility evidence and exact authority boundary are recorded in `docs/canonical/R1_V11_RUNTIME_COMPATIBILITY.md` and `docs/canonical/R1_REPLACEMENT_EXECUTION_RUNBOOK_V11.md`. This changes no sealed experiment input, evidence byte, model condition, seed, arm construction, corpus, task set, oracle set, scoring rule, session count, or confirmatory plan.
+The valid replacement evidence remains bound to sealed R1 v1.1. The replacement arming manifest produced during the repaired launcher path is not substituted for the sealed source-batch arming-manifest identity. Issue #11 verified the inherited scientific bindings against the sealed source manifest and preserved execution evidence.
 
-Do not infer success from the existence or qualification of the executor.
+The first variance-pilot batch remains preserved as invalidated infrastructure-contaminated evidence and remains prohibited from scoring or variance use.
+
+V8, V9, and V10 remain preserved fail-closed pre-scientific compatibility attempts. They are historical execution-path evidence only and must not be promoted into scientific observations.
+
+Do not infer scoring authorization from Issue #8 or Issue #11 closure. A fresh founder decision at the live evidence-backed gate is still required before blinded pilot scoring may begin.
 
 ## Sealed R1 v1.1 historical anchor
 
@@ -49,45 +69,63 @@ R1_V1_1_SEALED_TREE=f7ea7e0f57019c8061a4019ac614730f68750f19
 R1_V1_1_PREREGISTRATION_DIGEST=5463bfddcf076b930e35c3fe5a208b94f0af720e935a3dc8ae5b88432709f6e2
 ```
 
-GitHub was empty when it was first bootstrapped on 2026-08-28. The connected GitHub write interface could not upload the historical Git pack while preserving arbitrary historical commit timestamps, so the GitHub bootstrap commit SHA is **not** claimed to equal `ed79d8...`.
+GitHub was empty when it was first bootstrapped on 2026-08-28. The GitHub bootstrap commit SHA is not claimed to equal `ed79d8...`.
 
 Treat the SHAs above as immutable historical evidence. Do not rewrite them to match the later GitHub bootstrap history. See `docs/canonical/GITHUB_BOOTSTRAP_PROVENANCE.md`.
 
 ## What is authorized now
 
-Only work already authorized by the active R1 protocol and non-semantic documentation/planning that leaves R1 semantics and product behavior unchanged.
-
-The R1 protocol owns:
+Only:
 
 ```text
-variance pilot
-→ pilot seal
-→ blinded scoring when authorized
+founder review/decision on blinded pilot scoring
+non-semantic documentation/evidence reconciliation that leaves sealed R1 semantics unchanged
+repository maintenance already authorized by canonical governance
+```
+
+No blinded scoring is authorized by this file update itself.
+
+The remaining R1 protocol order is:
+
+```text
+founder decision on blinded pilot scoring
+→ blinded pilot scoring when explicitly authorized
 → power analysis
-→ confirmatory N
+→ computed confirmatory N
 → confirmatory manifest seal
 → confirmatory execution
-→ blinded scoring
-→ unblinding
+→ raw seal
+→ blinded confirmatory scoring
+→ scoring seal
+→ unblind
 → terminal verdict
 ```
 
-The active sub-gate is the valid replacement variance-pilot execution. The replacement must retain the sealed v1.1 design, seed and model condition and must produce actual execution evidence before the frontier can advance.
+Do not skip, collapse, or reorder these gates.
 
 ## What is blocked
+
+Until the founder explicitly authorizes blinded pilot scoring at the current gate:
+
+```text
+blinded pilot scoring                       = BLOCKED
+power analysis                              = BLOCKED
+confirmatory N / manifest / execution       = BLOCKED
+unblinding                                  = BLOCKED
+```
 
 Until R1 reaches its terminal verdict and the founder explicitly authorizes the post-R1 route:
 
 ```text
 specs/002-post-r1-canonical-core-convergence = BLOCKED
-Phase 1 product expansion                  = BLOCKED
-Phase 2 derived expansion                  = BLOCKED
-GI-CAP / graph work                        = BLOCKED
-Phase 4 memory productization              = BLOCKED
-Phase 5 agent gateway / MCP                = BLOCKED
-automatic memory                           = BLOCKED
-vectors                                    = BLOCKED
-UI                                         = BLOCKED
+Phase 1 product expansion                    = BLOCKED
+Phase 2 derived expansion                    = BLOCKED
+GI-CAP / graph work                          = BLOCKED
+Phase 4 memory productization                = BLOCKED
+Phase 5 agent gateway / MCP                  = BLOCKED
+automatic memory                             = BLOCKED
+vectors                                      = BLOCKED
+UI                                           = BLOCKED
 ```
 
 ## R1 outcome routing
@@ -120,7 +158,7 @@ Its first remaining activation task is T038. T037 is closed with exact recovered
 
 Before any post-R1 product implementation begins from the GitHub mirror, reconcile the working implementation/evidence snapshot against the historical R1 anchor and record the exact source of that evidence. A GitHub bootstrap SHA must never be substituted for an old sealed SHA merely for convenience.
 
-T037 now records the selected implementation baseline and durable recovery bundle. That reconciliation creates no product implementation authority while R1 remains open.
+T037 records the selected implementation baseline and durable recovery bundle. That reconciliation creates no product implementation authority while R1 remains open.
 
 ## Update rule
 
