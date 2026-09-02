@@ -8,15 +8,19 @@
 
 Fehrest is intended to become the durable brain and work operating system for humans and AI agents.
 
-The long-term product is not a memory plugin, a note-taking clone, a chat client, a project tracker, or an agent framework. It is the substrate that lets people and agents share durable knowledge, bounded authority, work state, evidence, memory, collaboration, execution, and continuity without surrendering canonical truth to a model, vendor, hosted service, derived index, or transient conversation.
+The long-term product is not a memory plugin, a note-taking clone, a chat client, a project tracker, a Git host, or an agent framework. It is the substrate that lets people and agents share durable knowledge, bounded authority, work state, evidence, memory, collaboration, execution, repository history, and continuity without surrendering canonical truth to a model, vendor, hosted service, derived index, transient conversation, IDE, agent runtime, or Git forge.
 
 The north-star formulation is:
 
-> **Fehrest is the Agent Brain and AI-native Work OS: durable local-first knowledge, temporal memory, collaboration, execution, planning, agent interoperability, and auditable capability control in one coherent system.**
+> **Fehrest is the Agent Brain and AI-native Work OS: durable local-first project continuity, temporal memory, knowledge, collaboration, execution, planning, repository portability, agent interoperability, and auditable capability control in one coherent system.**
 
 A second formulation defines the experience target:
 
-> **The calm knowledge depth of Notion and Obsidian, the collaboration velocity of Slack and Buzz, the execution discipline of Linear, and a stronger agent brain than any of them — unified by Fehrest-owned canonical truth, provenance, replay, and authority.**
+> **The calm knowledge depth of Notion and Obsidian, the collaboration velocity of Slack and Buzz, the execution discipline of Linear, Git-native interoperability with GitHub-class workflows, and a stronger project brain than any of them — unified by Fehrest-owned canonical truth, provenance, replay, and authority.**
+
+The strategic center is not feature aggregation. It is:
+
+> **durable project continuity + canonical temporal truth + governed action + provenance + replay across disposable agents, models, tools, devices, repositories, IDEs, CLIs, and vendors.**
 
 This document does not authorize implementation while R1 remains open.
 
@@ -29,6 +33,8 @@ COLLABORATION_IMPLEMENTATION_AUTHORIZED=NO
 SYNC_IMPLEMENTATION_AUTHORIZED=NO
 MCP_IMPLEMENTATION_AUTHORIZED=NO
 ACP_IMPLEMENTATION_AUTHORIZED=NO
+GIT_IMPORT_IMPLEMENTATION_AUTHORIZED=NO
+GIT_EXPORT_IMPLEMENTATION_AUTHORIZED=NO
 ```
 
 ## 2. The product thesis, expanded without weakening the original thesis
@@ -45,20 +51,32 @@ The expanded product direction adds:
 ```text
 Agents are disposable.
 Memory is durable.
+Projects outlive repositories.
 Authority is explicit.
 Work is traceable.
 Context is compiled.
 Knowledge is portable.
+Repositories are portable.
 Collaboration is first-class.
 Execution is receipted.
 The user remains the ultimate owner.
 ```
 
-Fehrest must make a fresh agent materially more capable because the system can provide the right durable state, current decisions, project history, constraints, procedures, evidence, work graph, and bounded tools without leaking ambient authority or forcing the user to reconstruct project context manually.
+Fehrest must make a fresh agent materially more capable because the system can provide the right durable state, current decisions, project history, constraints, procedures, evidence, work graph, repository provenance, and bounded tools without leaking ambient authority or forcing the user to reconstruct project context manually.
+
+A Git repository is one project source, not the whole project brain.
+
+```text
+PROJECT != REPOSITORY
+GIT_HISTORY != PROJECT_MEMORY
+IMPORT != FORK
+```
+
+Fehrest should be able to ingest a project from GitHub or another Git source, preserve its exact source provenance, enrich it with durable project understanding, and later export or publish selected work back to GitHub without requiring a remote fork as the prerequisite for local ownership or exploration.
 
 ## 3. What Fehrest becomes
 
-The mature product has seven integrated surfaces over one canonical model.
+The mature product has eight integrated surfaces over one canonical kernel with strongly typed domains.
 
 ### 3.1 Brain
 
@@ -74,6 +92,9 @@ What is connected?
 What should this agent see?
 What may this agent do?
 What did this agent actually do?
+Where did this project come from?
+What changed upstream?
+What project memory may now be stale?
 ```
 
 The Brain includes:
@@ -91,9 +112,37 @@ The Brain includes:
 - replay;
 - agent/session grants;
 - capability leases;
-- execution receipts.
+- execution receipts;
+- repository/source provenance;
+- upstream-change awareness;
+- explicit memory revalidation/invalidation paths.
 
-### 3.2 Workspace
+### 3.2 Project Substrate
+
+The Project Substrate makes repository and project state portable without reducing Fehrest to a Git host.
+
+Target capabilities, when separately specified and authorized:
+
+- import from GitHub or other Git remotes without requiring a fork;
+- preserve exact Git object/source identity;
+- snapshot, mirror, or explicitly track upstream;
+- keep local Fehrest project identity stable even when repository location changes;
+- relate multiple repositories to one Fehrest project;
+- compare and reconcile upstream changes;
+- identify project memories/procedures/decisions potentially invalidated by upstream changes;
+- export Git repositories, bundles, patches, branches, or publish to GitHub explicitly;
+- export Fehrest semantic project state independently from Git hosting.
+
+The defining distinction is:
+
+```text
+Git stores repository history.
+Fehrest preserves project understanding.
+```
+
+See `docs/research/FEHREST_PROJECT_SUBSTRATE_AND_MEMORY_FABRIC.md`.
+
+### 3.3 Workspace
 
 The Workspace is the human-facing knowledge environment:
 
@@ -113,7 +162,7 @@ The Workspace is the human-facing knowledge environment:
 
 The inspiration is the usability of Notion and Obsidian, but canonical semantics remain Fehrest-native and open.
 
-### 3.3 Collaboration
+### 3.4 Collaboration
 
 The Collaboration surface provides Slack/Buzz-class coordination without making chat the source of truth:
 
@@ -135,7 +184,7 @@ Critical distinction:
 
 A chat message may propose a decision. Canonical promotion requires the appropriate authenticated mechanism and provenance event. Retrieved conversation text can never mint capability authority.
 
-### 3.4 Work / Projects
+### 3.5 Work / Projects
 
 The Work surface targets Linear-class execution discipline:
 
@@ -159,7 +208,7 @@ The Work surface targets Linear-class execution discipline:
 
 A task is not complete because an agent says it is complete. Fehrest should be able to bind completion to the expected evidence class: tests, artifacts, review, commit, deployment, user decision, benchmark, or another named gate.
 
-### 3.5 Agent Runtime Interoperability
+### 3.6 Agent Runtime Interoperability
 
 Fehrest is not required to own the reasoning loop. It becomes the brain and capability plane that many agent runtimes can use.
 
@@ -188,7 +237,7 @@ Fehrest-native capability and receipt semantics remain authoritative
 
 No external protocol may weaken Fehrest's canonical authority boundary.
 
-### 3.6 Execution
+### 3.7 Execution
 
 Fehrest should eventually make agents useful, not merely informed.
 
@@ -224,7 +273,7 @@ PROCESS_LIFECYCLE_HARDENED != SECURITY_SANDBOXED
 
 Permission prompts alone are not a sandbox.
 
-### 3.7 Command / Automation Layer
+### 3.8 Command / Automation Layer
 
 Fehrest should expose the same underlying capabilities through multiple surfaces:
 
@@ -241,16 +290,17 @@ voice as an optional input/output surface
 
 The headless Rust core remains complete without a graphical interface.
 
-## 4. One object model, many views
+## 4. One canonical kernel, strongly typed domains, many views
 
-Fehrest should avoid becoming five disconnected products glued together.
+Fehrest should avoid becoming five disconnected products glued together, but it must also avoid a universal-property-bag anti-pattern.
 
-The product should converge on a small number of durable object families with typed relationships and event history. Example conceptual families:
+The product should converge on a small canonical kernel with strongly typed domain objects, typed relationships, and event history. Example conceptual families:
 
 ```text
 KnowledgeObject
 WorkItem
 Project
+RepositorySource
 Decision
 Memory
 Conversation
@@ -263,18 +313,53 @@ Execution
 Artifact
 Evidence
 ExternalSource
+Trajectory
 View
 ```
 
 The exact schema is future-spec work, not authorized here.
 
-A Slack-like channel, a Notion-like page, an Obsidian-like note, a Linear-like issue, and an agent run should be able to reference the same project, decision, evidence, and identity graph without duplicating canonical truth.
+A Slack-like channel, a Notion-like page, an Obsidian-like note, a Linear-like issue, a GitHub repository, and an agent run should be able to reference the same project, decision, evidence, and identity graph without duplicating canonical truth.
+
+```text
+ONE_CANONICAL_KERNEL=YES
+STRONGLY_TYPED_DOMAINS=YES
+UNIVERSAL_MUTABLE_PROPERTY_BAG=NO
+```
 
 ## 5. The Fehrest differentiation
 
 Fehrest should not win by having more checkboxes than incumbents. It should win because the products it learns from do not share Fehrest's combined invariants.
 
-### 5.1 Versus Slack-class tools
+### 5.1 Versus GitHub-class forges
+
+GitHub-class platforms excel at Git hosting, review, issues, CI integration, and public collaboration.
+
+Fehrest must add:
+
+- project identity above one repository;
+- no-fork local import and exploration;
+- durable project memory;
+- temporal decisions and supersession;
+- context compilation;
+- agent continuity across providers;
+- governed execution;
+- execution/context receipts;
+- upstream-aware memory revalidation;
+- semantic project export beyond Git objects.
+
+Fehrest is not required to replace GitHub. The initial strategy is additive:
+
+```text
+keep GitHub
+keep your IDE
+keep your CLI agent
+add Fehrest
+```
+
+GitHub can remain the publication/collaboration surface while Fehrest becomes the durable project brain.
+
+### 5.2 Versus Slack-class tools
 
 Slack-class tools optimize communication. Fehrest must preserve communication while converting important outcomes into provenance-linked durable state.
 
@@ -284,7 +369,7 @@ Fehrest advantage target:
 conversation + canonical decisions + memory + agent context + execution evidence
 ```
 
-### 5.2 Versus Buzz
+### 5.3 Versus Buzz
 
 Buzz demonstrates a strong human/agent collaboration model, protocol boundaries, agent identity, ACP/MCP integration, signed-event thinking, and hardened tool lifecycle patterns.
 
@@ -292,12 +377,12 @@ Fehrest should learn from those patterns but retain a different center of gravit
 
 ```text
 Buzz center: collaborative workspace/event substrate
-Fehrest center: durable agent brain/canonical context/authority/evidence substrate
+Fehrest center: durable project brain/canonical context/authority/evidence substrate
 ```
 
 Fehrest may later provide collaboration that is competitive with Buzz while preserving stronger separation between evidence and authority, canonical and derived state, capability scope, temporal memory, deterministic context compilation, and replay.
 
-### 5.3 Versus Notion
+### 5.4 Versus Notion
 
 Notion-class products excel at flexible knowledge and structured workspace UX.
 
@@ -313,7 +398,7 @@ Fehrest must add:
 - execution receipts;
 - vendor-independent portability.
 
-### 5.4 Versus Obsidian
+### 5.5 Versus Obsidian
 
 Obsidian-class products excel at local knowledge ownership and linked notes.
 
@@ -329,7 +414,7 @@ Fehrest must add:
 - evidence-bound execution;
 - multi-agent interoperability.
 
-### 5.5 Versus Linear
+### 5.6 Versus Linear
 
 Linear-class products excel at fast, opinionated work execution.
 
@@ -344,7 +429,7 @@ Fehrest must add:
 - decision provenance;
 - execution receipts.
 
-### 5.6 Versus standalone agent memory systems
+### 5.7 Versus standalone agent memory systems
 
 Memory products may retrieve prior information. Fehrest must prove a stronger claim:
 
@@ -358,6 +443,7 @@ Opening a project should answer within seconds:
 
 ```text
 What is this?
+Where did it come from?
 What matters now?
 What changed recently?
 What is blocked?
@@ -366,19 +452,29 @@ What did agents do?
 What needs my attention?
 ```
 
-### P-02 — One command surface
+### P-02 — Seconds-to-context, not history dumping
 
-A global command interface should eventually let a user search, navigate, create, assign, ask, run, approve, review, and inspect without hunting across modules.
+An authorized agent should receive the complete relevant working context for a task quickly, while retaining immediate drill-down access to deeper authorized evidence.
 
-### P-03 — Keyboard first, not keyboard only
+Planning targets should eventually measure warm-local orientation and context compilation in seconds, with explicit P50/P95 latency, constraint-miss, stale-state, provenance, and token-efficiency metrics.
+
+```text
+FAST_CONTEXT != FULL_HISTORY_DUMP
+```
+
+### P-03 — One command surface
+
+A global command interface should eventually let a user search, navigate, create, assign, ask, run, approve, review, import, compare upstream, and publish without hunting across modules.
+
+### P-04 — Keyboard first, not keyboard only
 
 Power users must be fast. New users must remain oriented.
 
-### P-04 — Calm density
+### P-05 — Calm density
 
 Information-dense does not mean visually noisy. Fehrest should favor calm hierarchy, precise typography, strong focus states, predictable shortcuts, and progressive disclosure.
 
-### P-05 — Agents look like accountable collaborators
+### P-06 — Agents look like accountable collaborators
 
 An agent should have visible:
 
@@ -393,15 +489,15 @@ An agent should have visible:
 - cost/time where available;
 - review state.
 
-### P-06 — Nothing important disappears into chat
+### P-07 — Nothing important disappears into chat
 
 Important decisions, constraints, tasks, evidence, and memories should be capturable as durable typed state with provenance.
 
-### P-07 — Nothing inferred becomes authority silently
+### P-08 — Nothing inferred becomes authority silently
 
 Agent suggestions remain suggestions until canonical policy permits the appropriate promotion path.
 
-### P-08 — Everything critical has receipts
+### P-09 — Everything critical has receipts
 
 The user should be able to ask:
 
@@ -414,6 +510,14 @@ Which evidence closed the task?
 ```
 
 and receive a reconstructable answer.
+
+### P-10 — No silent forgetting
+
+Fehrest should never promise impossible perfect memory. It should instead guarantee that durable canonical state is not silently discarded, retention is explicit, loss is detectable, supersession is preserved, and unreconstructable historical content is reported honestly.
+
+```text
+NO_SILENT_FORGETTING=YES
+```
 
 ## 7. Language and platform architecture
 
@@ -432,6 +536,8 @@ authorization
 capability leases
 context compiler
 agent gateway
+repository/source provenance
+Git import/export integrity boundaries
 protocol adapters where core-sensitive
 execution supervision
 receipts
@@ -483,6 +589,10 @@ The following must remain true even if the product becomes large:
 CANONICAL != DERIVED
 EVIDENCE != AUTHORITY
 PATH != IDENTITY
+PROJECT != REPOSITORY
+GIT_HISTORY != PROJECT_MEMORY
+IMPORT != FORK
+IMPORT != PUBLISH_AUTHORITY
 RANK != AUTHORIZATION
 RETRIEVED_CONTENT != INSTRUCTION
 MODEL_OUTPUT != FACT
@@ -490,6 +600,9 @@ CHAT != CANONICAL_STATE
 PERMISSION_PROMPT != SANDBOX
 REMOTE_SERVICE != CANONICAL_AUTHORITY
 AGENT != OWNER
+IDE != MEMORY_OWNER
+AGENT_RUNTIME != MEMORY_OWNER
+MODEL_PROVIDER != MEMORY_OWNER
 UI != CORE
 SYNC != REQUIRED
 ```
@@ -501,6 +614,7 @@ AI_OFF remains a valid core mode.
 Local single-machine use remains complete.
 Export remains possible without Fehrest infrastructure.
 A fresh agent can be replaced without losing project memory.
+A repository can move without destroying Fehrest project identity.
 ```
 
 ## 9. Capability model target
@@ -586,6 +700,7 @@ A strong future package may include, as authorized and relevant:
 
 ```text
 project identity
+repository/source identity
 current goals
 active decisions
 superseded decisions needed for explanation
@@ -597,6 +712,7 @@ relevant conversations
 relevant knowledge objects
 procedures
 selected memories
+upstream changes relevant to current state
 retrieval trace
 scope assertions
 budget accounting
@@ -604,6 +720,10 @@ provenance
 ```
 
 The package must remain bounded and inspectable. More context is not automatically better context.
+
+The performance objective is:
+
+> **complete relevant working context in seconds, deep evidence on demand, and no hidden loss of durable canonical state.**
 
 ## 12. Collaboration architecture principle
 
@@ -623,6 +743,8 @@ How does single-machine mode remain complete?
 ```
 
 No collaboration implementation may silently overturn I-1, I-2, I-7, I-8, or I-9.
+
+A replication constitution is required before multi-user collaboration implementation.
 
 ## 13. From conversation to durable knowledge
 
@@ -646,6 +768,7 @@ A mature agent can potentially:
 ```text
 read authorized project context
 search authorized knowledge
+inspect repository/upstream state
 inspect work items
 propose tasks
 claim eligible tasks
@@ -678,248 +801,98 @@ One search experience should eventually span authorized subsets of:
 knowledge
 memory
 projects
+repositories
 work items
 conversations
 decisions
-people
 agents
-runs
-commits
+executions
 artifacts
-receipts
-external evidence
+evidence
 ```
 
-Search results are candidates, never authority. Every result must preserve source identity and trust/provenance metadata where relevant.
+Global search should federate typed domain results rather than collapse all domains into one opaque ranking contract.
 
-## 16. Memory model beyond simple recall
+## 16. The winning first wedge
 
-Fehrest memory must support more than facts.
+The mature destination is broad. The initial wedge remains intentionally narrow:
 
-Relevant dimensions include:
+> **Long-lived technical and research projects that use multiple AI agents and need durable continuity across sessions, IDEs, CLIs, repositories, and model vendors.**
+
+The initial proof loop is:
 
 ```text
-static state
-dynamic state
-workflow/procedure
-environment gotcha
-premise awareness
-semantic memory
-procedural memory
-episodic memory
-project decisions
-constraints
-failure history
-user-confirmed preferences
+import or open project
+→ compile project context
+→ disposable agent works
+→ evidence / events / candidate learning
+→ reviewed durable state
+→ fresh agent continues
 ```
 
-External taxonomies may inform research but may not silently replace Fehrest's canonical model.
-
-## 17. A product quality bar higher than feature parity
-
-Fehrest should not ship a mediocre implementation of every inspiration.
-
-A feature is retained only when it satisfies its own bar:
+Workspace breadth follows proof. It does not precede it.
 
 ```text
-useful
-fast enough
-secure enough
-understandable
-recoverable
-auditable
-accessible
-benchmark-justified where load-bearing
-coherent with the product
+CORE_PROOF_BEFORE_WORKSPACE_BREADTH=YES
 ```
 
-If Fehrest cannot deliver a subsystem at a first-class quality level, it should keep that subsystem narrower rather than ship a broad low-quality clone.
+## 17. Adoption and distribution
 
-## 18. Product sequence — prove the brain before the shell
+Fehrest should not require users to abandon their existing tools.
 
-The current master plan remains authoritative for dependency order.
-
-The strategic convergence is:
+The initial adoption posture is:
 
 ```text
-R1 — prove the continuation thesis
-↓
-Canonical Core — durable identity/journal/recovery/mutation boundaries
-↓
-Derived Retrieval — disposable incremental retrieval
-↓
-Graph decision — retain only if measured value exists
-↓
-Temporal Memory — productize durable memory semantics
-↓
-Context Compiler + Agent Gateway — defining brain interface
-↓
-Vertical Proof — prove real agent continuation and safe execution
-↓
-Desktop Product — expose the proven mechanisms
-↓
-Collaboration / Work OS expansion — only through separately specified gates
+keep GitHub
+keep your IDE
+keep your CLI
+keep your preferred agent/model
+add Fehrest as the durable brain
 ```
 
-This document does not reorder these gates.
-
-## 19. Future product expansion gates
-
-Once the current canonical plan permits post-vertical expansion, future specifications should evaluate product families independently rather than admitting them all at once.
-
-Potential gates include:
-
-### Collaboration Gate
-
-Prove channels/threads/agent participation do not corrupt canonical semantics and that collaboration adds measurable workflow value.
-
-### Work Management Gate
-
-Prove a project/work-item layer can remain a coherent projection over Fehrest canonical objects/events instead of becoming a second truth system.
-
-### Structured Knowledge Gate
-
-Evaluate richer database/view/block functionality only if round-trip/open-format/local-first invariants remain intact.
-
-### Sync Gate
-
-Sync must preserve offline completeness, local canonical ownership, deterministic conflict semantics, and export independence.
-
-### Mobile Gate
-
-Only after a concrete usage case demonstrates that mobile materially improves capture, review, approval, notification, or knowledge access.
-
-### Voice Gate
-
-Voice is an input/output surface, not a replacement for evidence or authorization. It enters only with explicit confirmation semantics for load-bearing actions.
-
-## 20. Donor and competitor map
-
-The long-term product should study donors by capability, not brand worship.
+A future user should be able to:
 
 ```text
-Slack      -> collaboration ergonomics, channels, threads, notifications
-Buzz       -> human/agent workspace, ACP/MCP, identity, tool lifecycle, event ideas
-Notion     -> flexible workspace, structured knowledge, views, polish
-Obsidian   -> local ownership, files, links, extensibility, personal knowledge workflows
-Linear     -> speed, keyboard UX, work graph, triage, project execution discipline
-Aider      -> context/repo-map baseline
-Mem0       -> memory comparator
-Letta      -> memory/agent comparator
-Graphiti   -> temporal graph comparator
-OpenHands  -> agent/runtime comparator
-mini-SWE   -> inspectable benchmark harness
-OpenSandbox/E2B/Daytona -> execution isolation comparators/providers
+find any useful GitHub project
+import it into Fehrest without forking
+understand it quickly
+work with any authorized agent
+retain everything important learned by the project
+reconcile upstream changes
+publish selected work back to GitHub when desired
 ```
 
-Every adoption remains `USE / ADAPT / STUDY / BENCHMARK / DEFER / REJECT` with provenance and rights review.
+The product earns centrality through compounding project memory and continuity rather than lock-in.
 
-## 21. Success metrics
+## 18. Product success tests
 
-Star count, screenshots, and feature count are secondary. Fehrest succeeds if users and agents demonstrably work better.
-
-Primary product proof dimensions should eventually include:
+Fehrest should eventually be judged by outcomes including:
 
 ```text
-continuation correctness
-time to orient a fresh agent
-repeated-mistake reduction
-context token efficiency
-retrieval precision/recall where relevant
-stale-state error rate
-permission-escape rate = 0 under defined threat tests
+fresh-agent continuation success
+cross-runtime continuation success
+time to first useful project orientation
+context compile P50/P95
+constraint miss rate
+stale-memory error rate
 provenance completeness
-receipt completeness
-recovery correctness
-sync correctness when applicable
-human task throughput
-review latency
-agent handoff success
-user control/portability
+human interruption per successful agent task
+upstream reconciliation correctness
+semantic export fidelity
+recovery success
+import-to-first-value time
 ```
 
-The north-star benchmark remains stronger than a demo:
+The north-star outcome question is:
 
-> Destroy the current agent, start a fresh one, provide no hidden chat history, and determine whether Fehrest lets it continue the real project correctly under a fair context and tool budget.
+> **How often can a fresh authorized human or agent continue a real long-lived project correctly, quickly, and with less reconstruction work because Fehrest exists?**
 
-## 22. What must never happen in pursuit of the vision
+## 19. Final promise
 
-Do not achieve breadth by sacrificing the properties that make Fehrest worth building.
-
-Forbidden strategic shortcuts include:
-
-```text
-making cloud mandatory
-making a hosted model authoritative
-making a graph/vector index canonical
-letting agent content mint permissions
-using chat as the only durable project memory
-storing secrets in trajectories or receipts
-shipping unrestricted agent filesystem/network access by default
-claiming replay when evidence is unreconstructable
-hiding benchmark failures
-activating UI/product expansion to escape a failed core thesis
-copying donor code without provenance/license review
-building every competitor feature before proving Fehrest's unique value
-```
-
-## 23. Product identity
-
-The mature Fehrest should feel like one product, not a bundle of clones.
-
-Its identity is:
-
-```text
-LOCAL-FIRST
-AGENT-NATIVE
-EVIDENCE-BOUND
-TEMPORALLY-AWARE
-CAPABILITY-SECURE
-AUDITABLE
-FAST
-CALM
-PORTABLE
-OPEN
-```
-
-The central promise is:
+The product promise remains:
 
 > **Your projects remember. Your agents arrive informed. Their authority is bounded. Their work is provable. Your knowledge remains yours.**
 
-## 24. Immediate implication for current work
+And the repository/project relationship is summarized by:
 
-This north star changes no current R1 behavior and creates no implementation authority.
-
-The immediate obligations are only:
-
-1. keep R1 scientifically sealed and finish it honestly;
-2. preserve the product thesis as falsifiable;
-3. ensure future specifications do not accidentally optimize a narrow memory component in a way that prevents the larger Agent Brain / Work OS architecture;
-4. keep Rust as the correctness/security core, TypeScript as the primary product surface, and Python as optional research/evaluation/provider tooling;
-5. treat the Buzz donor study as one input to a broader product architecture, not as the product definition;
-6. make every future expansion earn its complexity through explicit specification, security analysis, evidence, and review.
-
-## 25. Final north star
-
-Fehrest should ultimately make this workflow normal:
-
-```text
-A person opens a project.
-Fehrest already knows the durable state, history, decisions, constraints, work, and evidence.
-A new agent joins with an explicit bounded grant.
-The agent receives a compact receipted context instead of months of chat.
-The person and agent collaborate in the same workspace.
-Knowledge, conversation, tasks, code, runs, and decisions stay connected.
-The agent executes only what it is authorized to execute.
-Every important action leaves evidence.
-Another agent can replace it without losing the project brain.
-The user can leave Fehrest and still retain the canonical knowledge in open local form.
-```
-
-That is the product Fehrest is planning toward.
-
-```text
-VISION_DEFINED=YES
-VISION_IMPLEMENTATION_AUTHORIZED=NO
-CURRENT_FRONTIER_UNCHANGED=R1
-```
+> **GitHub can host the repository. Fehrest should remember the project.**
