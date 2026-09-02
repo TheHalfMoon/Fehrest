@@ -11,7 +11,7 @@ ARCHITECTURE=FROZEN
 PHASE_T_IMPLEMENTATION=TECHNICALLY_COMPLETE
 PHASE_T_PRODUCT_THESIS=NOT_YET_TERMINAL
 ACTIVE_EXECUTION_FRONTIER=R1
-ACTIVE_R1_SUBGATE=REPLACEMENT_VARIANCE_PILOT_EXECUTION_COMPLETE
+ACTIVE_R1_SUBGATE=CEILING_EFFECT_DETECTED_AWAITING_NEW_PREREGISTRATION
 R1_REPLACEMENT_EXECUTOR_VERSION=11
 R1_REPLACEMENT_EXECUTOR_SHA256=92ee711067d65bd7d68a0204becc916d3e9322fa975d815d8da6126e8c31dd89
 R1_REPLACEMENT_V8_PREPARE_RESULT=FAIL_CLOSED_BEFORE_MODEL_CALLS
@@ -22,6 +22,8 @@ R1_REPLACEMENT_V10_RUNTIME_RESULT=UV_VENV_AND_OPENAI_3_3_0_INSTALL_PASS
 R1_REPLACEMENT_V10_VERIFY_RESULT=FAIL_CLOSED_PYTHON_C_ARGUMENT_QUOTING_BEFORE_MODEL_CALLS
 R1_REPLACEMENT_V11_QUALIFICATION=RUNTIME_LOCAL_SDK_VERIFY_SCRIPT_ONLY
 R1_REPLACEMENT_EXECUTION_RESULT=EXECUTION_COMPLETE_UNSCORED_REPLACEMENT
+R1_REPLACEMENT_SCORING_RESULT=CEILING_EFFECT_NO_DETECTABLE_DISCORDANCE
+CURRENT_PREREGISTRATION_CONFIRMATORY_POWER=UNAVAILABLE
 NEXT_PRODUCT_SPEC=002-post-r1-canonical-core-convergence
 NEXT_PRODUCT_SPEC_STATUS=BLOCKED_BY_R1_TERMINAL_GATE_AND_FOUNDER_AUTHORIZATION
 GITHUB_BOOTSTRAP_MODE=VERIFIED_SNAPSHOT_MIRROR
@@ -52,6 +54,22 @@ ISSUE_11_STATUS=CLOSED
 
 The outer operator bridge initially failed due to a schema mismatch (expected field names not in supervisor output). The result file was post-hoc augmented with 3 derived fields. The original supervisor bytes are not recoverable. The augmented result file is not accepted as scientific evidence and must not be used as a substitute for the preserved immutable evidence. All closure criteria were independently verified from immutable evidence (runner stdout, records, raw archive, execution order, seal outputs, scientific bindings). Binding verification uses the sealed source-batch arming-manifest identity `2e360072931ac2adfbdbba94da20d9198f8b24474852429545bcd14cd8653205`; the replacement arming manifest `a7ae52b503d6c7b66cf03624aa78bd82b0349d5b02e9e0537b6a7985e1eff2ae` is a distinct execution artifact and must not be conflated with that sealed source binding.
 
+## Variance pilot scoring result
+
+The blinded scoring report is recorded in `docs/canonical/R1-PILOT-SCORING-REPORT.md`:
+
+```text
+PILOT_RESULT=NO_DETECTABLE_DISCORDANCE
+CEILING_EFFECT=YES
+CURRENT_PREREGISTRATION_CONFIRMATORY_POWER=UNAVAILABLE
+PRODUCT_THESIS_PASS=NOT_AUTHORIZED
+PRODUCT_THESIS_FAIL=NOT_AUTHORIZED
+```
+
+All six arms achieved perfect continuation correctness (120/120) across all 30 tasks. The power-analysis rule correctly identifies that the study cannot be powered for the preregistered effect size δ=0.15 because there is no variance to detect.
+
+This is a legitimate scientific finding. The ceiling effect is **not** interpreted as thesis support or thesis falsification. It means the benchmark has no discriminating power at this difficulty level with this model.
+
 ## Sealed R1 v1.1 historical anchor
 
 The pre-GitHub local repository sealed R1 v1.1 at:
@@ -68,27 +86,28 @@ Treat the SHAs above as immutable historical evidence. Do not rewrite them to ma
 
 ## What is authorized now
 
-Only work already authorized by the active R1 protocol and non-semantic documentation/planning that leaves R1 semantics and product behavior unchanged.
-
-The R1 protocol owns:
+The founder decision on the ceiling-effect gate:
 
 ```text
-variance pilot → PILOT SEAL → blinded scoring when authorized
-→ power analysis
-→ confirmatory N
-→ confirmatory manifest seal
-→ confirmatory execution
-→ blinded scoring
-→ scoring seal
-→ unblind
-→ terminal verdict
+ROUTE=NEW_PREREGISTRATION
+MODEL_STRATEGY=KEEP_REPRESENTATIVE_STRONG_MODEL
+TASK_STRATEGY=INCREASE_DISCRIMINATING_DIFFICULTY
+WEAKER_MODEL_ROUTE=NOT_SELECTED
 ```
 
-The variance pilot has been executed and sealed. Issue #8 and Issue #11 are closed. The next gate is the founder decision on blinded pilot scoring.
+Authorized:
+1. Design a new preregistration with harder task complexity that can discriminate context strategies for a strong modern agent.
+2. Preserve the failed-to-discriminate study as immutable prior evidence. Do not overwrite, retroactively modify, rescore, or reuse the old pilot as confirmatory observations.
+3. Repository-local governance, specification, design, static validation, review, CI, and sealing work for the new preregistration.
+4. Strong simple baselines must be preserved. Do not weaken baselines simply to create separation.
+
+Not authorized:
+- Executing the new model experiment until the new preregistration, benchmark artifacts, manifest identities, exact model/runtime condition, and execution authority are all sealed and independently reviewed.
+- Activating Spec 002 merely because the old R1 pilot was underpowered.
 
 ## What is blocked
 
-Until R1 reaches its terminal verdict and the founder explicitly authorizes the post-R1 route:
+Until the new R1 successor experiment reaches its terminal verdict and the founder explicitly authorizes the post-R1 route:
 
 ```text
 specs/002-post-r1-canonical-core-convergence = BLOCKED
@@ -115,6 +134,7 @@ After the terminal verdict:
 | `THESIS_NOT_SUPPORTED` | Trigger F-1 review. Do not begin Spec 002 by default |
 | `THESIS_FAIL` | Halt product expansion and perform architecture/product reconsideration |
 | `INCONCLUSIVE` | No silent continuation. Founder explicitly chooses extension, limited convergence, or stop |
+| `CEILING_EFFECT` | Design harder benchmark. New preregistration required. Do not reinterpret as thesis support or falsification |
 
 ## Next Spec Kit
 
