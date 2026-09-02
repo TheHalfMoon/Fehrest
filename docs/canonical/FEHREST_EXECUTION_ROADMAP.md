@@ -48,7 +48,9 @@ Before changing anything, an implementation agent must read the live repository 
 3. `docs/canonical/EXECUTION_MASTER_PLAN.md`
 4. the active or next Spec Kit named by `specs/CURRENT.md`
 5. `README.md`
-6. relevant reconciled architecture/security/benchmark documents required by the active task
+6. **all reconciled and mirrored historical architecture, security, benchmark, recovery, failure-condition, and active benchmark-protocol documents currently present in the repository**
+
+Step 6 is unconditional once those historical documents are reconciled and mirrored. An implementation agent may not narrow the mandatory governance read to documents it considers relevant to the task.
 
 Then inspect:
 
@@ -90,7 +92,7 @@ Phase 5 — Full Context Compiler + Agent Gateway
         ↓
 Phase 6 — Full Vertical Proof
         ↓
-Phase 7 — Product Surfaces, only after proof and authorization
+Phase 7 — Desktop/UI Surface, only after proof and authorization
 ```
 
 No later phase is executable because it is documented here.
@@ -302,7 +304,7 @@ TRAJECTORY != MEMORY
 SUMMARY != CANONICAL_MEMORY
 ```
 
-Source changes, contradictions, or invalidation immediately move affected active objects into a typed suspect / `PENDING_REVALIDATION` state that is excluded from ordinary active context until revalidated.
+Source changes or invalidation do not introduce a new lifecycle value. They emit canonical events that move an affected item's existing `resolution` axis to `UNRESOLVED` (or `CONFLICTED` when a contradiction is observed) while preserving the frozen lifecycle vocabulary. Ordinary active-context compilation excludes such unresolved/conflicted items from authoritative use until the existing axes are validly resolved through the domain-specific revalidation path; historical access remains temporally honest and provenance-linked.
 
 ---
 
@@ -331,21 +333,37 @@ AUTHORIZE
 
 By the Phase 5 gate, **every Fehrest-produced model-visible package MUST have a permanent receipt and served-item manifest** sufficient to audit exactly what Fehrest attempted to supply and under which authority/policy state.
 
-Each receipt/manifest binds at minimum:
+Each permanent receipt/manifest binds at minimum:
 
 ```text
+manifest schema/version
+context/package identity
 request identity/digest
 principal/session/grant binding
 canonical high-water mark
-source/event/object references
-compiler/policy/transform identities
+compiler/policy identities
+tokenizer identity/version and effective budget
+selection-trace identity/digest
 derived-generation bindings where used
-package/content digest when retained
-served-item identities/digests
-ContextReceipt
+package/rendered-content digest — always recorded, independent of body retention
+served-item order and item identities/digests
 ```
 
-Exact content reconstruction is conditional on the referenced source revision/body still being retained and permitted by canonical retention rules. When exact reconstruction is impossible, replay MUST return an explicit `UNRECONSTRUCTABLE` result rather than fabricating or silently substituting content.
+For **every served item**, the permanent manifest also records at minimum:
+
+```text
+source/event/object reference(s)
+content digest
+trust level
+provenance binding
+basis/verification/lifecycle/resolution where applicable
+scope/authorization binding
+temporal/as-of and supersession state where applicable
+transform/render identity
+truncation/compression decision and parameters where applicable
+```
+
+Exact item-body reconstruction is conditional on the referenced source revision/body still being retained and permitted by canonical retention rules. When exact reconstruction is impossible, replay MUST return an explicit `UNRECONSTRUCTABLE` result with reason rather than fabricating or silently substituting content. Permanent composition auditing does not depend on retaining every body forever because the complete manifest and package/render digests survive independently.
 
 There is no exemption for search results, tool reads, summaries, auxiliary snippets, or other Fehrest-produced model-visible payloads from the permanent receipt/manifest requirement.
 
@@ -356,8 +374,12 @@ If an active specification authorizes a `CapabilityLease`, it must bind at least
 ```text
 principal
 agent/session
+canonical project identity
+canonical work/task identity where work-scoped
 canonical grant digest
+normalized request/argument digest
 tool + operation
+intended executor/provider audience
 resource/filesystem/network/credential/process scopes
 cost/time/output/resource budgets
 expiry
@@ -367,18 +389,28 @@ receipt policy
 claim/fencing generation where applicable
 ```
 
-At issuance, every descendant lease MUST be a monotonic attenuation of every ancestor across all authority dimensions. It may narrow tool/action, filesystem, network, credential, process, budget, time, and resource scope; it may never widen any dimension.
+At issuance, every descendant lease MUST be a monotonic attenuation of every ancestor across all authority dimensions. It may narrow tool/action, project/work scope, request, executor audience, filesystem, network, credential, process, budget, time, and resource scope; it may never widen any dimension.
 
-Every execution must:
+Immediately before dispatch, one Core-owned admission operation MUST atomically validate and reserve/consume all applicable bindings and constraints, including:
 
-1. verify lease authenticity and the canonical grant digest;
-2. revalidate the live originating session and the complete live parent chain;
-3. revalidate per-dimension attenuation against every parent in that chain;
-4. reject descendants immediately when any parent is cancelled, exhausted, revoked, superseded, or no longer contains the child scope;
-5. use a core-owned atomic check-and-reserve/check-and-consume across all applicable ancestor budgets and single-use constraints;
-6. require the selected executor to declare enforceability per requested restriction dimension;
-7. reject the lease when the executor cannot enforce every requested restriction;
-8. fail closed when the enforcement store is unavailable.
+```text
+lease authenticity
+live canonical grant digest
+canonical project/work identity
+normalized request/argument digest
+intended executor/provider audience
+live originating session
+complete live parent chain
+per-dimension attenuation across every ancestor
+revocation/cancellation/supersession state
+claim/fencing generation
+expiry
+single-use constraints
+effective hierarchical cost/time/output/resource limits
+executor enforcement capability for every requested restriction
+```
+
+Dispatch is denied if any value differs from the admitted lease, any ancestor is no longer live or containing, the fencing generation is stale, the executor audience does not match, any effective budget cannot be reserved, any requested restriction cannot be enforced, or the enforcement/admission store is unavailable.
 
 ```text
 PROCESS_LIFECYCLE_HARDENED != SECURITY_SANDBOXED
@@ -403,7 +435,31 @@ PREPARED
 
 No dispatch occurs if durable receipt storage is unavailable.
 
-Every dispatch carries a unique immutable attempt identity plus the required fencing/admission identity into the executor/provider request. A crash after `DISPATCHED` and before `STARTED` does **not** permit blind retry. Retry requires idempotent admission keyed by the attempt identity or explicit reconciliation proving no prior side effect. Otherwise the result is `INDETERMINATE` until reconciled.
+Every dispatch carries a unique immutable attempt identity plus the required fencing/admission identity into the executor/provider request. A crash after `DISPATCHED` and before `STARTED` does **not** permit blind retry. Retry requires idempotent admission keyed by the attempt identity or explicit reconciliation proving no prior side effect.
+
+Any attempt whose side-effect status cannot be proven becomes durably `INDETERMINATE`. `INDETERMINATE` is owned by a Core reconciliation state machine; while unresolved it prohibits automatic retry, successor dispatch for the same non-idempotent operation, and dependent privileged work.
+
+Reconciliation appends durable evidence and resolves exactly one of these outcome classes:
+
+```text
+NO_SIDE_EFFECT_PROVEN
+  → write a terminal receipt recording that execution did not occur;
+    a later retry requires a new admitted attempt/fencing identity.
+
+COMPLETED_EXECUTION_PROVEN
+  → write the normal completed terminal receipt from verified provider/executor evidence;
+    never dispatch a duplicate retry.
+
+FAILED_EXECUTION_PROVEN
+  → write a failed terminal receipt from verified evidence;
+    any retry is a separately admitted new attempt subject to operation policy.
+
+DUPLICATE_TERMINAL_COMPLETION_PROVEN
+  → write a terminal duplicate/conflict receipt preserving every observed attempt/side effect;
+    never report success, never auto-retry, and require the owning domain's explicit remediation path for non-idempotent effects.
+```
+
+The reconciliation transition itself records the evidence identities, actor/process performing reconciliation, previous and resulting state, and decision reason. No reconciliation path may erase the original `DISPATCHED`/`STARTED` evidence or reuse an attempt identity for another side effect.
 
 A durable terminal receipt binds materially relevant runtime provenance, including immutable tool/server revision/configuration, executor revision, runtime artifact, platform where relevant, isolation-policy identity, and the lease dimensions actually enforced.
 
@@ -446,19 +502,33 @@ Fehrest demonstrates measurable value over strong simpler baselines while preser
 
 ---
 
-## 12. Phase 7 — Product surfaces
+## 12. Phase 7 — Desktop/UI surface
 
-Hard entry requires the canonical Phase 6 proof gate plus any editor/founder authorization required by live governance.
+Hard entry requires the canonical Phase 6 proof gate plus the editor/founder authorization required by live governance.
 
-The UI remains presentation. Headless Rust Core remains authoritative.
+Phase 7 follows the controlling master plan and is scoped to the `009-phase7-desktop` desktop/UI product surface. The UI remains presentation; the headless Rust Core remains authoritative.
 
-Potential surfaces such as CLI, IDE, desktop, web, MCP/ACP adapters, collaboration, schedules, and automation are future work only when explicitly authorized.
+This roadmap does **not** silently assign other capabilities to Phase 7:
 
-### Automation authority law
+```text
+agent gateway / MCP = governed by Phase 5 and its active specification
+CLI/web beyond already-scheduled work = UNSCHEDULED HERE
+collaboration = UNSCHEDULED HERE
+schedules/automation = UNSCHEDULED HERE
+other product surfaces = UNSCHEDULED HERE
+```
+
+Assigning an unscheduled capability to a phase requires the canonical change-control process; documenting an invariant below does not schedule implementation.
+
+---
+
+## 13. Unscheduled future automation invariant
+
+This section records a security invariant only. It assigns automation to **no phase** and creates no implementation authority.
 
 A trigger is never authority.
 
-Every scheduled/conditional run preserves the originating creator principal and an explicit delegated automation sub-scope that is a subset of that principal's live canonical authority.
+Every future scheduled/conditional run must preserve the originating creator principal and an explicit delegated automation sub-scope that is a subset of that principal's live canonical authority.
 
 ```text
 ONE_AUTOMATED_RUN = ONE_RESOLVED_PRINCIPAL
@@ -471,7 +541,7 @@ Editing trigger/schedule configuration does not transfer authority. Each future 
 
 ---
 
-## 13. Donor and adoption discipline
+## 14. Donor and adoption discipline
 
 The Architecture Freeze remains controlling.
 
@@ -503,7 +573,7 @@ BENCHMARK_CANDIDATE != PRODUCTION_DEPENDENCY
 
 ---
 
-## 14. Project portability and recovery invariants
+## 15. Project portability and recovery invariants
 
 Any future complete project capsule/export must preserve irreplaceable unpublished state, not merely Git-reconstructible state.
 
@@ -522,7 +592,7 @@ Cold-start, restore, missing-index, schema-upgrade, backlog, and rebuild-under-l
 
 ---
 
-## 15. Definition of Done
+## 16. Definition of Done
 
 A task is not complete because code or documentation exists.
 
@@ -549,14 +619,14 @@ Never claim PASS, QUALIFIED, MERGED, CLOSED, or COMPLETE without exact evidence.
 
 ---
 
-## 16. Hermes execution protocol
+## 17. Hermes execution protocol
 
 When Hermes executes Fehrest work, it must derive the task from **live repository truth**, not from a pasted stale task list.
 
 Hermes must:
 
 1. verify exact live `main`, current branch, open PRs, CI, reviews, review threads, and issues;
-2. read `AGENTS.md`, then follow its mandatory file order exactly;
+2. read `AGENTS.md`, then follow its mandatory file order exactly, including the unconditional reconciled historical governance set;
 3. state the active frontier and first dependency-ready authorized unit;
 4. refuse Phase 1+ implementation while R1 remains open/blocked;
 5. use a dedicated branch/worktree for implementation work;
@@ -572,7 +642,7 @@ The current Hermes starting point is the live R1 replacement-variance-pilot fron
 
 ---
 
-## 17. Fast navigation index
+## 18. Fast navigation index
 
 ```text
 What may execute now?
@@ -594,12 +664,12 @@ Active implementation detail
   the active Spec Kit named by specs/CURRENT.md
 
 Architecture/security/benchmark details
-  read only the reconciled documents required by the active task
+  all reconciled and mirrored historical governance documents required by AGENTS.md
 ```
 
 ---
 
-## 18. Current authority statement
+## 19. Current authority statement
 
 At this roadmap revision:
 
