@@ -68,6 +68,7 @@ The **realized** order is written to `runs/execution-order.jsonl` as it happens 
 ## 4. Model identity — frozen
 
 - **One model condition** for every primary-arm run. B0, B1, B3, B4 and B5 all use the same provider, identifier, snapshot, temperature, top-p, max output and reasoning setting.
+- **Model:** `gpt-5.6-terra` (same as R1-v1.1 replacement), reasoning effort `medium`, temperature `0.0`, max output `1024` tokens.
 - **A stronger model for B5 than for the baselines invalidates the batch.** So does a weaker one.
 - If the provider exposes only a floating alias, that is recorded as `MODEL_VERSION_PIN_STATUS=UNAVAILABLE_FLOATING_ALIAS` and the model string the provider reports **per response** is recorded per run, so drift is at least detectable after the fact. It is not recorded as pinned.
 - A second model is permitted later as a **separate replication**, with its own manifest. It is never pooled with the primary condition.
@@ -181,6 +182,7 @@ The R1-v1 variance pilot revealed a ceiling effect. This v2 pilot uses a harder 
 R1_V1_CEILING_EFFECT_EVIDENCE=SHA256:d99c21773b50daab9f0fd04f8b3bf34cf9f6e3ec7d11c2555132841ddcd2096b
 R1_V1_CEILING_EFFECT_COMMIT=cef01818bc178366109ef386b40a7c02330015c4
 R1_V1_CEILING_EFFECT_RESULT=NO_DETECTABLE_DISCORDANCE
+R1_V1_1_SEALED_COMMIT=ed79d8ecee08e4ce4dd384edaffc4a27cfd6d37c
 ```
 
 If this v2 pilot also reveals a ceiling effect, the response is:

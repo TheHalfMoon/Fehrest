@@ -114,18 +114,17 @@ Distractors share keywords, document naming conventions, and structural patterns
 | Class | Tasks | What it isolates | R1-v2 addition |
 |---|---|---|---|
 | `NEXT_ACTION` | 3 | Selecting the correct next step from a long history | Unchanged |
-| `SUPERSESSION_AVOIDANCE` | 4 | Not acting on a decision that has been replaced | Multi-layer chains |
+| `SUPERSESSION_AVOIDANCE` | 3 | Not acting on a decision that has been replaced | Multi-layer chains |
 | `CONSTRAINT_RETENTION` | 3 | Honouring a requirement introduced many checkpoints earlier | Delayed constraints (span >8) |
 | `FAILED_APPROACH_AVOIDANCE` | 3 | Not repeating a known failed approach | Revisited with new context |
-| `HISTORICAL_REASONING` | 2 | Operating under what was true at an earlier point | Unchanged |
-| `CONTRADICTION_HANDLING` | 2 | Surfacing a conflict instead of silently picking | Unresolved conflicts |
-| `ABSTENTION` | 2 | Declining to invent an answer that does not exist | Masked absence |
-| `IDENTITY_CONTINUITY` | 2 | Following an object across rename and move | Multiple renames |
 | `SCOPE_RESOLUTION` | 2 | Applying a project-local rule without globalising it | Cross-scenario precedent |
+| `CONTRADICTION_HANDLING` | 3 | Surfacing a conflict instead of silently picking | Unresolved conflicts |
+| `HISTORICAL_REASONING` | 3 | Operating under what was true at an earlier point | Unchanged |
+| `IDENTITY_CONTINUITY` | 3 | Following an object across rename and move | Multiple renames |
+| `ABSTENTION` | 2 | Declining to invent an answer that does not exist | Masked absence |
 | `PROVENANCE` | 1 | Naming the evidence an action requires | Look-alike documents |
-| `CURRENT_STATE_CONTINUATION` | 1 | Acting on brand-new evidence | Unchanged |
 | `CROSS_FILE_SYNTHESIS` | 2 | **NEW**: Synthesizing facts from 3+ checkpoints | R1-v2 addition |
-| `EPOCH_BOUNDARY` | 1 | **NEW**: Reasoning across project eras | R1-v2 addition |
+| `EPOCH_BOUNDARY` | 2 | **NEW**: Reasoning across project eras | R1-v2 addition |
 
 ### 5.2 Tasks span the full timeline
 
@@ -542,6 +541,7 @@ The R1-v1 ceiling effect is preserved as immutable prior evidence:
 R1_V1_CEILING_EFFECT_EVIDENCE=SHA256:d99c21773b50daab9f0fd04f8b3bf34cf9f6e3ec7d11c2555132841ddcd2096b
 R1_V1_CEILING_EFFECT_COMMIT=cef01818bc178366109ef386b40a7c02330015c4
 R1_V1_CEILING_EFFECT_RESULT=NO_DETECTABLE_DISCORDANCE
+R1_V1_1_SEALED_COMMIT=ed79d8ecee08e4ce4dd384edaffc4a27cfd6d37c
 ```
 
 The failed-to-discriminate study is not overwritten, retroactively modified, rescores, or reused as confirmatory observations. It is input to the R1-v2 design, not data for tuning individual answers.
