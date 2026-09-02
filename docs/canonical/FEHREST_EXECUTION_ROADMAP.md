@@ -48,9 +48,9 @@ Before changing anything, an implementation agent must read the live repository 
 3. `docs/canonical/EXECUTION_MASTER_PLAN.md`
 4. the active or next Spec Kit named by `specs/CURRENT.md`
 5. `README.md`
-6. **all reconciled and mirrored historical architecture, security, benchmark, recovery, failure-condition, and active benchmark-protocol documents currently present in the repository**
+6. **all reconciled and mirrored historical governance documents currently present in the repository**, including the complete intended extended reading set named by `AGENTS.md`: Architecture Freeze, `docs/canonical/PHASE_T_AUTHORIZATION.md`, `docs/19-ENGINEERING-METHOD.md`, Threat Model, Recovery Model, Failure Conditions, Benchmark Plan, and the active benchmark protocol, plus any additional reconciled architecture/security/benchmark documents present at execution time.
 
-Step 6 is unconditional once those historical documents are reconciled and mirrored. An implementation agent may not narrow the mandatory governance read to documents it considers relevant to the task.
+Step 6 is unconditional once those historical documents are reconciled and mirrored. An implementation agent may not narrow the mandatory governance read to documents it considers relevant to the task. The filenames above do not replace `AGENTS.md`; if its live extended set grows or changes, the live `AGENTS.md` set wins and must be read in full.
 
 Then inspect:
 
@@ -450,16 +450,22 @@ COMPLETED_EXECUTION_PROVEN
   → write the normal completed terminal receipt from verified provider/executor evidence;
     never dispatch a duplicate retry.
 
-FAILED_EXECUTION_PROVEN
-  → write a failed terminal receipt from verified evidence;
-    any retry is a separately admitted new attempt subject to operation policy.
+FAILED_EXECUTION_WITH_NO_SIDE_EFFECT_PROVEN
+  → write a failed terminal receipt only when evidence proves both execution failure and complete absence/rollback of side effects;
+    a later retry requires a separately admitted new attempt/fencing identity and normal operation policy.
+
+PARTIAL_OR_UNKNOWN_SIDE_EFFECT
+  → remain blocked from automatic retry and successor privileged work;
+    append the known side-effect disposition and route to the owning domain's explicit remediation/compensation path until complete disposition is proven.
 
 DUPLICATE_TERMINAL_COMPLETION_PROVEN
   → write a terminal duplicate/conflict receipt preserving every observed attempt/side effect;
     never report success, never auto-retry, and require the owning domain's explicit remediation path for non-idempotent effects.
 ```
 
-The reconciliation transition itself records the evidence identities, actor/process performing reconciliation, previous and resulting state, and decision reason. No reconciliation path may erase the original `DISPATCHED`/`STARTED` evidence or reuse an attempt identity for another side effect.
+A failed process/HTTP/provider status **alone is never proof that retry is safe**. Before an `INDETERMINATE` attempt may leave the blocked state for a retryable terminal failure, Core MUST durably prove the complete side-effect disposition: either no side effect occurred, every partial effect was conclusively rolled back/compensated, or the operation is independently idempotent under the same attempt identity. Otherwise the attempt remains blocked and requires explicit remediation.
+
+The reconciliation transition itself records the evidence identities, actor/process performing reconciliation, previous and resulting state, complete side-effect disposition, and decision reason. No reconciliation path may erase the original `DISPATCHED`/`STARTED` evidence or reuse an attempt identity for another side effect.
 
 A durable terminal receipt binds materially relevant runtime provenance, including immutable tool/server revision/configuration, executor revision, runtime artifact, platform where relevant, isolation-policy identity, and the lease dimensions actually enforced.
 
