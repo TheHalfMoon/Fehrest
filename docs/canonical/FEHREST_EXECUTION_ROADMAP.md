@@ -1,15 +1,15 @@
 # Fehrest Execution Roadmap
 
 **Status:** CANONICAL NAVIGATION / EXECUTION GUIDE  
-**Purpose:** provide a dependency-ordered navigation layer without weakening repository governance.  
+**Purpose:** provide one dependency-ordered execution map that is easy for a human or implementation agent to follow without weakening repository governance.  
 **Current live frontier at this revision:** `R1 / REPLACEMENT_VARIANCE_PILOT_EXECUTION`  
 **Authority rule:** this file never authorizes work by itself.
 
-> Read this file for sequence only. Read `specs/CURRENT.md` for what is executable now.
+> Read this file for sequence only. Read `specs/CURRENT.md` and the active Spec Kit for what is executable now.
 
 ---
 
-## 1. Non-negotiable authority boundary
+## 1. Authority boundary
 
 ```text
 LIVE_REPOSITORY_TRUTH > HANDOFF
@@ -33,7 +33,7 @@ NEXT_PRODUCT_SPEC=002-post-r1-canonical-core-convergence
 NEXT_PRODUCT_SPEC_STATUS=BLOCKED_BY_R1_TERMINAL_GATE_AND_FOUNDER_AUTHORIZATION
 ```
 
-No Phase 1+ product implementation may begin while `specs/CURRENT.md` still reports that block.
+No Phase 1+ product implementation may begin while live canonical governance still reports that block.
 
 ---
 
@@ -48,7 +48,7 @@ Before changing anything, an implementation agent must read the live repository 
 3. `docs/canonical/EXECUTION_MASTER_PLAN.md`
 4. the active or next Spec Kit named by `specs/CURRENT.md`
 5. `README.md`
-6. any historical architecture/security/benchmark documents that are present, reconciled, and relevant to the current task
+6. relevant reconciled architecture/security/benchmark documents required by the active task
 
 Then inspect:
 
@@ -90,7 +90,7 @@ Phase 5 — Full Context Compiler + Agent Gateway
         ↓
 Phase 6 — Full Vertical Proof
         ↓
-Phase 7 — Desktop/Product Surfaces, only after proof and authorization
+Phase 7 — Product Surfaces, only after proof and authorization
 ```
 
 No later phase is executable because it is documented here.
@@ -103,17 +103,17 @@ No later phase is executable because it is documented here.
 
 Complete the sealed R1 experiment in canonical order without mutating sealed semantics or fabricating runtime evidence.
 
-### Live critical path
+### Critical path
 
 The exact active sub-gate comes from `specs/CURRENT.md` and the active R1 runbooks. The canonical experiment order remains:
 
 ```text
-valid variance pilot execution
+valid replacement variance pilot execution
 → raw evidence seal
 → execution-integrity review
-→ blinded pilot scoring when authorized
+→ blinded pilot scoring when separately authorized
 → power analysis
-→ confirmatory N
+→ computed confirmatory N
 → confirmatory manifest seal
 → confirmatory execution
 → raw seal
@@ -127,15 +127,15 @@ valid variance pilot execution
 
 - Use the host/runtime required by the sealed protocol.
 - Do not substitute WSL, Linux, GitHub Actions, another model condition, another seed, another corpus, or another arm where the sealed protocol requires something else.
-- Do not infer success from executor qualification.
+- Do not infer success from executor qualification or zero exit code.
 - Do not fabricate execution evidence.
 - Do not score, unblind, or run confirmatory work before its canonical gate.
 - Preserve invalidated batches as invalidated evidence.
-- Reconcile exact artifact identities/hashes before any gate closeout.
+- Reconcile exact artifact identities and hashes before any gate closeout.
 
 ### Exit
 
-A genuine terminal R1 verdict exists, is recorded canonically, and the required post-verdict founder/governance route has completed.
+A genuine terminal R1 verdict exists, is recorded canonically, and every required post-verdict founder/governance gate has completed.
 
 ---
 
@@ -146,11 +146,11 @@ A genuine terminal R1 verdict exists, is recorded canonically, and the required 
 
 ### Objective
 
-Turn already-proven Phase T canonical mechanisms into a production-grade canonical core without expanding agent-facing authority or derived intelligence.
+Turn already-proven canonical mechanisms into a production-grade core without expanding agent-facing authority or derived intelligence.
 
-### Authorized capability families only after activation
+### Scope after activation
 
-The Phase 1 scope follows the Execution Master Plan and active Spec 002. It is limited to the dependency-complete work those documents authorize, including:
+Phase 1 follows the Execution Master Plan and active Spec 002 only. Its dependency-complete capability family includes:
 
 ```text
 Phase T truth reconciliation
@@ -170,7 +170,7 @@ golden old-version fixtures
 recovery evidence
 ```
 
-The following are **not** Phase 1 merely because future architecture needs them:
+The following are **not** Phase 1 merely because later architecture needs them:
 
 ```text
 agent grants / capability leases
@@ -182,11 +182,9 @@ automatic memory
 UI
 ```
 
-Those remain in later phases unless canonical governance explicitly changes phase boundaries through the required review path.
-
 ### Exit
 
-Canonical loss under the required fault matrix is zero and all existing security/path/identity/resource invariants remain green.
+Canonical loss under the required fault matrix is zero and all required security/path/identity/resource invariants remain green.
 
 ---
 
@@ -217,7 +215,11 @@ INDEX_CORRUPTION != CANONICAL_CORRUPTION
 REBUILD_IDENTITY_IS_RECORDED=YES
 ```
 
-Aider repo-map remains a strong simple baseline for code/project workloads where applicable. Vector systems remain optional benchmark/provider candidates, not defaults.
+Aider repo-map remains a strong simple baseline for code/project workloads where the governing benchmark/specification already authorizes it. Vector systems remain optional future candidates, not defaults.
+
+### Exit
+
+A strong non-graph baseline exists with measured quality, latency, footprint, update cost, and rebuild behavior.
 
 ---
 
@@ -227,9 +229,9 @@ Aider repo-map remains a strong simple baseline for code/project workloads where
 
 Determine whether graph complexity materially improves Fehrest outcomes before building production graph infrastructure.
 
-### Canonical comparator family
+### Frozen comparator family
 
-The frozen default comparator set remains:
+Use only the comparator set already permitted by canonical freeze/governance unless a valid gap-driven change is recorded:
 
 ```text
 Fehrest lexical/structured/temporal baseline
@@ -238,12 +240,12 @@ Code-Graph-RAG
 Graphiti where temporal-context-graph semantics match the workload
 ```
 
-Any newly surfaced source such as Semantica, Microsoft GraphRAG, LightRAG, or a new tree-sitter-based comparator is **deferred** unless a valid gap-driven donor-research trigger is recorded and the governing experiment/specification authorizes its inclusion.
-
 ```text
 NEW_DONOR_FOUND != COMPARATOR_REQUIRED
 DONOR_DISCOVERY_FROZEN=YES
 ```
+
+Any future donor research itself requires a valid gap-driven trigger before it is conducted or landed in canonical planning. Appearance in chat, founder brainstorming, or external popularity is not sufficient.
 
 Measure task/continuation quality, retrieval quality, build/incremental cost, memory/disk footprint, context tokens, latency, and API cost where applicable.
 
@@ -325,11 +327,11 @@ AUTHORIZE
 → ContextReceipt
 ```
 
-### Model-visible reconstruction law
+### Model-visible package law
 
-By the Phase 5 gate, **every Fehrest-produced model-visible package MUST be reconstructable** from durable project artifacts and declared environment inputs.
+By the Phase 5 gate, **every Fehrest-produced model-visible package MUST have a permanent receipt and served-item manifest** sufficient to audit exactly what Fehrest attempted to supply and under which authority/policy state.
 
-Each package binds at minimum:
+Each receipt/manifest binds at minimum:
 
 ```text
 request identity/digest
@@ -338,11 +340,14 @@ canonical high-water mark
 source/event/object references
 compiler/policy/transform identities
 derived-generation bindings where used
-package/content digest
+package/content digest when retained
+served-item identities/digests
 ContextReceipt
 ```
 
-There is no `load-bearing` exemption for search results, tool reads, summaries, auxiliary snippets, or other Fehrest-produced model-visible payloads.
+Exact content reconstruction is conditional on the referenced source revision/body still being retained and permitted by canonical retention rules. When exact reconstruction is impossible, replay MUST return an explicit `UNRECONSTRUCTABLE` result rather than fabricating or silently substituting content.
+
+There is no exemption for search results, tool reads, summaries, auxiliary snippets, or other Fehrest-produced model-visible payloads from the permanent receipt/manifest requirement.
 
 ### Capability-lease security contract
 
@@ -362,15 +367,18 @@ receipt policy
 claim/fencing generation where applicable
 ```
 
+At issuance, every descendant lease MUST be a monotonic attenuation of every ancestor across all authority dimensions. It may narrow tool/action, filesystem, network, credential, process, budget, time, and resource scope; it may never widen any dimension.
+
 Every execution must:
 
 1. verify lease authenticity and the canonical grant digest;
-2. revalidate the live originating session and the **complete live parent chain**;
-3. reject descendants immediately when a parent is cancelled, exhausted, revoked, or superseded;
-4. use a core-owned atomic check-and-reserve/check-and-consume across all applicable ancestor budgets and single-use constraints;
-5. require the selected executor to declare enforceability per requested restriction dimension;
-6. reject the lease when the executor cannot enforce **every** requested restriction;
-7. fail closed when the enforcement store is unavailable.
+2. revalidate the live originating session and the complete live parent chain;
+3. revalidate per-dimension attenuation against every parent in that chain;
+4. reject descendants immediately when any parent is cancelled, exhausted, revoked, superseded, or no longer contains the child scope;
+5. use a core-owned atomic check-and-reserve/check-and-consume across all applicable ancestor budgets and single-use constraints;
+6. require the selected executor to declare enforceability per requested restriction dimension;
+7. reject the lease when the executor cannot enforce every requested restriction;
+8. fail closed when the enforcement store is unavailable.
 
 ```text
 PROCESS_LIFECYCLE_HARDENED != SECURITY_SANDBOXED
@@ -428,7 +436,7 @@ backup/restore/corruption recovery
 human approval friction
 ```
 
-If the vertical proof requires Git import/export, project-capsule restore, or fresh-device transport fidelity, the bounded specification and implementation needed for that trial must be authorized and completed **before** the trial. A subsystem may not be deferred to Phase 7+ while simultaneously being required to pass Phase 6.
+If the vertical proof requires Git import/export, project-capsule restore, or fresh-device transport fidelity, the bounded specification and implementation needed for that trial must be authorized and completed **before** the trial. A subsystem may not be deferred to Phase 7 while simultaneously being required to pass Phase 6.
 
 Do not build a sandbox platform merely to run the proof; qualify/adapt a provider only when the active specification authorizes it.
 
@@ -463,13 +471,16 @@ Editing trigger/schedule configuration does not transfer authority. Each future 
 
 ---
 
-## 13. Donor/adoption discipline
+## 13. Donor and adoption discipline
 
 The Architecture Freeze remains controlling.
 
-Before a newly surfaced external source becomes load-bearing, record a valid gap-driven trigger. Before any code/dependency is copied or adopted, the active specification must also record:
+New donor research itself requires a valid gap-driven trigger before investigation begins or research bytes are landed in canonical planning.
+
+If a valid trigger exists, record it before research. Before any external implementation becomes load-bearing or is copied/adopted, the active specification must also record as applicable:
 
 ```text
+trigger identity and change-control class
 real authorized requirement
 simplest Fehrest-native option considered
 immutable upstream revision
@@ -489,8 +500,6 @@ SOURCE_USEFUL != SOURCE_REQUIRED
 COPYABLE != SHOULD_COPY
 BENCHMARK_CANDIDATE != PRODUCTION_DEPENDENCY
 ```
-
-The PR #27 research qualification record is `docs/research/PR27_REVIEW_QUALIFICATION_ADDENDUM.md`.
 
 ---
 
@@ -536,7 +545,7 @@ Unless the active specification says otherwise, applicable completion evidence i
 [ ] governance reread selects the next authorized dependency
 ```
 
-Never claim PASS, QUALIFIED, MERGED, CLOSED, or COMPLETE without evidence.
+Never claim PASS, QUALIFIED, MERGED, CLOSED, or COMPLETE without exact evidence.
 
 ---
 
@@ -554,9 +563,54 @@ Hermes must:
 6. make the smallest dependency-complete change;
 7. run required local gates and exact-head CI;
 8. preserve sealed R1 evidence and historical identifiers exactly;
-9. preserve donor provenance and donor-freeze rules;
+9. obey the donor-research freeze and preserve provenance for any already-authorized source use;
 10. never fabricate runtime evidence, qualification, review, authority, or completion;
 11. resolve review findings only after verifying the current head actually addresses them;
 12. after each completed unit, reread live governance and continue only to the next genuinely authorized dependency.
 
 The current Hermes starting point is the live R1 replacement-variance-pilot frontier, **not** Spec 002 implementation, unless `specs/CURRENT.md` has changed by the time Hermes starts.
+
+---
+
+## 17. Fast navigation index
+
+```text
+What may execute now?
+  specs/CURRENT.md
+
+Repository operating law
+  AGENTS.md
+
+Bootstrap/provenance constraints
+  docs/canonical/GITHUB_BOOTSTRAP_PROVENANCE.md
+
+Canonical program order
+  docs/canonical/EXECUTION_MASTER_PLAN.md
+
+Easy dependency map
+  docs/canonical/FEHREST_EXECUTION_ROADMAP.md
+
+Active implementation detail
+  the active Spec Kit named by specs/CURRENT.md
+
+Architecture/security/benchmark details
+  read only the reconciled documents required by the active task
+```
+
+---
+
+## 18. Current authority statement
+
+At this roadmap revision:
+
+```text
+ROADMAP_RECORDED=YES
+ROADMAP_AUTHORIZES_LATER_PHASES=NO
+ACTIVE_EXECUTION_AUTHORITY=DEFER_TO_SPECS_CURRENT_AND_ACTIVE_SPEC
+R1_SEMANTICS_CHANGED=NO
+PRODUCT_BEHAVIOR_CHANGED=NO
+NEW_PRODUCTION_DEPENDENCY_ADMITTED=NO
+UNGATED_DONOR_RESEARCH_ADMITTED=NO
+```
+
+If this roadmap ever conflicts with live canonical governance, **live canonical governance wins**.
