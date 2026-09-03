@@ -45,7 +45,7 @@ Three failure modes this rules out, all of which V0 permitted:
 
 ## 4. Session contract
 
-One maintenance session per `(arm, scenario, checkpoint)` for t1 through t14. Fresh and stateless: the maintainer's only memory of previous checkpoints is **the artefact it already produced**, which is the property under test.
+One maintenance session per `(arm, scenario, trajectory, checkpoint)` for t1 through t14. Fresh and stateless: the maintainer's only memory of previous checkpoints is **the artefact it already produced**, which is the property under test. With 3 arms, 3 scenarios, 2 trajectories, and 14 checkpoints (t1–t14), this yields 3 × 3 × 2 × 14 = 252 sessions.
 
 Inputs:
 

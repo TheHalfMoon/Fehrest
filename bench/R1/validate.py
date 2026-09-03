@@ -59,6 +59,7 @@ class Validator:
         self._validate_no_duplicate_ids(tasks, oracles)
         self._validate_trap_metadata(tasks, oracles, corpus)
         self._validate_cross_scenario_dependencies(tasks)
+        self._validate_protocol_documents(spec, tasks)
 
         return len(self.errors) == 0
 
@@ -363,6 +364,60 @@ class Validator:
             for dep in task.get("cross_scenario_dependencies", []):
                 self.check(dep in scenario_ids,
                            f"Task {task['id']} cross_scenario_dependency '{dep}' not a valid scenario")
+
+    def _validate_protocol_documents(self, spec, tasks):
+        """Cross-check that numbers stated in the markdown protocol documents
+        (PREREGISTRATION-V2.md, VARIANCE-PILOT-V2.md) match the actual JSON
+        artifacts. This prevents documentation drift where prose numbers
+        diverge from machine-verified state.
+        """
+        r1_dir = Path(__file__).parent
+        pregreg_path = r1_dir / "PREREGISTRATION-V2.md"
+
+        if pregreg_path.exists():
+            text = pregreg_path.read_text()
+
+            # Check the "tasks issued before t14" count
+            actual_pre_t14 = sum(1 for t in tasks if t.get("checkpoint", 0) < 14)
+            # Look for the pattern "**NN of the 30 tasks are issued before t14**"
+            match = re.search(r'$$(\d+) of the (\d+) tasks? are issued before t14', text)
+            if match:
+                stated_pre_t14 = int(match.group(1))
+                stated_total = int(match.group(2))
+                actual_total = len(tasks)
+                self.check(stated_pre_t14 == actual_pre_t14,
+                           f"PREREGISTRATION-V2.md states {stated_pre_t14} tasks before t14, "
+                           f"but actual count is {actual_pre_t14}")
+                self.check(stated_total == actual_total,
+                           f"PREREGISTRATION-V2.md states {stated_total} total tasks, "
+                           f"but actual count is {actual_total}")
+
+            # Check B-NULL exclusion ordering: B-NULL exclusion must be applied
+            # BEFORE computing r_conf (§28 ordering)
+            section_28 = re.search(r'## 28\.\s*Then.*?(?=## \d+|\Z)', text, re.DOTALL)
+            if section_28:
+                section_text = section_28.group(0)
+                # The first numbered step must be B-NULL exclusion, not r_conf
+                first_step = re.search(r'^\s*1\.\s*(.+)$', section_text, re.MULTILINE)
+                if first_step:
+                    step_text = first_step.group(1).strip().lower()
+                    self.check('b-null' in step_text or 'b null' in step_text,
+                               f"PREREGISTRATION-V2.md §28.1 must apply B-NULL exclusion first, "
+                               f"got: '{first_step.group(1).strip()}'")
+
+        variance_path = r1_dir / "VARIANCE-PILOT-V2.md"
+        if variance_path.exists():
+            text = variance_path.read_text()
+            # Check B-NULL exclusion ordering in variance pilot
+            section_10 = re.search(r'## 10\.\s*Then.*?(?=## \d+|\Z)', text, re.DOTALL)
+            if section_10:
+                section_text = section_10.group(0)
+                first_step = re.search(r'^\s*1\.\s*(.+)$', section_text, re.MULTILINE)
+                if first_step:
+                    step_text = first_step.group(1).strip().lower()
+                    self.check('b-null' in step_text or 'b null' in step_text,
+                               f"VARIANCE-PILOT-V2.md §10.1 must apply B-NULL exclusion first, "
+                               f"got: '{first_step.group(1).strip()}'")
 
 
 def main():

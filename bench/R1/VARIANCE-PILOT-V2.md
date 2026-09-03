@@ -202,8 +202,8 @@ POWER_ANALYSIS_INPUTS           COMPUTED_CONFIRMATORY_N
 
 ## 10. Then, and only then
 
-1. Compute `r_conf` mechanically from §7. No judgement, no adjustment.
-2. Apply the B-NULL exclusion from PREREGISTRATION-V2.md §19.1.
+1. Apply the B-NULL exclusion from PREREGISTRATION-V2.md §19.1. This yields K_eligible, N_pairs and r_conf.
+2. Compute `r_conf` mechanically from §7. No judgement, no adjustment.
 3. Create **R1-CONFIRMATORY-v2** — a new immutable manifest carrying the computed N, the power-analysis digest, the model condition, the runner version, the corpus, task, scorer and baseline digests, the frozen Fehrest identity, the randomization seed and the execution-plan digest.
 4. Seal it. **Then** run the confirmatory stage.
 

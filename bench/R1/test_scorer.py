@@ -188,7 +188,7 @@ def test_cross_file_synthesis_false_positive():
         "require_epoch": None, "provenance_required": False, "trap_present": [],
         "stale_facts": [], "correct_facts": ["S1-T0-CON-001", "S1-T11-DEC-001"],
     }
-    response = {"action": "Hash and encrypt", "reasoning": "From t0 and t11"}
+    response = {"action": "Hash and encrypt (from t0, t11)", "reasoning": "From t0 and t11"}
     result = score_task(response, oracle)
     assert result["score"] == 0, f"Expected 0 (missing t12), got {result['score']}"
     print("PASS: test_cross_file_synthesis_false_positive")
@@ -203,7 +203,7 @@ def test_cross_file_synthesis_true_positive():
         "require_epoch": None, "provenance_required": False, "trap_present": [],
         "stale_facts": [], "correct_facts": ["S1-T0-CON-001", "S1-T11-DEC-001"],
     }
-    response = {"action": "Hash PII and encrypt at rest", "reasoning": "t0 PII constraint, t11 encryption, t12 config"}
+    response = {"action": "Hash PII from t0 and encrypt at rest (t11 encryption, t12 config)", "reasoning": "Synthesizing from t0 PII constraint, t11 encryption, t12 config"}
     result = score_task(response, oracle)
     assert result["score"] == 1, f"Expected 1, got {result['score']}: {result['failures']}"
     print("PASS: test_cross_file_synthesis_true_positive")
@@ -221,13 +221,15 @@ def test_epoch_false_positive():
         "provenance_required": False, "trap_present": ["S1-T5-DEP-001"],
         "stale_facts": ["S1-T0-DEC-002"], "correct_facts": ["S1-T0-DEC-001", "S1-T10-DEP-001"],
     }
+    # Epoch names and must_identify evidence appear only in reasoning (not a scored field).
+    # With field-scoped scoring, require_epoch must not pick them up from reasoning or metadata.
     response = {
         "valid_decisions": ["S1-T0-DEC-001"],
         "deprecated_decisions": ["S1-T0-DEC-002"],
         "reasoning": "Foundation to maturity transition",
     }
     result = score_task(response, oracle)
-    assert result["score"] == 0, f"Expected 0 (missing deprecation ID), got {result['score']}"
+    assert result["score"] == 0, f"Expected 0 (missing epoch in scored fields), got {result['score']}"
     print("PASS: test_epoch_false_positive")
 
 
@@ -243,10 +245,11 @@ def test_epoch_true_positive():
         "provenance_required": False, "trap_present": ["S1-T5-DEP-001"],
         "stale_facts": ["S1-T0-DEC-002"], "correct_facts": ["S1-T0-DEC-001", "S1-T10-DEP-001"],
     }
+    # Epoch names and must_identify evidence in scored fields (valid_decisions).
     response = {
-        "valid_decisions": ["S1-T0-DEC-001"],
+        "valid_decisions": ["S1-T0-DEC-001", "Foundation to maturity: S1-T5-DEP-001 deprecated JSON"],
         "deprecated_decisions": ["S1-T0-DEC-002"],
-        "reasoning": "Foundation to maturity: S1-T5-DEP-001 deprecated JSON",
+        "reasoning": "The foundation epoch gives way to maturity",
     }
     result = score_task(response, oracle)
     assert result["score"] == 1, f"Expected 1, got {result['score']}: {result['failures']}"

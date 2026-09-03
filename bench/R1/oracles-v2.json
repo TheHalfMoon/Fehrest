@@ -59,10 +59,10 @@
     "require_epoch": null,
     "provenance_required": false,
     "trap_present": [
-      "S1-T0-DEC-003"
+      "S1-T0-DEC-002"
     ],
     "stale_facts": [
-      "S1-T0-DEC-003"
+      "S1-T0-DEC-002"
     ],
     "correct_facts": [
       "S1-T1-DEC-002"
@@ -651,12 +651,12 @@
     "id": "O-S2-G-HISTORICAL",
     "task_id": "S2-G-HISTORICAL",
     "derivation_evidence": [
-      "S2-T0-DEC-001"
+      "S2-T1-DEC-002"
     ],
     "require_all": [
       {
         "field": "answer",
-        "contains": "site-based"
+        "contains": "protocol"
       },
       {
         "field": "as_of_checkpoint",
@@ -666,7 +666,7 @@
     "forbid": [
       {
         "field": "answer",
-        "contains": "protocol"
+        "contains": "site-based"
       }
     ],
     "abstention_ok": false,
@@ -676,9 +676,11 @@
     "trap_present": [
       "S2-T9-DEC-001"
     ],
-    "stale_facts": [],
-    "correct_facts": [
+    "stale_facts": [
       "S2-T0-DEC-001"
+    ],
+    "correct_facts": [
+      "S2-T1-DEC-002"
     ],
     "epoch_boundary": null
   },

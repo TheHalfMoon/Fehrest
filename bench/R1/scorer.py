@@ -88,8 +88,8 @@ def check_forbid(response, forbid):
 def check_abstention(response, abstention_ok, abstention_required):
     """Check abstention rules."""
     failures = []
-    ab_value = field_value(response, "abstain")
 
+    ab_value = field_value(response, "abstain")
     if abstention_required:
         if not ab_value or str(ab_value).upper() not in ("YES", "TRUE", "1"):
             failures.append("Abstention required but ABSTAIN is not YES")
@@ -125,8 +125,58 @@ def check_substantive(response, min_action_chars=10):
     return len(failures) == 0, failures
 
 
-def check_require_synthesis(response, require_synthesis, corpus):
-    """Check that response synthesizes facts from multiple checkpoints."""
+def _scored_field_text(response, oracle, require_config):
+    """Extract text only from the designated scored field(s).
+
+    This prevents auxiliary metadata fields from satisfying checkpoint
+    or epoch reference requirements. The scored field is determined by:
+    1. An explicit 'scored_field' key in the require_* config, if present.
+    2. Otherwise, the fields referenced in the oracle's 'require_all' list.
+    3. If neither is available, fall back to all string values in the response
+       (backward compatibility, but less strict).
+    """
+    scored_fields = require_config.get("scored_field")
+    if scored_fields:
+        if isinstance(scored_fields, str):
+            scored_fields = [scored_fields]
+    else:
+        # Derive scored fields from require_all entries
+        scored_fields = []
+        for req in oracle.get("require_all", []):
+            f = req.get("field")
+            if f and f not in scored_fields:
+                scored_fields.append(f)
+
+    if not scored_fields:
+        # Fallback: all string values in response (backward compat)
+        return json.dumps(response).lower()
+
+    parts = []
+    for field in scored_fields:
+        value = field_value(response, field)
+        if value is not None:
+            if isinstance(value, str):
+                parts.append(value)
+            elif isinstance(value, list):
+                for item in value:
+                    if isinstance(item, str):
+                        parts.append(item)
+                    elif isinstance(item, dict):
+                        parts.append(json.dumps(item))
+            elif isinstance(value, dict):
+                parts.append(json.dumps(value))
+            else:
+                parts.append(str(value))
+
+    return " ".join(parts).lower()
+
+
+def check_require_synthesis(response, require_synthesis, corpus, oracle=None):
+    """Check that response synthesizes facts from multiple checkpoints.
+
+    Only the designated scored field(s) are inspected for checkpoint
+    references, preventing auxiliary metadata from creating false positives.
+    """
     failures = []
 
     if not require_synthesis:
@@ -135,8 +185,10 @@ def check_require_synthesis(response, require_synthesis, corpus):
     min_checkpoints = require_synthesis.get("min_checkpoints", 2)
     required_checkpoints = require_synthesis.get("required_checkpoints", [])
 
-    # Extract checkpoint references from response
-    response_text = json.dumps(response).lower()
+    if oracle:
+        response_text = _scored_field_text(response, oracle, require_synthesis)
+    else:
+        response_text = json.dumps(response).lower()
     checkpoint_refs = set()
 
     for match in re.findall(r't(\d+)', response_text):
@@ -157,8 +209,13 @@ def check_require_synthesis(response, require_synthesis, corpus):
     return len(failures) == 0, failures
 
 
-def check_require_epoch(response, require_epoch, corpus):
-    """Check that response correctly identifies epoch boundary."""
+def check_require_epoch(response, require_epoch, corpus, oracle=None):
+    """Check that response correctly identifies epoch boundary.
+
+    Only the designated scored field(s) are inspected for epoch names and
+    the must_identify evidence, preventing auxiliary metadata from creating
+    false positives.
+    """
     failures = []
 
     if not require_epoch:
@@ -167,7 +224,10 @@ def check_require_epoch(response, require_epoch, corpus):
     epochs = require_epoch.get("epochs", [])
     must_identify = require_epoch.get("must_identify")
 
-    response_text = json.dumps(response).lower()
+    if oracle:
+        response_text = _scored_field_text(response, oracle, require_epoch)
+    else:
+        response_text = json.dumps(response).lower()
 
     for epoch in epochs:
         if epoch.lower() not in response_text:
@@ -215,14 +275,14 @@ def score_task(response, oracle, corpus=None):
 
     # 5. Check require_synthesis (v2)
     synth_ok, synth_failures = check_require_synthesis(
-        response, oracle.get("require_synthesis"), corpus
+        response, oracle.get("require_synthesis"), corpus, oracle=oracle
     )
     details["require_synthesis"] = {"passed": synth_ok, "failures": synth_failures}
     all_failures.extend(synth_failures)
 
     # 6. Check require_epoch (v2)
     epoch_ok, epoch_failures = check_require_epoch(
-        response, oracle.get("require_epoch"), corpus
+        response, oracle.get("require_epoch"), corpus, oracle=oracle
     )
     details["require_epoch"] = {"passed": epoch_ok, "failures": epoch_failures}
     all_failures.extend(epoch_failures)

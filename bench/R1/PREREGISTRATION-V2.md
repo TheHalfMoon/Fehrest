@@ -145,7 +145,7 @@ Distractors share keywords, document naming conventions, and structural patterns
 | t12 | 2 | Cross-file synthesis |
 | t14 | 3 | Terminal epoch reasoning |
 
-**21 of the 30 tasks are issued before t14**, testing maintenance lag, staleness, and knowledge decay across the full project lifecycle. The harness asserts that tasks are distributed across at least 8 distinct checkpoints (actual: 12).
+**27 of the 30 tasks are issued before t14**, testing maintenance lag, staleness, and knowledge decay across the full project lifecycle. The harness asserts that tasks are distributed across at least 8 distinct checkpoints (actual: 12).
 
 ### 5.3 Task identities (frozen)
 
@@ -542,8 +542,8 @@ POWER_ANALYSIS_INPUTS           COMPUTED_CONFIRMATORY_N
 
 ## 28. Then, and only then
 
-1. Compute r_conf mechanically from §20. No judgement, no adjustment.
-2. Apply the B-NULL exclusion from §19.1.
+1. Apply the B-NULL exclusion from §19.1. This yields K_eligible, N_pairs and r_conf.
+2. Compute r_conf mechanically from §20. No judgement, no adjustment.
 3. Create **R1-CONFIRMATORY-v2** — a new immutable manifest carrying the computed N, the power-analysis digest, the model condition, the runner version, the corpus, task, scorer and baseline digests, the frozen Fehrest identity, the randomization seed and the execution-plan digest.
 4. Seal it. **Then** run the confirmatory stage.
 
