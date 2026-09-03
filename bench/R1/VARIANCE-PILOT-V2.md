@@ -1,6 +1,6 @@
 # R1-VARIANCE-PILOT-V2 — sealed protocol
 
-```
+```text
 STAGE:                              1 of 2
 CONFIRMATORY:                       NO
 RESULTS_COUNTED_IN_CONFIRMATORY:    NO -- NEVER
@@ -39,13 +39,13 @@ Nothing here changes the corpus, the tasks, the oracles, the scoring rule, the m
 | Maintenance trajectories per maintained arm | **T = 2** | One trajectory gives no maintenance-variance signal at all; two is the minimum that gives one |
 | Continuation repeats per (arm, task) | **r = 4** | For maintained arms: 2 runs on each of the 2 trajectories |
 
-Resulting session counts, fixed:
+Resulting session counts, derived from the benchmark specification:
 
 ```
-maintenance   3 arms x 2 trajectories x 28 checkpoints  =   168 sessions
-continuation  5 arms x 30 tasks x 4 repeats            =   600 runs
-calibration   B-NULL x 30 tasks x 4 repeats            =   120 runs
-                                              TOTAL    =   888 model sessions
+maintenance   3 scenarios × 14 transitions × 3 maintained arms × 2 trajectories  =   252 sessions
+continuation  5 arms × 30 tasks × 4 repeats                                  =   600 runs
+calibration   1 arm × 30 tasks × 4 repeats                                   =   120 runs
+                                                                  TOTAL    =   972 model sessions
 ```
 
 **Stopping rule: none that depends on the data.** The pilot runs to its fixed size. The only halt condition is a runner-quality gate, defined in §7: if infrastructure failures exceed **10%** of attempted sessions, the pilot is halted and the runner is recorded as inadmissible. That is a decision about the runner, not about the results.
@@ -75,6 +75,17 @@ The **realized** order is written to `runs/execution-order.jsonl` as it happens 
 
 **Maintainer model:** the same condition as continuation, across all three maintained arms. Task-blind per MAINTENANCE-V2.md: no future checkpoints, no tasks, no oracles, no scoring targets, and no statement that anything will matter later.
 
+### 4.1 Model identity admissibility — fail-closed
+
+| Condition | Handling |
+|---|---|
+| Returned model identity missing | **INVALIDATE_BATCH** |
+| Identity changes within batch | **INVALIDATE_BATCH** |
+| Maintenance identity ≠ continuation identity | **INVALIDATE_BATCH** |
+| Different identities across arms | **INVALIDATE_BATCH** |
+| Provider alias drift | **INVALIDATE_BATCH** |
+| Identity metadata malformed | **INVALIDATE_BATCH** |
+
 ## 5. Scorer — frozen
 
 The deterministic scorer, `fehrest-r1 score`, with arm identity stripped before adjudication. **No human adjudication in the pilot.**
@@ -85,8 +96,12 @@ An unparseable response is scored as it stands — normally 0 — and flagged as
 
 The v2 scorer adds oracle field types beyond the v1 baseline:
 
-- `require_synthesis`: Requires that the named output field references facts from at least 2 distinct checkpoints.
-- `require_epoch`: Requires that the named output field correctly identifies the epoch boundary.
+- `require_synthesis`: Requires that the named output field references facts from at least N distinct checkpoints (where N is specified in the oracle definition).
+- `require_epoch`: Requires that the named output field correctly identifies the epoch boundary and references the specific deprecation or decision that marks the boundary.
+
+These are **not** substring-only checks. The scorer verifies that:
+- For `require_synthesis`: the response references facts from the required checkpoints, not merely mentions checkpoint names.
+- For `require_epoch`: the response identifies the specific epoch boundary marker (e.g., a deprecation ID), not just self-labels an epoch.
 
 ## 6. Variance estimators — frozen
 
@@ -105,7 +120,7 @@ Let `x_{a,t,i} ∈ {0,1}` be the primary outcome for arm `a`, task `t`, repeat `
 
 ## 7. Power analysis and the confirmatory-N rule — frozen
 
-Confirmatory analysis is McNemar's exact test on paired binary outcomes, as preregistered in PREREGISTRATION-V2.md §19.
+Confirmatory analysis is McNemar's exact test on paired binary outcomes, as preregistered in PREREGISTRATION-V2.md §20.
 
 **Fixed criteria:**
 
@@ -117,12 +132,31 @@ Confirmatory analysis is McNemar's exact test on paired binary outcomes, as prer
 | `z_{1−α/2}` | 1.959964 |
 | `z_{power}` | 0.841621 |
 
+**Design values:**
+
+| Parameter | Value |
+|---|---|
+| K_total (total tasks) | 30 |
+| B_NULL_exclusion_rule | Tasks where B-NULL scores > 0 are excluded |
+| K_eligible | K_total minus number of excluded tasks (computed after pilot) |
+| ψ̂ (discordant-pair rate) | Proportion of (task, repeat) pairs where exactly one of B5, B4 is correct |
+| Pairing unit | (task, repeat) pair |
+| N_pairs formula | `ceil( (z_{1-α/2}·sqrt(ψ̂) + z_power·sqrt(ψ̂ − δ²))² / δ² )` |
+| r_conf formula | `ceil( N_pairs / K_eligible )` |
+| r_conf minimum | 3 |
+| r_conf maximum | 20 |
+| N_pairs floor | 90 |
+| N_pairs ceiling | 600 |
+| Minimum K_eligible | 15 (if fewer than 15 tasks remain after exclusion, study is UNDERPOWERED) |
+
 **The rule, applied mechanically:**
 
 ```
-N_pairs = ceil( ( z_{1-α/2}·sqrt(ψ̂) + z_power·sqrt(ψ̂ − δ²) )² / δ² )
-r_conf  = ceil( N_pairs / 30 )              # 30 tasks, one pair per task per repeat
+N_pairs = ceil( (z_{1-α/2}·sqrt(ψ̂) + z_power·sqrt(ψ̂ − δ²))² / δ² )
+r_conf  = ceil( N_pairs / K_eligible )     # K_eligible, not 30
 ```
+
+**The divisor is K_eligible (not 30).** If B-NULL excludes tasks, the divisor shrinks accordingly.
 
 **Safety bounds, fixed now:**
 
@@ -132,6 +166,7 @@ r_conf  = ceil( N_pairs / 30 )              # 30 tasks, one pair per task per re
 | `r_conf` maximum | **20** | Cost ceiling |
 | `N_pairs` floor | 90 | |
 | `N_pairs` ceiling | 600 | |
+| `K_eligible` minimum | 15 | If K_eligible < 15, report as UNDERPOWERED |
 
 **If the formula demands `r_conf > 20`, the study is declared `UNDERPOWERED_FOR_PREREGISTERED_EFFECT` and reported as such.** It is *not* rescued by lowering δ, by relaxing α, by dropping the harder task classes, or by switching to a one-sided test.
 
@@ -168,7 +203,7 @@ POWER_ANALYSIS_INPUTS           COMPUTED_CONFIRMATORY_N
 ## 10. Then, and only then
 
 1. Compute `r_conf` mechanically from §7. No judgement, no adjustment.
-2. Apply the B-NULL exclusion from PREREGISTRATION-V2.md §18.1.
+2. Apply the B-NULL exclusion from PREREGISTRATION-V2.md §19.1.
 3. Create **R1-CONFIRMATORY-v2** — a new immutable manifest carrying the computed N, the power-analysis digest, the model condition, the runner version, the corpus, task, scorer and baseline digests, the frozen Fehrest identity, the randomization seed and the execution-plan digest.
 4. Seal it. **Then** run the confirmatory stage.
 
@@ -190,3 +225,19 @@ If this v2 pilot also reveals a ceiling effect, the response is:
 2. Do not proceed to confirmatory
 3. Report the ceiling effect as the finding
 4. Founder decides on next steps (no automatic escalation)
+
+## 12. Artifact manifest
+
+The R1-v2 benchmark is defined by the following authoritative artifacts:
+
+| Artifact | Path | Description |
+|---|---|---|
+| Benchmark spec | `bench/R1/benchmark-spec-v2.json` | Single source of truth |
+| Task table | `bench/R1/tasks-v2.json` | 30 frozen tasks |
+| Oracle table | `bench/R1/oracles-v2.json` | 30 frozen oracles |
+| Corpus manifest | `bench/R1/corpus-manifest-v2.json` | 96 evidence objects |
+| Scorer | `bench/R1/scorer.py` | Deterministic v2 scorer |
+| Validator | `bench/R1/validate.py` | Machine validator |
+| Tests | `bench/R1/test_scorer.py` | Scorer unit tests |
+
+All artifacts are generated from `benchmark-spec-v2.json`. No authoritative number is manually duplicated across files.

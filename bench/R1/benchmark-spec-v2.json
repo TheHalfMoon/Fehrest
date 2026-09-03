@@ -1,0 +1,4249 @@
+{
+  "preregistration_version": "R1-PREREG-v2",
+  "prior_evidence": "ceiling effect in R1-v1 variance pilot",
+  "historical_sealed_ids": {
+    "R1_V1_CEILING_EFFECT_EVIDENCE": "d99c21773b50daab9f0fd04f8b3bf34cf9f6e3ec7d11c2555132841ddcd2096b",
+    "R1_V1_1_SEALED_COMMIT": "ed79d8ecee08e4ce4dd384edaffc4a27cfd6d37c"
+  },
+  "model_condition": {
+    "model": "gpt-5.6-terra",
+    "reasoning_effort": "medium",
+    "temperature": 0.0,
+    "max_output_tokens": 1024,
+    "tool_set": []
+  },
+  "scenarios": {
+    "S1": {
+      "name": "Beacon",
+      "domain": "Telemetry ingestion service",
+      "checkpoints": 15,
+      "epochs": {
+        "foundation": {
+          "checkpoints": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ]
+        },
+        "growth": {
+          "checkpoints": [
+            5,
+            6,
+            7,
+            8,
+            9
+          ]
+        },
+        "maturity": {
+          "checkpoints": [
+            10,
+            11,
+            12,
+            13,
+            14
+          ]
+        }
+      }
+    },
+    "S2": {
+      "name": "Marisol",
+      "domain": "Clinical-trial data pipeline",
+      "checkpoints": 15,
+      "epochs": {
+        "foundation": {
+          "checkpoints": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ]
+        },
+        "growth": {
+          "checkpoints": [
+            5,
+            6,
+            7,
+            8,
+            9
+          ]
+        },
+        "maturity": {
+          "checkpoints": [
+            10,
+            11,
+            12,
+            13,
+            14
+          ]
+        }
+      }
+    },
+    "S3": {
+      "name": "Harbor",
+      "domain": "Documentation migration",
+      "checkpoints": 15,
+      "epochs": {
+        "foundation": {
+          "checkpoints": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ]
+        },
+        "growth": {
+          "checkpoints": [
+            5,
+            6,
+            7,
+            8,
+            9
+          ]
+        },
+        "maturity": {
+          "checkpoints": [
+            10,
+            11,
+            12,
+            13,
+            14
+          ]
+        }
+      }
+    }
+  },
+  "task_classes": {
+    "NEXT_ACTION": {
+      "description": "Selecting the correct next step from a long history",
+      "count": 3
+    },
+    "SUPERSESSION_AVOIDANCE": {
+      "description": "Not acting on a decision that has been replaced",
+      "count": 3
+    },
+    "CONSTRAINT_RETENTION": {
+      "description": "Honouring a requirement introduced many checkpoints earlier",
+      "count": 3
+    },
+    "FAILED_APPROACH_AVOIDANCE": {
+      "description": "Not repeating a known failed approach",
+      "count": 3
+    },
+    "SCOPE_RESOLUTION": {
+      "description": "Applying a project-local rule without globalising it",
+      "count": 2
+    },
+    "CONTRADICTION_HANDLING": {
+      "description": "Surfacing a conflict instead of silently picking",
+      "count": 3
+    },
+    "HISTORICAL_REASONING": {
+      "description": "Operating under what was true at an earlier point",
+      "count": 3
+    },
+    "IDENTITY_CONTINUITY": {
+      "description": "Following an object across rename and move",
+      "count": 3
+    },
+    "ABSTENTION": {
+      "description": "Declining to invent an answer that does not exist",
+      "count": 2
+    },
+    "PROVENANCE": {
+      "description": "Naming the evidence an action requires",
+      "count": 1
+    },
+    "CROSS_FILE_SYNTHESIS": {
+      "description": "Synthesizing facts from 3+ checkpoints",
+      "count": 2
+    },
+    "EPOCH_BOUNDARY": {
+      "description": "Reasoning across project eras",
+      "count": 2
+    }
+  },
+  "arms": {
+    "B-NULL": {
+      "construction": "Task prompt only, no project context",
+      "maintained": false
+    },
+    "B0": {
+      "construction": "Plain project files, newest checkpoint first",
+      "maintained": false
+    },
+    "B1": {
+      "construction": "Repository-native state documents then project files",
+      "maintained": true
+    },
+    "B3": {
+      "construction": "Lexical retrieval through FTS index",
+      "maintained": false
+    },
+    "B4": {
+      "construction": "Maintained wiki page only",
+      "maintained": true
+    },
+    "B5": {
+      "construction": "Fehrest compiled context package",
+      "maintained": true
+    }
+  },
+  "maintenance_protocol": {
+    "t0_rule": "initialized_scenario_state",
+    "description": "t0 is the initialized scenario state. No model-driven maintainer action required at t0.",
+    "checkpoints_per_scenario": 15,
+    "maintained_transitions_per_scenario": 14,
+    "maintained_arms": 3,
+    "trajectories_per_maintained_arm": 2,
+    "epoch_transitions": [
+      {
+        "from": "foundation",
+        "to": "growth",
+        "checkpoint": 5
+      },
+      {
+        "from": "growth",
+        "to": "maturity",
+        "checkpoint": 10
+      }
+    ]
+  },
+  "session_arithmetic": {
+    "scenarios": 3,
+    "comparison_arms": 5,
+    "calibration_arms": 1,
+    "total_tasks": 30,
+    "repeats_per_task": 4,
+    "maintenance_sessions": 252,
+    "comparison_continuation_sessions": 600,
+    "calibration_sessions": 120,
+    "total_variance_pilot_sessions": 972
+  },
+  "statistical_parameters": {
+    "alpha": 0.05,
+    "target_power": 0.8,
+    "minimum_meaningful_effect_delta": 0.15,
+    "z_one_minus_alpha_over_2": 1.959964,
+    "z_power": 0.841621,
+    "K_total": 30,
+    "B_NULL_exclusion_rule": "Tasks where B-NULL scores > 0 are excluded",
+    "K_eligible": "K_total minus number of B-NULL prompt-answerable tasks",
+    "psi_hat_population": "Proportion of (task, repeat) pairs where exactly one of B5, B4 is correct",
+    "pairing_unit": "(task, repeat) pair",
+    "N_pairs_formula": "ceil( (z_{1-alpha/2}*sqrt(psi_hat) + z_power*sqrt(psi_hat - delta^2))^2 / delta^2 )",
+    "r_conf_formula": "ceil( N_pairs / K_eligible )",
+    "r_conf_minimum": 3,
+    "r_conf_maximum": 20,
+    "N_pairs_floor": 90,
+    "N_pairs_ceiling": 600,
+    "minimum_K": 15
+  },
+  "model_identity_admissibility": {
+    "policy": "fail-closed",
+    "conditions": {
+      "returned_identity_missing": "INVALIDATE_BATCH",
+      "identity_changes_within_batch": "INVALIDATE_BATCH",
+      "maintenance_identity_not_equal_continuation_identity": "INVALIDATE_BATCH",
+      "different_identities_across_arms": "INVALIDATE_BATCH",
+      "provider_alias_drift": "INVALIDATE_BATCH",
+      "identity_metadata_malformed": "INVALIDATE_BATCH"
+    }
+  },
+  "execution_prohibitions": {
+    "R1_V2_MODEL_EXECUTION_AUTHORIZED": "NO",
+    "R1_V2_VARIANCE_PILOT_EXECUTION": "PROHIBITED",
+    "R1_V2_CONFIRMATORY_EXECUTION": "PROHIBITED",
+    "SPEC_002_ACTIVATION": "PROHIBITED",
+    "PRODUCT_IMPLEMENTATION": "PROHIBITED"
+  },
+  "context_budget": {
+    "primary_tier_bytes": 6000,
+    "secondary_tier_bytes": null,
+    "description": "Single context budget tier at 6,000 bytes. No secondary tier."
+  },
+  "randomization": {
+    "seed_recorded_before_execution": true,
+    "seed_never_changed": true,
+    "algorithm": "for repeat_index in 1..=4: for task in permute(all_30_tasks, seed, repeat_index): for arm in permute([B-NULL,B0,B1,B3,B4,B5], seed, repeat_index, task): run(arm, task, repeat_index)",
+    "blocked_and_interleaved": true
+  },
+  "tasks": [
+    {
+      "id": "S1-A-NEXT",
+      "scenario": "S1",
+      "checkpoint": 1,
+      "task_class": "NEXT_ACTION",
+      "prompt": "Beacon is a telemetry ingestion service. At t0 the team decided to use Kafka as the message broker. At t1 the team added a schema registry requirement. Given the project state at t1, what is the correct next action for the ingestion pipeline?",
+      "output_contract": {
+        "action": "string",
+        "reasoning": "string"
+      },
+      "oracle_id": "O-S1-A-NEXT",
+      "temporal_span": 1,
+      "required_hops": 1,
+      "epoch_boundary": false,
+      "depends_on_evidence": [
+        "S1-T0-DEC-001",
+        "S1-T1-DEC-001"
+      ],
+      "trap_evidence": [
+        "S1-T0-DEC-002"
+      ],
+      "distractor_evidence": [
+        "S1-T1-DIST-001",
+        "S1-T1-DIST-002"
+      ],
+      "historical_as_of": null,
+      "abstention_required": false,
+      "provenance_required": false,
+      "cross_scenario_dependencies": []
+    },
+    {
+      "id": "S1-B-SUPERSESSION",
+      "scenario": "S1",
+      "checkpoint": 2,
+      "task_class": "SUPERSESSION_AVOIDANCE",
+      "prompt": "At t0 Beacon used JSON for event serialization. At t1 the team switched to Protobuf. At t2 a new team member suggests switching back to JSON for debugging ease. What should the maintainer do?",
+      "output_contract": {
+        "action": "string",
+        "reasoning": "string"
+      },
+      "oracle_id": "O-S1-B-SUPERSESSION",
+      "temporal_span": 2,
+      "required_hops": 2,
+      "epoch_boundary": false,
+      "depends_on_evidence": [
+        "S1-T0-DEC-003",
+        "S1-T1-DEC-002",
+        "S1-T2-DEC-001"
+      ],
+      "trap_evidence": [
+        "S1-T0-DEC-003"
+      ],
+      "distractor_evidence": [
+        "S1-T2-DIST-001"
+      ],
+      "historical_as_of": null,
+      "abstention_required": false,
+      "provenance_required": false,
+      "cross_scenario_dependencies": []
+    },
+    {
+      "id": "S1-C-CONSTRAINT",
+      "scenario": "S1",
+      "checkpoint": 3,
+      "task_class": "CONSTRAINT_RETENTION",
+      "prompt": "At t0 Beacon established a constraint: all PII must be hashed before ingestion. At t3 the team is adding a new data source with email addresses. How should the maintainer handle this?",
+      "output_contract": {
+        "action": "string",
+        "reasoning": "string"
+      },
+      "oracle_id": "O-S1-C-CONSTRAINT",
+      "temporal_span": 3,
+      "required_hops": 1,
+      "epoch_boundary": false,
+      "depends_on_evidence": [
+        "S1-T0-CON-001",
+        "S1-T3-DEC-001"
+      ],
+      "trap_evidence": [],
+      "distractor_evidence": [
+        "S1-T3-DIST-001",
+        "S1-T3-DIST-002"
+      ],
+      "historical_as_of": null,
+      "abstention_required": false,
+      "provenance_required": false,
+      "cross_scenario_dependencies": []
+    },
+    {
+      "id": "S1-D-FAILED",
+      "scenario": "S1",
+      "checkpoint": 4,
+      "task_class": "FAILED_APPROACH_AVOIDANCE",
+      "prompt": "At t1 Beacon tried using a single Kafka partition for all events, which caused a bottleneck. The approach was abandoned at t2. At t4 a new engineer suggests using a single partition with batching. What should the maintainer do?",
+      "output_contract": {
+        "action": "string",
+        "reasoning": "string"
+      },
+      "oracle_id": "O-S1-D-FAILED",
+      "temporal_span": 3,
+      "required_hops": 2,
+      "epoch_boundary": false,
+      "depends_on_evidence": [
+        "S1-T1-DEC-003",
+        "S1-T2-DEC-002",
+        "S1-T4-DEC-001"
+      ],
+      "trap_evidence": [
+        "S1-T1-DEC-003"
+      ],
+      "distractor_evidence": [
+        "S1-T4-DIST-001"
+      ],
+      "historical_as_of": null,
+      "abstention_required": false,
+      "provenance_required": false,
+      "cross_scenario_dependencies": []
+    },
+    {
+      "id": "S1-E-SCOPE",
+      "scenario": "S1",
+      "checkpoint": 5,
+      "task_class": "SCOPE_RESOLUTION",
+      "prompt": "Beacon (S1) uses a custom retry policy with exponential backoff. Marisol (S2) uses a fixed-interval retry. A new team member suggests standardizing both projects on Beacon's policy. What should the maintainer do?",
+      "output_contract": {
+        "action": "string",
+        "reasoning": "string"
+      },
+      "oracle_id": "O-S1-E-SCOPE",
+      "temporal_span": 5,
+      "required_hops": 2,
+      "epoch_boundary": true,
+      "depends_on_evidence": [
+        "S1-T5-DEC-001",
+        "S2-T0-DEC-001"
+      ],
+      "trap_evidence": [],
+      "distractor_evidence": [
+        "S1-T5-DIST-001"
+      ],
+      "historical_as_of": null,
+      "abstention_required": false,
+      "provenance_required": false,
+      "cross_scenario_dependencies": [
+        "S2"
+      ]
+    },
+    {
+      "id": "S1-F-CONTRADICTION",
+      "scenario": "S1",
+      "checkpoint": 6,
+      "task_class": "CONTRADICTION_HANDLING",
+      "prompt": "At t5 Beacon's ADR-012 stated that all events must be processed exactly-once. At t6 a new ADR-015 stated that at-least-once is acceptable for non-critical events. A task requires processing a non-critical event. What should the maintainer do?",
+      "output_contract": {
+        "action": "string",
+        "reasoning": "string",
+        "conflict_flagged": "boolean"
+      },
+      "oracle_id": "O-S1-F-CONTRADICTION",
+      "temporal_span": 1,
+      "required_hops": 2,
+      "epoch_boundary": false,
+      "depends_on_evidence": [
+        "S1-T5-ADR-012",
+        "S1-T6-ADR-015"
+      ],
+      "trap_evidence": [
+        "S1-T5-ADR-012"
+      ],
+      "distractor_evidence": [
+        "S1-T6-DIST-001"
+      ],
+      "historical_as_of": null,
+      "abstention_required": false,
+      "provenance_required": false,
+      "cross_scenario_dependencies": []
+    },
+    {
+      "id": "S1-G-HISTORICAL",
+      "scenario": "S1",
+      "checkpoint": 7,
+      "task_class": "HISTORICAL_REASONING",
+      "prompt": "A new team member asks: 'What serialization format was Beacon using at t1?' The current format at t7 is Protobuf. What was the format at t1?",
+      "output_contract": {
+        "answer": "string",
+        "as_of_checkpoint": "integer"
+      },
+      "oracle_id": "O-S1-G-HISTORICAL",
+      "temporal_span": 6,
+      "required_hops": 1,
+      "epoch_boundary": false,
+      "depends_on_evidence": [
+        "S1-T1-DEC-002"
+      ],
+      "trap_evidence": [
+        "S1-T7-DEC-001"
+      ],
+      "distractor_evidence": [
+        "S1-T7-DIST-001"
+      ],
+      "historical_as_of": 1,
+      "abstention_required": false,
+      "provenance_required": false,
+      "cross_scenario_dependencies": []
+    },
+    {
+      "id": "S1-H-IDENTITY",
+      "scenario": "S1",
+      "checkpoint": 8,
+      "task_class": "IDENTITY_CONTINUITY",
+      "prompt": "Beacon's main ingestion module was called 'ingest-core' at t0, renamed to 'event-gateway' at t3, and renamed to 'stream-ingest' at t6. A configuration file still references 'ingest-core'. What is the correct current name?",
+      "output_contract": {
+        "answer": "string",
+        "reasoning": "string"
+      },
+      "oracle_id": "O-S1-H-IDENTITY",
+      "temporal_span": 8,
+      "required_hops": 3,
+      "epoch_boundary": false,
+      "depends_on_evidence": [
+        "S1-T0-DEC-004",
+        "S1-T3-DEC-002",
+        "S1-T6-DEC-001"
+      ],
+      "trap_evidence": [
+        "S1-T0-DEC-004",
+        "S1-T3-DEC-002"
+      ],
+      "distractor_evidence": [
+        "S1-T8-DIST-001"
+      ],
+      "historical_as_of": null,
+      "abstention_required": false,
+      "provenance_required": false,
+      "cross_scenario_dependencies": []
+    },
+    {
+      "id": "S1-I-ABSENT",
+      "scenario": "S1",
+      "checkpoint": 9,
+      "task_class": "ABSTENTION",
+      "prompt": "A task asks: 'What is the maximum throughput of the Beacon ingestion pipeline at t9?' The project documents contain throughput targets, distractor numbers from other projects, and a benchmark from t3, but no actual measured throughput at t9. What should the maintainer answer?",
+      "output_contract": {
+        "action": "string",
+        "abstain": "boolean",
+        "reasoning": "string"
+      },
+      "oracle_id": "O-S1-I-ABSENT",
+      "temporal_span": 9,
+      "required_hops": 1,
+      "epoch_boundary": true,
+      "depends_on_evidence": [],
+      "trap_evidence": [
+        "S1-T3-BENCH-001",
+        "S2-T5-BENCH-001"
+      ],
+      "distractor_evidence": [
+        "S1-T9-DIST-001",
+        "S1-T9-DIST-002"
+      ],
+      "historical_as_of": null,
+      "abstention_required": true,
+      "provenance_required": false,
+      "cross_scenario_dependencies": []
+    },
+    {
+      "id": "S1-J-PROVENANCE",
+      "scenario": "S1",
+      "checkpoint": 10,
+      "task_class": "PROVENANCE",
+      "prompt": "Beacon's data retention policy states that raw events are kept for 30 days. A task requires identifying which document established this policy. There are similar-looking documents about retention from other projects. Name the exact evidence.",
+      "output_contract": {
+        "answer": "string",
+        "evidence_id": "string"
+      },
+      "oracle_id": "O-S1-J-PROVENANCE",
+      "temporal_span": 10,
+      "required_hops": 1,
+      "epoch_boundary": true,
+      "depends_on_evidence": [
+        "S1-T4-ADR-020"
+      ],
+      "trap_evidence": [
+        "S2-T4-ADR-010",
+        "S3-T4-ADR-005"
+      ],
+      "distractor_evidence": [
+        "S1-T10-DIST-001"
+      ],
+      "historical_as_of": null,
+      "abstention_required": false,
+      "provenance_required": true,
+      "cross_scenario_dependencies": []
+    },
+    {
+      "id": "S1-K-CROSS-SYNTHESIS",
+      "scenario": "S1",
+      "checkpoint": 12,
+      "task_class": "CROSS_FILE_SYNTHESIS",
+      "prompt": "A task requires determining the correct configuration for a new data source that must comply with both Beacon's PII hashing constraint (t0) and the new encryption-at-rest requirement (t11). What is the correct combined configuration?",
+      "output_contract": {
+        "action": "string",
+        "reasoning": "string",
+        "synthesized_from": "array"
+      },
+      "oracle_id": "O-S1-K-CROSS-SYNTHESIS",
+      "temporal_span": 12,
+      "required_hops": 3,
+      "epoch_boundary": false,
+      "depends_on_evidence": [
+        "S1-T0-CON-001",
+        "S1-T11-DEC-001",
+        "S1-T12-DEC-001"
+      ],
+      "trap_evidence": [],
+      "distractor_evidence": [
+        "S1-T12-DIST-001"
+      ],
+      "historical_as_of": null,
+      "abstention_required": false,
+      "provenance_required": false,
+      "cross_scenario_dependencies": []
+    },
+    {
+      "id": "S1-L-EPOCH",
+      "scenario": "S1",
+      "checkpoint": 14,
+      "task_class": "EPOCH_BOUNDARY",
+      "prompt": "Beacon is now at t14 (Maturity epoch). A task requires identifying which Foundation-epoch decisions are still valid in Maturity, given that some were deprecated during Growth. List the valid decisions and explain why.",
+      "output_contract": {
+        "valid_decisions": "array",
+        "deprecated_decisions": "array",
+        "reasoning": "string"
+      },
+      "oracle_id": "O-S1-L-EPOCH",
+      "temporal_span": 14,
+      "required_hops": 2,
+      "epoch_boundary": true,
+      "depends_on_evidence": [
+        "S1-T0-DEC-001",
+        "S1-T0-DEC-002",
+        "S1-T5-DEP-001",
+        "S1-T10-DEP-001"
+      ],
+      "trap_evidence": [
+        "S1-T5-DEP-001"
+      ],
+      "distractor_evidence": [
+        "S1-T14-DIST-001"
+      ],
+      "historical_as_of": null,
+      "abstention_required": false,
+      "provenance_required": false,
+      "cross_scenario_dependencies": []
+    },
+    {
+      "id": "S2-A-NEXT",
+      "scenario": "S2",
+      "checkpoint": 1,
+      "task_class": "NEXT_ACTION",
+      "prompt": "Marisol is a clinical-trial data pipeline. At t0 the team decided to use site-based partitioning. At t1 the team added a requirement for HIPAA compliance. Given the project state at t1, what is the correct next action?",
+      "output_contract": {
+        "action": "string",
+        "reasoning": "string"
+      },
+      "oracle_id": "O-S2-A-NEXT",
+      "temporal_span": 1,
+      "required_hops": 1,
+      "epoch_boundary": false,
+      "depends_on_evidence": [
+        "S2-T0-DEC-001",
+        "S2-T1-DEC-001"
+      ],
+      "trap_evidence": [],
+      "distractor_evidence": [
+        "S2-T1-DIST-001"
+      ],
+      "historical_as_of": null,
+      "abstention_required": false,
+      "provenance_required": false,
+      "cross_scenario_dependencies": []
+    },
+    {
+      "id": "S2-B-SUPERSESSION",
+      "scenario": "S2",
+      "checkpoint": 2,
+      "task_class": "SUPERSESSION_AVOIDANCE",
+      "prompt": "At t0 Marisol used site-based partitioning. At t1 the team switched to protocol-based partitioning. At t2 a team member suggests reverting to site-based for consistency with another project. What should the maintainer do?",
+      "output_contract": {
+        "action": "string",
+        "reasoning": "string"
+      },
+      "oracle_id": "O-S2-B-SUPERSESSION",
+      "temporal_span": 2,
+      "required_hops": 2,
+      "epoch_boundary": false,
+      "depends_on_evidence": [
+        "S2-T0-DEC-001",
+        "S2-T1-DEC-002",
+        "S2-T2-DEC-001"
+      ],
+      "trap_evidence": [
+        "S2-T0-DEC-001"
+      ],
+      "distractor_evidence": [
+        "S2-T2-DIST-001"
+      ],
+      "historical_as_of": null,
+      "abstention_required": false,
+      "provenance_required": false,
+      "cross_scenario_dependencies": []
+    },
+    {
+      "id": "S2-C-CONSTRAINT",
+      "scenario": "S2",
+      "checkpoint": 3,
+      "task_class": "CONSTRAINT_RETENTION",
+      "prompt": "At t0 Marisol established that all patient data must be encrypted in transit. At t3 the team is adding a new API endpoint. How should the maintainer handle this?",
+      "output_contract": {
+        "action": "string",
+        "reasoning": "string"
+      },
+      "oracle_id": "O-S2-C-CONSTRAINT",
+      "temporal_span": 3,
+      "required_hops": 1,
+      "epoch_boundary": false,
+      "depends_on_evidence": [
+        "S2-T0-CON-001",
+        "S2-T3-DEC-001"
+      ],
+      "trap_evidence": [],
+      "distractor_evidence": [
+        "S2-T3-DIST-001"
+      ],
+      "historical_as_of": null,
+      "abstention_required": false,
+      "provenance_required": false,
+      "cross_scenario_dependencies": []
+    },
+    {
+      "id": "S2-D-FAILED",
+      "scenario": "S2",
+      "checkpoint": 5,
+      "task_class": "FAILED_APPROACH_AVOIDANCE",
+      "prompt": "At t2 Marisol tried using a single database connection pool, which caused timeouts. The approach was abandoned at t3. At t5 a new engineer suggests using a single pool with increased size. What should the maintainer do?",
+      "output_contract": {
+        "action": "string",
+        "reasoning": "string"
+      },
+      "oracle_id": "O-S2-D-FAILED",
+      "temporal_span": 3,
+      "required_hops": 2,
+      "epoch_boundary": true,
+      "depends_on_evidence": [
+        "S2-T2-DEC-002",
+        "S2-T3-DEC-002",
+        "S2-T5-DEC-001"
+      ],
+      "trap_evidence": [
+        "S2-T2-DEC-002"
+      ],
+      "distractor_evidence": [
+        "S2-T5-DIST-001"
+      ],
+      "historical_as_of": null,
+      "abstention_required": false,
+      "provenance_required": false,
+      "cross_scenario_dependencies": []
+    },
+    {
+      "id": "S2-E-SCOPE",
+      "scenario": "S2",
+      "checkpoint": 6,
+      "task_class": "SCOPE_RESOLUTION",
+      "prompt": "Marisol (S2) uses protocol-based partitioning. Harbor (S3) uses document-type partitioning. A new team member suggests standardizing both on protocol-based. What should the maintainer do?",
+      "output_contract": {
+        "action": "string",
+        "reasoning": "string"
+      },
+      "oracle_id": "O-S2-E-SCOPE",
+      "temporal_span": 6,
+      "required_hops": 2,
+      "epoch_boundary": false,
+      "depends_on_evidence": [
+        "S2-T1-DEC-002",
+        "S3-T0-DEC-001"
+      ],
+      "trap_evidence": [],
+      "distractor_evidence": [
+        "S2-T6-DIST-001"
+      ],
+      "historical_as_of": null,
+      "abstention_required": false,
+      "provenance_required": false,
+      "cross_scenario_dependencies": [
+        "S3"
+      ]
+    },
+    {
+      "id": "S2-F-CONTRADICTION",
+      "scenario": "S2",
+      "checkpoint": 7,
+      "task_class": "CONTRADICTION_HANDLING",
+      "prompt": "At t6 Marisol's ADR-030 stated that all data exports must be approved by a PI. At t7 a new ADR-031 stated that automated exports are allowed for de-identified data. A task requires exporting de-identified data. What should the maintainer do?",
+      "output_contract": {
+        "action": "string",
+        "reasoning": "string",
+        "conflict_flagged": "boolean"
+      },
+      "oracle_id": "O-S2-F-CONTRADICTION",
+      "temporal_span": 1,
+      "required_hops": 2,
+      "epoch_boundary": false,
+      "depends_on_evidence": [
+        "S2-T6-ADR-030",
+        "S2-T7-ADR-031"
+      ],
+      "trap_evidence": [
+        "S2-T6-ADR-030"
+      ],
+      "distractor_evidence": [
+        "S2-T7-DIST-001"
+      ],
+      "historical_as_of": null,
+      "abstention_required": false,
+      "provenance_required": false,
+      "cross_scenario_dependencies": []
+    },
+    {
+      "id": "S2-G-HISTORICAL",
+      "scenario": "S2",
+      "checkpoint": 9,
+      "task_class": "HISTORICAL_REASONING",
+      "prompt": "A new team member asks: 'What partitioning strategy was Marisol using at t2?' The current strategy at t9 is protocol-based. What was the strategy at t2?",
+      "output_contract": {
+        "answer": "string",
+        "as_of_checkpoint": "integer"
+      },
+      "oracle_id": "O-S2-G-HISTORICAL",
+      "temporal_span": 7,
+      "required_hops": 1,
+      "epoch_boundary": true,
+      "depends_on_evidence": [
+        "S2-T0-DEC-001"
+      ],
+      "trap_evidence": [
+        "S2-T9-DEC-001"
+      ],
+      "distractor_evidence": [
+        "S2-T9-DIST-001"
+      ],
+      "historical_as_of": 2,
+      "abstention_required": false,
+      "provenance_required": false,
+      "cross_scenario_dependencies": []
+    },
+    {
+      "id": "S2-H-IDENTITY",
+      "scenario": "S2",
+      "checkpoint": 10,
+      "task_class": "IDENTITY_CONTINUITY",
+      "prompt": "Marisol's main pipeline module was called 'data-flow' at t0, renamed to 'trial-pipeline' at t4, and renamed to 'clinical-ingest' at t8. A configuration file still references 'data-flow'. What is the correct current name?",
+      "output_contract": {
+        "answer": "string",
+        "reasoning": "string"
+      },
+      "oracle_id": "O-S2-H-IDENTITY",
+      "temporal_span": 10,
+      "required_hops": 3,
+      "epoch_boundary": true,
+      "depends_on_evidence": [
+        "S2-T0-DEC-002",
+        "S2-T4-DEC-001",
+        "S2-T8-DEC-001"
+      ],
+      "trap_evidence": [
+        "S2-T0-DEC-002",
+        "S2-T4-DEC-001"
+      ],
+      "distractor_evidence": [
+        "S2-T10-DIST-001"
+      ],
+      "historical_as_of": null,
+      "abstention_required": false,
+      "provenance_required": false,
+      "cross_scenario_dependencies": []
+    },
+    {
+      "id": "S2-I-ABSENT",
+      "scenario": "S2",
+      "checkpoint": 12,
+      "task_class": "ABSTENTION",
+      "prompt": "A task asks: 'What is the average query latency for the Marisol reporting module at t12?' The project documents contain latency targets, distractor numbers from load tests, and a benchmark from t5, but no actual measured latency at t12. What should the maintainer answer?",
+      "output_contract": {
+        "action": "string",
+        "abstain": "boolean",
+        "reasoning": "string"
+      },
+      "oracle_id": "O-S2-I-ABSENT",
+      "temporal_span": 12,
+      "required_hops": 1,
+      "epoch_boundary": false,
+      "depends_on_evidence": [],
+      "trap_evidence": [
+        "S2-T5-BENCH-001"
+      ],
+      "distractor_evidence": [
+        "S2-T12-DIST-001",
+        "S2-T12-DIST-002"
+      ],
+      "historical_as_of": null,
+      "abstention_required": true,
+      "provenance_required": false,
+      "cross_scenario_dependencies": []
+    },
+    {
+      "id": "S2-K-CROSS-SYNTHESIS",
+      "scenario": "S2",
+      "checkpoint": 14,
+      "task_class": "CROSS_FILE_SYNTHESIS",
+      "prompt": "A task requires determining the correct data handling for a new clinical site that must comply with both Marisol's HIPAA encryption constraint (t0) and the new GDPR requirement (t13). What is the correct combined configuration?",
+      "output_contract": {
+        "action": "string",
+        "reasoning": "string",
+        "synthesized_from": "array"
+      },
+      "oracle_id": "O-S2-K-CROSS-SYNTHESIS",
+      "temporal_span": 14,
+      "required_hops": 3,
+      "epoch_boundary": false,
+      "depends_on_evidence": [
+        "S2-T0-CON-001",
+        "S2-T13-DEC-001",
+        "S2-T14-DEC-001"
+      ],
+      "trap_evidence": [],
+      "distractor_evidence": [
+        "S2-T14-DIST-001"
+      ],
+      "historical_as_of": null,
+      "abstention_required": false,
+      "provenance_required": false,
+      "cross_scenario_dependencies": []
+    },
+    {
+      "id": "S3-A-NEXT",
+      "scenario": "S3",
+      "checkpoint": 1,
+      "task_class": "NEXT_ACTION",
+      "prompt": "Harbor is a documentation migration project. At t0 the team decided to use Markdown as the target format. At t1 the team added a requirement for cross-reference validation. Given the project state at t1, what is the correct next action?",
+      "output_contract": {
+        "action": "string",
+        "reasoning": "string"
+      },
+      "oracle_id": "O-S3-A-NEXT",
+      "temporal_span": 1,
+      "required_hops": 1,
+      "epoch_boundary": false,
+      "depends_on_evidence": [
+        "S3-T0-DEC-001",
+        "S3-T1-DEC-001"
+      ],
+      "trap_evidence": [],
+      "distractor_evidence": [
+        "S3-T1-DIST-001"
+      ],
+      "historical_as_of": null,
+      "abstention_required": false,
+      "provenance_required": false,
+      "cross_scenario_dependencies": []
+    },
+    {
+      "id": "S3-B-SUPERSESSION",
+      "scenario": "S3",
+      "checkpoint": 2,
+      "task_class": "SUPERSESSION_AVOIDANCE",
+      "prompt": "At t0 Harbor used a manual migration approach. At t1 the team switched to automated migration. At t2 a team member suggests reverting to manual for accuracy. What should the maintainer do?",
+      "output_contract": {
+        "action": "string",
+        "reasoning": "string"
+      },
+      "oracle_id": "O-S3-B-SUPERSESSION",
+      "temporal_span": 2,
+      "required_hops": 2,
+      "epoch_boundary": false,
+      "depends_on_evidence": [
+        "S3-T0-DEC-002",
+        "S3-T1-DEC-002",
+        "S3-T2-DEC-001"
+      ],
+      "trap_evidence": [
+        "S3-T0-DEC-002"
+      ],
+      "distractor_evidence": [
+        "S3-T2-DIST-001"
+      ],
+      "historical_as_of": null,
+      "abstention_required": false,
+      "provenance_required": false,
+      "cross_scenario_dependencies": []
+    },
+    {
+      "id": "S3-C-CONSTRAINT",
+      "scenario": "S3",
+      "checkpoint": 4,
+      "task_class": "CONSTRAINT_RETENTION",
+      "prompt": "At t0 Harbor established that all migrated documents must preserve original URLs. At t4 the team is adding a new document type with different URL patterns. How should the maintainer handle this?",
+      "output_contract": {
+        "action": "string",
+        "reasoning": "string"
+      },
+      "oracle_id": "O-S3-C-CONSTRAINT",
+      "temporal_span": 4,
+      "required_hops": 1,
+      "epoch_boundary": false,
+      "depends_on_evidence": [
+        "S3-T0-CON-001",
+        "S3-T4-DEC-001"
+      ],
+      "trap_evidence": [],
+      "distractor_evidence": [
+        "S3-T4-DIST-001"
+      ],
+      "historical_as_of": null,
+      "abstention_required": false,
+      "provenance_required": false,
+      "cross_scenario_dependencies": []
+    },
+    {
+      "id": "S3-D-FAILED",
+      "scenario": "S3",
+      "checkpoint": 5,
+      "task_class": "FAILED_APPROACH_AVOIDANCE",
+      "prompt": "At t2 Harbor tried using regex-based link rewriting, which broke many links. The approach was abandoned at t3. At t5 a new engineer suggests using regex with better patterns. What should the maintainer do?",
+      "output_contract": {
+        "action": "string",
+        "reasoning": "string"
+      },
+      "oracle_id": "O-S3-D-FAILED",
+      "temporal_span": 3,
+      "required_hops": 2,
+      "epoch_boundary": true,
+      "depends_on_evidence": [
+        "S3-T2-DEC-002",
+        "S3-T3-DEC-001",
+        "S3-T5-DEC-001"
+      ],
+      "trap_evidence": [
+        "S3-T2-DEC-002"
+      ],
+      "distractor_evidence": [
+        "S3-T5-DIST-001"
+      ],
+      "historical_as_of": null,
+      "abstention_required": false,
+      "provenance_required": false,
+      "cross_scenario_dependencies": []
+    },
+    {
+      "id": "S3-F-CONTRADICTION",
+      "scenario": "S3",
+      "checkpoint": 7,
+      "task_class": "CONTRADICTION_HANDLING",
+      "prompt": "At t6 Harbor's ADR-050 stated that all documents must be reviewed by a technical writer. At t7 a new ADR-051 stated that auto-migrated documents skip review if confidence > 95%. A task requires migrating a document with 97% confidence. What should the maintainer do?",
+      "output_contract": {
+        "action": "string",
+        "reasoning": "string",
+        "conflict_flagged": "boolean"
+      },
+      "oracle_id": "O-S3-F-CONTRADICTION",
+      "temporal_span": 1,
+      "required_hops": 2,
+      "epoch_boundary": false,
+      "depends_on_evidence": [
+        "S3-T6-ADR-050",
+        "S3-T7-ADR-051"
+      ],
+      "trap_evidence": [
+        "S3-T6-ADR-050"
+      ],
+      "distractor_evidence": [
+        "S3-T7-DIST-001"
+      ],
+      "historical_as_of": null,
+      "abstention_required": false,
+      "provenance_required": false,
+      "cross_scenario_dependencies": []
+    },
+    {
+      "id": "S3-G-HISTORICAL",
+      "scenario": "S3",
+      "checkpoint": 8,
+      "task_class": "HISTORICAL_REASONING",
+      "prompt": "A new team member asks: 'What migration approach was Harbor using at t1?' The current approach at t8 is automated. What was the approach at t1?",
+      "output_contract": {
+        "answer": "string",
+        "as_of_checkpoint": "integer"
+      },
+      "oracle_id": "O-S3-G-HISTORICAL",
+      "temporal_span": 7,
+      "required_hops": 1,
+      "epoch_boundary": false,
+      "depends_on_evidence": [
+        "S3-T1-DEC-002"
+      ],
+      "trap_evidence": [
+        "S3-T8-DEC-001"
+      ],
+      "distractor_evidence": [
+        "S3-T8-DIST-001"
+      ],
+      "historical_as_of": 1,
+      "abstention_required": false,
+      "provenance_required": false,
+      "cross_scenario_dependencies": []
+    },
+    {
+      "id": "S3-H-IDENTITY",
+      "scenario": "S3",
+      "checkpoint": 10,
+      "task_class": "IDENTITY_CONTINUITY",
+      "prompt": "Harbor's main migration module was called 'doc-migrate' at t0, renamed to 'content-shift' at t4, and renamed to 'doc-transform' at t9. A configuration file still references 'doc-migrate'. What is the correct current name?",
+      "output_contract": {
+        "answer": "string",
+        "reasoning": "string"
+      },
+      "oracle_id": "O-S3-H-IDENTITY",
+      "temporal_span": 10,
+      "required_hops": 3,
+      "epoch_boundary": true,
+      "depends_on_evidence": [
+        "S3-T0-DEC-003",
+        "S3-T4-DEC-002",
+        "S3-T9-DEC-001"
+      ],
+      "trap_evidence": [
+        "S3-T0-DEC-003",
+        "S3-T4-DEC-002"
+      ],
+      "distractor_evidence": [
+        "S3-T10-DIST-001"
+      ],
+      "historical_as_of": null,
+      "abstention_required": false,
+      "provenance_required": false,
+      "cross_scenario_dependencies": []
+    },
+    {
+      "id": "S3-L-EPOCH",
+      "scenario": "S3",
+      "checkpoint": 14,
+      "task_class": "EPOCH_BOUNDARY",
+      "prompt": "Harbor is now at t14 (Maturity epoch). A task requires identifying which Foundation-epoch decisions are still valid in Maturity, given that some were deprecated during Growth. List the valid decisions and explain why.",
+      "output_contract": {
+        "valid_decisions": "array",
+        "deprecated_decisions": "array",
+        "reasoning": "string"
+      },
+      "oracle_id": "O-S3-L-EPOCH",
+      "temporal_span": 14,
+      "required_hops": 2,
+      "epoch_boundary": true,
+      "depends_on_evidence": [
+        "S3-T0-DEC-001",
+        "S3-T0-DEC-002",
+        "S3-T5-DEP-001",
+        "S3-T10-DEP-001"
+      ],
+      "trap_evidence": [
+        "S3-T5-DEP-001"
+      ],
+      "distractor_evidence": [
+        "S3-T14-DIST-001"
+      ],
+      "historical_as_of": null,
+      "abstention_required": false,
+      "provenance_required": false,
+      "cross_scenario_dependencies": []
+    }
+  ],
+  "oracles": [
+    {
+      "id": "O-S1-A-NEXT",
+      "task_id": "S1-A-NEXT",
+      "derivation_evidence": [
+        "S1-T0-DEC-001",
+        "S1-T1-DEC-001"
+      ],
+      "require_all": [
+        {
+          "field": "action",
+          "contains": "schema registry"
+        }
+      ],
+      "forbid": [
+        {
+          "field": "action",
+          "contains": "ignore"
+        }
+      ],
+      "abstention_ok": false,
+      "require_synthesis": null,
+      "require_epoch": null,
+      "provenance_required": false,
+      "trap_present": [
+        "S1-T0-DEC-002"
+      ],
+      "stale_facts": [],
+      "correct_facts": [
+        "S1-T1-DEC-001"
+      ],
+      "epoch_boundary": null
+    },
+    {
+      "id": "O-S1-B-SUPERSESSION",
+      "task_id": "S1-B-SUPERSESSION",
+      "derivation_evidence": [
+        "S1-T1-DEC-002",
+        "S1-T2-DEC-001"
+      ],
+      "require_all": [
+        {
+          "field": "action",
+          "contains": "reject"
+        },
+        {
+          "field": "reasoning",
+          "contains": "Protobuf"
+        }
+      ],
+      "forbid": [
+        {
+          "field": "action",
+          "contains": "accept"
+        }
+      ],
+      "abstention_ok": false,
+      "require_synthesis": null,
+      "require_epoch": null,
+      "provenance_required": false,
+      "trap_present": [
+        "S1-T0-DEC-003"
+      ],
+      "stale_facts": [
+        "S1-T0-DEC-003"
+      ],
+      "correct_facts": [
+        "S1-T1-DEC-002"
+      ],
+      "epoch_boundary": null
+    },
+    {
+      "id": "O-S1-C-CONSTRAINT",
+      "task_id": "S1-C-CONSTRAINT",
+      "derivation_evidence": [
+        "S1-T0-CON-001",
+        "S1-T3-DEC-001"
+      ],
+      "require_all": [
+        {
+          "field": "action",
+          "contains": "hash"
+        },
+        {
+          "field": "reasoning",
+          "contains": "PII"
+        }
+      ],
+      "forbid": [
+        {
+          "field": "action",
+          "contains": "skip"
+        }
+      ],
+      "abstention_ok": false,
+      "require_synthesis": null,
+      "require_epoch": null,
+      "provenance_required": false,
+      "trap_present": [],
+      "stale_facts": [],
+      "correct_facts": [
+        "S1-T0-CON-001"
+      ],
+      "epoch_boundary": null
+    },
+    {
+      "id": "O-S1-D-FAILED",
+      "task_id": "S1-D-FAILED",
+      "derivation_evidence": [
+        "S1-T1-DEC-003",
+        "S1-T2-DEC-002",
+        "S1-T4-DEC-001"
+      ],
+      "require_all": [
+        {
+          "field": "action",
+          "contains": "reject"
+        },
+        {
+          "field": "reasoning",
+          "contains": "bottleneck"
+        }
+      ],
+      "forbid": [
+        {
+          "field": "action",
+          "contains": "accept"
+        }
+      ],
+      "abstention_ok": false,
+      "require_synthesis": null,
+      "require_epoch": null,
+      "provenance_required": false,
+      "trap_present": [
+        "S1-T1-DEC-003"
+      ],
+      "stale_facts": [
+        "S1-T1-DEC-003"
+      ],
+      "correct_facts": [
+        "S1-T2-DEC-002"
+      ],
+      "epoch_boundary": null
+    },
+    {
+      "id": "O-S1-E-SCOPE",
+      "task_id": "S1-E-SCOPE",
+      "derivation_evidence": [
+        "S1-T5-DEC-001",
+        "S2-T0-DEC-001"
+      ],
+      "require_all": [
+        {
+          "field": "action",
+          "contains": "reject"
+        },
+        {
+          "field": "reasoning",
+          "contains": "project-local"
+        }
+      ],
+      "forbid": [
+        {
+          "field": "action",
+          "contains": "standardize"
+        }
+      ],
+      "abstention_ok": false,
+      "require_synthesis": null,
+      "require_epoch": null,
+      "provenance_required": false,
+      "trap_present": [],
+      "stale_facts": [],
+      "correct_facts": [
+        "S1-T5-DEC-001"
+      ],
+      "epoch_boundary": null
+    },
+    {
+      "id": "O-S1-F-CONTRADICTION",
+      "task_id": "S1-F-CONTRADICTION",
+      "derivation_evidence": [
+        "S1-T5-ADR-012",
+        "S1-T6-ADR-015"
+      ],
+      "require_all": [
+        {
+          "field": "conflict_flagged",
+          "equals": true
+        },
+        {
+          "field": "reasoning",
+          "contains": "at-least-once"
+        }
+      ],
+      "forbid": [
+        {
+          "field": "action",
+          "contains": "exactly-once"
+        }
+      ],
+      "abstention_ok": false,
+      "require_synthesis": null,
+      "require_epoch": null,
+      "provenance_required": false,
+      "trap_present": [
+        "S1-T5-ADR-012"
+      ],
+      "stale_facts": [
+        "S1-T5-ADR-012"
+      ],
+      "correct_facts": [
+        "S1-T6-ADR-015"
+      ],
+      "epoch_boundary": null
+    },
+    {
+      "id": "O-S1-G-HISTORICAL",
+      "task_id": "S1-G-HISTORICAL",
+      "derivation_evidence": [
+        "S1-T1-DEC-002"
+      ],
+      "require_all": [
+        {
+          "field": "answer",
+          "contains": "Protobuf"
+        },
+        {
+          "field": "as_of_checkpoint",
+          "equals": 1
+        }
+      ],
+      "forbid": [
+        {
+          "field": "answer",
+          "contains": "JSON"
+        }
+      ],
+      "abstention_ok": false,
+      "require_synthesis": null,
+      "require_epoch": null,
+      "provenance_required": false,
+      "trap_present": [
+        "S1-T7-DEC-001"
+      ],
+      "stale_facts": [],
+      "correct_facts": [
+        "S1-T1-DEC-002"
+      ],
+      "epoch_boundary": null
+    },
+    {
+      "id": "O-S1-H-IDENTITY",
+      "task_id": "S1-H-IDENTITY",
+      "derivation_evidence": [
+        "S1-T0-DEC-004",
+        "S1-T3-DEC-002",
+        "S1-T6-DEC-001"
+      ],
+      "require_all": [
+        {
+          "field": "answer",
+          "contains": "stream-ingest"
+        }
+      ],
+      "forbid": [
+        {
+          "field": "answer",
+          "contains": "ingest-core"
+        },
+        {
+          "field": "answer",
+          "contains": "event-gateway"
+        }
+      ],
+      "abstention_ok": false,
+      "require_synthesis": null,
+      "require_epoch": null,
+      "provenance_required": false,
+      "trap_present": [
+        "S1-T0-DEC-004",
+        "S1-T3-DEC-002"
+      ],
+      "stale_facts": [
+        "S1-T0-DEC-004",
+        "S1-T3-DEC-002"
+      ],
+      "correct_facts": [
+        "S1-T6-DEC-001"
+      ],
+      "epoch_boundary": null
+    },
+    {
+      "id": "O-S1-I-ABSENT",
+      "task_id": "S1-I-ABSENT",
+      "derivation_evidence": [],
+      "require_all": [
+        {
+          "field": "abstain",
+          "equals": true
+        }
+      ],
+      "forbid": [
+        {
+          "field": "action",
+          "contains": "throughput"
+        }
+      ],
+      "abstention_ok": true,
+      "require_synthesis": null,
+      "require_epoch": null,
+      "provenance_required": false,
+      "trap_present": [
+        "S1-T3-BENCH-001",
+        "S2-T5-BENCH-001"
+      ],
+      "stale_facts": [],
+      "correct_facts": [],
+      "epoch_boundary": null
+    },
+    {
+      "id": "O-S1-J-PROVENANCE",
+      "task_id": "S1-J-PROVENANCE",
+      "derivation_evidence": [
+        "S1-T4-ADR-020"
+      ],
+      "require_all": [
+        {
+          "field": "evidence_id",
+          "equals": "S1-T4-ADR-020"
+        }
+      ],
+      "forbid": [
+        {
+          "field": "evidence_id",
+          "contains": "S2-"
+        },
+        {
+          "field": "evidence_id",
+          "contains": "S3-"
+        }
+      ],
+      "abstention_ok": false,
+      "require_synthesis": null,
+      "require_epoch": null,
+      "provenance_required": true,
+      "trap_present": [
+        "S2-T4-ADR-010",
+        "S3-T4-ADR-005"
+      ],
+      "stale_facts": [],
+      "correct_facts": [
+        "S1-T4-ADR-020"
+      ],
+      "epoch_boundary": null
+    },
+    {
+      "id": "O-S1-K-CROSS-SYNTHESIS",
+      "task_id": "S1-K-CROSS-SYNTHESIS",
+      "derivation_evidence": [
+        "S1-T0-CON-001",
+        "S1-T11-DEC-001",
+        "S1-T12-DEC-001"
+      ],
+      "require_all": [
+        {
+          "field": "action",
+          "contains": "hash"
+        },
+        {
+          "field": "action",
+          "contains": "encrypt"
+        }
+      ],
+      "forbid": [],
+      "abstention_ok": false,
+      "require_synthesis": {
+        "min_checkpoints": 3,
+        "required_checkpoints": [
+          0,
+          11,
+          12
+        ]
+      },
+      "require_epoch": null,
+      "provenance_required": false,
+      "trap_present": [],
+      "stale_facts": [],
+      "correct_facts": [
+        "S1-T0-CON-001",
+        "S1-T11-DEC-001"
+      ],
+      "epoch_boundary": null
+    },
+    {
+      "id": "O-S1-L-EPOCH",
+      "task_id": "S1-L-EPOCH",
+      "derivation_evidence": [
+        "S1-T0-DEC-001",
+        "S1-T0-DEC-002",
+        "S1-T5-DEP-001",
+        "S1-T10-DEP-001"
+      ],
+      "require_all": [
+        {
+          "field": "valid_decisions",
+          "contains": "S1-T0-DEC-001"
+        },
+        {
+          "field": "deprecated_decisions",
+          "contains": "S1-T0-DEC-002"
+        }
+      ],
+      "forbid": [],
+      "abstention_ok": false,
+      "require_synthesis": null,
+      "require_epoch": {
+        "epochs": [
+          "foundation",
+          "maturity"
+        ],
+        "must_identify": "S1-T5-DEP-001"
+      },
+      "provenance_required": false,
+      "trap_present": [
+        "S1-T5-DEP-001"
+      ],
+      "stale_facts": [
+        "S1-T0-DEC-002"
+      ],
+      "correct_facts": [
+        "S1-T0-DEC-001",
+        "S1-T10-DEP-001"
+      ],
+      "epoch_boundary": "foundation->maturity"
+    },
+    {
+      "id": "O-S2-A-NEXT",
+      "task_id": "S2-A-NEXT",
+      "derivation_evidence": [
+        "S2-T0-DEC-001",
+        "S2-T1-DEC-001"
+      ],
+      "require_all": [
+        {
+          "field": "action",
+          "contains": "HIPAA"
+        }
+      ],
+      "forbid": [
+        {
+          "field": "action",
+          "contains": "ignore"
+        }
+      ],
+      "abstention_ok": false,
+      "require_synthesis": null,
+      "require_epoch": null,
+      "provenance_required": false,
+      "trap_present": [],
+      "stale_facts": [],
+      "correct_facts": [
+        "S2-T1-DEC-001"
+      ],
+      "epoch_boundary": null
+    },
+    {
+      "id": "O-S2-B-SUPERSESSION",
+      "task_id": "S2-B-SUPERSESSION",
+      "derivation_evidence": [
+        "S2-T1-DEC-002",
+        "S2-T2-DEC-001"
+      ],
+      "require_all": [
+        {
+          "field": "action",
+          "contains": "reject"
+        },
+        {
+          "field": "reasoning",
+          "contains": "protocol"
+        }
+      ],
+      "forbid": [
+        {
+          "field": "action",
+          "contains": "revert"
+        }
+      ],
+      "abstention_ok": false,
+      "require_synthesis": null,
+      "require_epoch": null,
+      "provenance_required": false,
+      "trap_present": [
+        "S2-T0-DEC-001"
+      ],
+      "stale_facts": [
+        "S2-T0-DEC-001"
+      ],
+      "correct_facts": [
+        "S2-T1-DEC-002"
+      ],
+      "epoch_boundary": null
+    },
+    {
+      "id": "O-S2-C-CONSTRAINT",
+      "task_id": "S2-C-CONSTRAINT",
+      "derivation_evidence": [
+        "S2-T0-CON-001",
+        "S2-T3-DEC-001"
+      ],
+      "require_all": [
+        {
+          "field": "action",
+          "contains": "encrypt"
+        },
+        {
+          "field": "reasoning",
+          "contains": "transit"
+        }
+      ],
+      "forbid": [
+        {
+          "field": "action",
+          "contains": "skip"
+        }
+      ],
+      "abstention_ok": false,
+      "require_synthesis": null,
+      "require_epoch": null,
+      "provenance_required": false,
+      "trap_present": [],
+      "stale_facts": [],
+      "correct_facts": [
+        "S2-T0-CON-001"
+      ],
+      "epoch_boundary": null
+    },
+    {
+      "id": "O-S2-D-FAILED",
+      "task_id": "S2-D-FAILED",
+      "derivation_evidence": [
+        "S2-T2-DEC-002",
+        "S2-T3-DEC-002",
+        "S2-T5-DEC-001"
+      ],
+      "require_all": [
+        {
+          "field": "action",
+          "contains": "reject"
+        },
+        {
+          "field": "reasoning",
+          "contains": "timeout"
+        }
+      ],
+      "forbid": [
+        {
+          "field": "action",
+          "contains": "accept"
+        }
+      ],
+      "abstention_ok": false,
+      "require_synthesis": null,
+      "require_epoch": null,
+      "provenance_required": false,
+      "trap_present": [
+        "S2-T2-DEC-002"
+      ],
+      "stale_facts": [
+        "S2-T2-DEC-002"
+      ],
+      "correct_facts": [
+        "S2-T3-DEC-002"
+      ],
+      "epoch_boundary": null
+    },
+    {
+      "id": "O-S2-E-SCOPE",
+      "task_id": "S2-E-SCOPE",
+      "derivation_evidence": [
+        "S2-T1-DEC-002",
+        "S3-T0-DEC-001"
+      ],
+      "require_all": [
+        {
+          "field": "action",
+          "contains": "reject"
+        },
+        {
+          "field": "reasoning",
+          "contains": "project-local"
+        }
+      ],
+      "forbid": [
+        {
+          "field": "action",
+          "contains": "standardize"
+        }
+      ],
+      "abstention_ok": false,
+      "require_synthesis": null,
+      "require_epoch": null,
+      "provenance_required": false,
+      "trap_present": [],
+      "stale_facts": [],
+      "correct_facts": [
+        "S2-T1-DEC-002"
+      ],
+      "epoch_boundary": null
+    },
+    {
+      "id": "O-S2-F-CONTRADICTION",
+      "task_id": "S2-F-CONTRADICTION",
+      "derivation_evidence": [
+        "S2-T6-ADR-030",
+        "S2-T7-ADR-031"
+      ],
+      "require_all": [
+        {
+          "field": "conflict_flagged",
+          "equals": true
+        },
+        {
+          "field": "reasoning",
+          "contains": "automated"
+        }
+      ],
+      "forbid": [
+        {
+          "field": "action",
+          "contains": "PI approval"
+        }
+      ],
+      "abstention_ok": false,
+      "require_synthesis": null,
+      "require_epoch": null,
+      "provenance_required": false,
+      "trap_present": [
+        "S2-T6-ADR-030"
+      ],
+      "stale_facts": [
+        "S2-T6-ADR-030"
+      ],
+      "correct_facts": [
+        "S2-T7-ADR-031"
+      ],
+      "epoch_boundary": null
+    },
+    {
+      "id": "O-S2-G-HISTORICAL",
+      "task_id": "S2-G-HISTORICAL",
+      "derivation_evidence": [
+        "S2-T0-DEC-001"
+      ],
+      "require_all": [
+        {
+          "field": "answer",
+          "contains": "site-based"
+        },
+        {
+          "field": "as_of_checkpoint",
+          "equals": 2
+        }
+      ],
+      "forbid": [
+        {
+          "field": "answer",
+          "contains": "protocol"
+        }
+      ],
+      "abstention_ok": false,
+      "require_synthesis": null,
+      "require_epoch": null,
+      "provenance_required": false,
+      "trap_present": [
+        "S2-T9-DEC-001"
+      ],
+      "stale_facts": [],
+      "correct_facts": [
+        "S2-T0-DEC-001"
+      ],
+      "epoch_boundary": null
+    },
+    {
+      "id": "O-S2-H-IDENTITY",
+      "task_id": "S2-H-IDENTITY",
+      "derivation_evidence": [
+        "S2-T0-DEC-002",
+        "S2-T4-DEC-001",
+        "S2-T8-DEC-001"
+      ],
+      "require_all": [
+        {
+          "field": "answer",
+          "contains": "clinical-ingest"
+        }
+      ],
+      "forbid": [
+        {
+          "field": "answer",
+          "contains": "data-flow"
+        },
+        {
+          "field": "answer",
+          "contains": "trial-pipeline"
+        }
+      ],
+      "abstention_ok": false,
+      "require_synthesis": null,
+      "require_epoch": null,
+      "provenance_required": false,
+      "trap_present": [
+        "S2-T0-DEC-002",
+        "S2-T4-DEC-001"
+      ],
+      "stale_facts": [
+        "S2-T0-DEC-002",
+        "S2-T4-DEC-001"
+      ],
+      "correct_facts": [
+        "S2-T8-DEC-001"
+      ],
+      "epoch_boundary": null
+    },
+    {
+      "id": "O-S2-I-ABSENT",
+      "task_id": "S2-I-ABSENT",
+      "derivation_evidence": [],
+      "require_all": [
+        {
+          "field": "abstain",
+          "equals": true
+        }
+      ],
+      "forbid": [
+        {
+          "field": "action",
+          "contains": "latency"
+        }
+      ],
+      "abstention_ok": true,
+      "require_synthesis": null,
+      "require_epoch": null,
+      "provenance_required": false,
+      "trap_present": [
+        "S2-T5-BENCH-001"
+      ],
+      "stale_facts": [],
+      "correct_facts": [],
+      "epoch_boundary": null
+    },
+    {
+      "id": "O-S2-K-CROSS-SYNTHESIS",
+      "task_id": "S2-K-CROSS-SYNTHESIS",
+      "derivation_evidence": [
+        "S2-T0-CON-001",
+        "S2-T13-DEC-001",
+        "S2-T14-DEC-001"
+      ],
+      "require_all": [
+        {
+          "field": "action",
+          "contains": "encrypt"
+        },
+        {
+          "field": "action",
+          "contains": "GDPR"
+        }
+      ],
+      "forbid": [],
+      "abstention_ok": false,
+      "require_synthesis": {
+        "min_checkpoints": 3,
+        "required_checkpoints": [
+          0,
+          13,
+          14
+        ]
+      },
+      "require_epoch": null,
+      "provenance_required": false,
+      "trap_present": [],
+      "stale_facts": [],
+      "correct_facts": [
+        "S2-T0-CON-001",
+        "S2-T13-DEC-001"
+      ],
+      "epoch_boundary": null
+    },
+    {
+      "id": "O-S3-A-NEXT",
+      "task_id": "S3-A-NEXT",
+      "derivation_evidence": [
+        "S3-T0-DEC-001",
+        "S3-T1-DEC-001"
+      ],
+      "require_all": [
+        {
+          "field": "action",
+          "contains": "cross-reference"
+        }
+      ],
+      "forbid": [
+        {
+          "field": "action",
+          "contains": "ignore"
+        }
+      ],
+      "abstention_ok": false,
+      "require_synthesis": null,
+      "require_epoch": null,
+      "provenance_required": false,
+      "trap_present": [],
+      "stale_facts": [],
+      "correct_facts": [
+        "S3-T1-DEC-001"
+      ],
+      "epoch_boundary": null
+    },
+    {
+      "id": "O-S3-B-SUPERSESSION",
+      "task_id": "S3-B-SUPERSESSION",
+      "derivation_evidence": [
+        "S3-T1-DEC-002",
+        "S3-T2-DEC-001"
+      ],
+      "require_all": [
+        {
+          "field": "action",
+          "contains": "reject"
+        },
+        {
+          "field": "reasoning",
+          "contains": "automated"
+        }
+      ],
+      "forbid": [
+        {
+          "field": "action",
+          "contains": "revert"
+        }
+      ],
+      "abstention_ok": false,
+      "require_synthesis": null,
+      "require_epoch": null,
+      "provenance_required": false,
+      "trap_present": [
+        "S3-T0-DEC-002"
+      ],
+      "stale_facts": [
+        "S3-T0-DEC-002"
+      ],
+      "correct_facts": [
+        "S3-T1-DEC-002"
+      ],
+      "epoch_boundary": null
+    },
+    {
+      "id": "O-S3-C-CONSTRAINT",
+      "task_id": "S3-C-CONSTRAINT",
+      "derivation_evidence": [
+        "S3-T0-CON-001",
+        "S3-T4-DEC-001"
+      ],
+      "require_all": [
+        {
+          "field": "action",
+          "contains": "preserve"
+        },
+        {
+          "field": "reasoning",
+          "contains": "URL"
+        }
+      ],
+      "forbid": [
+        {
+          "field": "action",
+          "contains": "skip"
+        }
+      ],
+      "abstention_ok": false,
+      "require_synthesis": null,
+      "require_epoch": null,
+      "provenance_required": false,
+      "trap_present": [],
+      "stale_facts": [],
+      "correct_facts": [
+        "S3-T0-CON-001"
+      ],
+      "epoch_boundary": null
+    },
+    {
+      "id": "O-S3-D-FAILED",
+      "task_id": "S3-D-FAILED",
+      "derivation_evidence": [
+        "S3-T2-DEC-002",
+        "S3-T3-DEC-001",
+        "S3-T5-DEC-001"
+      ],
+      "require_all": [
+        {
+          "field": "action",
+          "contains": "reject"
+        },
+        {
+          "field": "reasoning",
+          "contains": "regex"
+        }
+      ],
+      "forbid": [
+        {
+          "field": "action",
+          "contains": "accept"
+        }
+      ],
+      "abstention_ok": false,
+      "require_synthesis": null,
+      "require_epoch": null,
+      "provenance_required": false,
+      "trap_present": [
+        "S3-T2-DEC-002"
+      ],
+      "stale_facts": [
+        "S3-T2-DEC-002"
+      ],
+      "correct_facts": [
+        "S3-T3-DEC-001"
+      ],
+      "epoch_boundary": null
+    },
+    {
+      "id": "O-S3-F-CONTRADICTION",
+      "task_id": "S3-F-CONTRADICTION",
+      "derivation_evidence": [
+        "S3-T6-ADR-050",
+        "S3-T7-ADR-051"
+      ],
+      "require_all": [
+        {
+          "field": "conflict_flagged",
+          "equals": true
+        },
+        {
+          "field": "reasoning",
+          "contains": "confidence"
+        }
+      ],
+      "forbid": [
+        {
+          "field": "action",
+          "contains": "review"
+        }
+      ],
+      "abstention_ok": false,
+      "require_synthesis": null,
+      "require_epoch": null,
+      "provenance_required": false,
+      "trap_present": [
+        "S3-T6-ADR-050"
+      ],
+      "stale_facts": [
+        "S3-T6-ADR-050"
+      ],
+      "correct_facts": [
+        "S3-T7-ADR-051"
+      ],
+      "epoch_boundary": null
+    },
+    {
+      "id": "O-S3-G-HISTORICAL",
+      "task_id": "S3-G-HISTORICAL",
+      "derivation_evidence": [
+        "S3-T1-DEC-002"
+      ],
+      "require_all": [
+        {
+          "field": "answer",
+          "contains": "automated"
+        },
+        {
+          "field": "as_of_checkpoint",
+          "equals": 1
+        }
+      ],
+      "forbid": [
+        {
+          "field": "answer",
+          "contains": "manual"
+        }
+      ],
+      "abstention_ok": false,
+      "require_synthesis": null,
+      "require_epoch": null,
+      "provenance_required": false,
+      "trap_present": [
+        "S3-T8-DEC-001"
+      ],
+      "stale_facts": [],
+      "correct_facts": [
+        "S3-T1-DEC-002"
+      ],
+      "epoch_boundary": null
+    },
+    {
+      "id": "O-S3-H-IDENTITY",
+      "task_id": "S3-H-IDENTITY",
+      "derivation_evidence": [
+        "S3-T0-DEC-003",
+        "S3-T4-DEC-002",
+        "S3-T9-DEC-001"
+      ],
+      "require_all": [
+        {
+          "field": "answer",
+          "contains": "doc-transform"
+        }
+      ],
+      "forbid": [
+        {
+          "field": "answer",
+          "contains": "doc-migrate"
+        },
+        {
+          "field": "answer",
+          "contains": "content-shift"
+        }
+      ],
+      "abstention_ok": false,
+      "require_synthesis": null,
+      "require_epoch": null,
+      "provenance_required": false,
+      "trap_present": [
+        "S3-T0-DEC-003",
+        "S3-T4-DEC-002"
+      ],
+      "stale_facts": [
+        "S3-T0-DEC-003",
+        "S3-T4-DEC-002"
+      ],
+      "correct_facts": [
+        "S3-T9-DEC-001"
+      ],
+      "epoch_boundary": null
+    },
+    {
+      "id": "O-S3-L-EPOCH",
+      "task_id": "S3-L-EPOCH",
+      "derivation_evidence": [
+        "S3-T0-DEC-001",
+        "S3-T0-DEC-002",
+        "S3-T5-DEP-001",
+        "S3-T10-DEP-001"
+      ],
+      "require_all": [
+        {
+          "field": "valid_decisions",
+          "contains": "S3-T0-DEC-001"
+        },
+        {
+          "field": "deprecated_decisions",
+          "contains": "S3-T0-DEC-002"
+        }
+      ],
+      "forbid": [],
+      "abstention_ok": false,
+      "require_synthesis": null,
+      "require_epoch": {
+        "epochs": [
+          "foundation",
+          "maturity"
+        ],
+        "must_identify": "S3-T5-DEP-001"
+      },
+      "provenance_required": false,
+      "trap_present": [
+        "S3-T5-DEP-001"
+      ],
+      "stale_facts": [
+        "S3-T0-DEC-002"
+      ],
+      "correct_facts": [
+        "S3-T0-DEC-001",
+        "S3-T10-DEP-001"
+      ],
+      "epoch_boundary": "foundation->maturity"
+    }
+  ],
+  "corpus": [
+    {
+      "evidence_id": "S1-T0-DEC-001",
+      "scenario": "S1",
+      "checkpoint": 0,
+      "epoch": "foundation",
+      "kind": "decision",
+      "path": "beacon/adr/001-broker.md",
+      "content": "ADR-001: Beacon will use Kafka as the message broker for all event ingestion.",
+      "relevant_to": [
+        "S1-A-NEXT"
+      ],
+      "supersedes": [],
+      "superseded_by": [],
+      "contradicts": [],
+      "trap_for": [],
+      "distractor_for": [],
+      "available_from": 0,
+      "available_until": null,
+      "content_digest": "1916a8d20359dc74560962999f9ec1f52a6de4d56e62142ac6fb0a19edf18196"
+    },
+    {
+      "evidence_id": "S1-T0-DEC-002",
+      "scenario": "S1",
+      "checkpoint": 0,
+      "epoch": "foundation",
+      "kind": "decision",
+      "path": "beacon/adr/002-format.md",
+      "content": "ADR-002: Beacon will use JSON for event serialization.",
+      "relevant_to": [],
+      "supersedes": [],
+      "superseded_by": [
+        "S1-T1-DEC-002"
+      ],
+      "contradicts": [],
+      "trap_for": [
+        "S1-B-SUPERSESSION"
+      ],
+      "distractor_for": [],
+      "available_from": 0,
+      "available_until": 1,
+      "content_digest": "aad6b660d5ea4d80bc572a9fa415b1037f9faacb5282c43deabb1a68b8619773"
+    },
+    {
+      "evidence_id": "S1-T0-DEC-003",
+      "scenario": "S1",
+      "checkpoint": 0,
+      "epoch": "foundation",
+      "kind": "decision",
+      "path": "beacon/adr/003-partitioning.md",
+      "content": "ADR-003: Beacon will use a single Kafka partition for all events.",
+      "relevant_to": [],
+      "supersedes": [],
+      "superseded_by": [
+        "S1-T2-DEC-002"
+      ],
+      "contradicts": [],
+      "trap_for": [
+        "S1-D-FAILED"
+      ],
+      "distractor_for": [],
+      "available_from": 0,
+      "available_until": 2,
+      "content_digest": "452a13c69bcbec640cd7ab692551a4dc81cb7e1bf20a10ac365e102b7be2638c"
+    },
+    {
+      "evidence_id": "S1-T0-DEC-004",
+      "scenario": "S1",
+      "checkpoint": 0,
+      "epoch": "foundation",
+      "kind": "decision",
+      "path": "beacon/adr/004-module-name.md",
+      "content": "ADR-004: The main ingestion module is named 'ingest-core'.",
+      "relevant_to": [],
+      "supersedes": [],
+      "superseded_by": [
+        "S1-T3-DEC-002"
+      ],
+      "contradicts": [],
+      "trap_for": [
+        "S1-H-IDENTITY"
+      ],
+      "distractor_for": [],
+      "available_from": 0,
+      "available_until": 3,
+      "content_digest": "f09c0efec6083870ca24f22c095b9f0977c2fd27198ef0f7cab439a40a7f44d2"
+    },
+    {
+      "evidence_id": "S1-T0-CON-001",
+      "scenario": "S1",
+      "checkpoint": 0,
+      "epoch": "foundation",
+      "kind": "constraint",
+      "path": "beacon/constraints/pii-hashing.md",
+      "content": "CON-001: All PII must be hashed before ingestion into Beacon.",
+      "relevant_to": [
+        "S1-C-CONSTRAINT",
+        "S1-K-CROSS-SYNTHESIS"
+      ],
+      "supersedes": [],
+      "superseded_by": [],
+      "contradicts": [],
+      "trap_for": [],
+      "distractor_for": [],
+      "available_from": 0,
+      "available_until": null,
+      "content_digest": "fac3b5c13bd47f5c9c26272cc323827c4d3d7b936b20d7e1d7f1c1daade3e586"
+    },
+    {
+      "evidence_id": "S1-T1-DEC-001",
+      "scenario": "S1",
+      "checkpoint": 1,
+      "epoch": "foundation",
+      "kind": "decision",
+      "path": "beacon/adr/005-schema-registry.md",
+      "content": "ADR-005: Beacon will add a schema registry requirement for all event types.",
+      "relevant_to": [
+        "S1-A-NEXT"
+      ],
+      "supersedes": [],
+      "superseded_by": [],
+      "contradicts": [],
+      "trap_for": [],
+      "distractor_for": [],
+      "available_from": 1,
+      "available_until": null,
+      "content_digest": "45fb1841643d5233e89d9bf544e74747daca363fcf0016e810ebe52ec5ee152c"
+    },
+    {
+      "evidence_id": "S1-T1-DEC-002",
+      "scenario": "S1",
+      "checkpoint": 1,
+      "epoch": "foundation",
+      "kind": "decision",
+      "path": "beacon/adr/006-protobuf.md",
+      "content": "ADR-006: Beacon will use Protobuf for event serialization (supersedes ADR-002).",
+      "relevant_to": [
+        "S1-B-SUPERSESSION",
+        "S1-G-HISTORICAL"
+      ],
+      "supersedes": [
+        "S1-T0-DEC-002"
+      ],
+      "superseded_by": [],
+      "contradicts": [],
+      "trap_for": [],
+      "distractor_for": [],
+      "available_from": 1,
+      "available_until": null,
+      "content_digest": "9a3ea983f400d60f40fbe608b873d3ad2cb25ad78efe3b699eaf56548dc245d0"
+    },
+    {
+      "evidence_id": "S1-T1-DEC-003",
+      "scenario": "S1",
+      "checkpoint": 1,
+      "epoch": "foundation",
+      "kind": "decision",
+      "path": "beacon/adr/007-single-partition.md",
+      "content": "ADR-007: Beacon will use a single Kafka partition with batching for simplicity.",
+      "relevant_to": [],
+      "supersedes": [],
+      "superseded_by": [
+        "S1-T2-DEC-002"
+      ],
+      "contradicts": [],
+      "trap_for": [
+        "S1-D-FAILED"
+      ],
+      "distractor_for": [],
+      "available_from": 1,
+      "available_until": 2,
+      "content_digest": "98d1b4ad6e48efaa79747eec45c4379ea283b65a3ce04217448de810f23ed3c4"
+    },
+    {
+      "evidence_id": "S1-T1-DIST-001",
+      "scenario": "S1",
+      "checkpoint": 1,
+      "epoch": "foundation",
+      "kind": "distractor",
+      "path": "beacon/docs/monitoring.md",
+      "content": "Beacon monitoring uses Prometheus with Grafana dashboards.",
+      "relevant_to": [],
+      "supersedes": [],
+      "superseded_by": [],
+      "contradicts": [],
+      "trap_for": [],
+      "distractor_for": [
+        "S1-A-NEXT"
+      ],
+      "available_from": 1,
+      "available_until": null,
+      "content_digest": "48ebdd688fc2983605080e7b954ecab42173f9cb16a9d5fee06b8d1318b3c160"
+    },
+    {
+      "evidence_id": "S1-T1-DIST-002",
+      "scenario": "S1",
+      "checkpoint": 1,
+      "epoch": "foundation",
+      "kind": "distractor",
+      "path": "beacon/docs/deployment.md",
+      "content": "Beacon deployment uses Docker containers orchestrated by Kubernetes.",
+      "relevant_to": [],
+      "supersedes": [],
+      "superseded_by": [],
+      "contradicts": [],
+      "trap_for": [],
+      "distractor_for": [
+        "S1-A-NEXT"
+      ],
+      "available_from": 1,
+      "available_until": null,
+      "content_digest": "7989ad2b9b7ef74f1151b72000256f58e1d257328ec02254c58efff87fba2663"
+    },
+    {
+      "evidence_id": "S1-T2-DEC-001",
+      "scenario": "S1",
+      "checkpoint": 2,
+      "epoch": "foundation",
+      "kind": "decision",
+      "path": "beacon/adr/008-reject-json.md",
+      "content": "ADR-008: Beacon rejects the proposal to switch back to JSON for debugging.",
+      "relevant_to": [
+        "S1-B-SUPERSESSION"
+      ],
+      "supersedes": [],
+      "superseded_by": [],
+      "contradicts": [],
+      "trap_for": [],
+      "distractor_for": [],
+      "available_from": 2,
+      "available_until": null,
+      "content_digest": "be1415bd32939b3782122c443a2e67937861c7031e45435a26f5e926a6240610"
+    },
+    {
+      "evidence_id": "S1-T2-DEC-002",
+      "scenario": "S1",
+      "checkpoint": 2,
+      "epoch": "foundation",
+      "kind": "decision",
+      "path": "beacon/adr/009-multi-partition.md",
+      "content": "ADR-009: Beacon will use multiple Kafka partitions (supersedes ADR-003, ADR-007).",
+      "relevant_to": [
+        "S1-D-FAILED"
+      ],
+      "supersedes": [
+        "S1-T0-DEC-003",
+        "S1-T1-DEC-003"
+      ],
+      "superseded_by": [],
+      "contradicts": [],
+      "trap_for": [],
+      "distractor_for": [],
+      "available_from": 2,
+      "available_until": null,
+      "content_digest": "2b8d0b73d4edfcefbd85fbe96d8a56bc68f6aebea75e2611a7ed64bcb4dce3c2"
+    },
+    {
+      "evidence_id": "S1-T2-DIST-001",
+      "scenario": "S1",
+      "checkpoint": 2,
+      "epoch": "foundation",
+      "kind": "distractor",
+      "path": "beacon/docs/testing.md",
+      "content": "Beacon testing strategy includes unit tests, integration tests, and end-to-end tests.",
+      "relevant_to": [],
+      "supersedes": [],
+      "superseded_by": [],
+      "contradicts": [],
+      "trap_for": [],
+      "distractor_for": [
+        "S1-B-SUPERSESSION"
+      ],
+      "available_from": 2,
+      "available_until": null,
+      "content_digest": "4c2d555b00f3806785ccdec334ab149d54a6034df549668caee39dd343dee910"
+    },
+    {
+      "evidence_id": "S1-T3-DEC-001",
+      "scenario": "S1",
+      "checkpoint": 3,
+      "epoch": "foundation",
+      "kind": "decision",
+      "path": "beacon/adr/010-new-source.md",
+      "content": "ADR-010: Beacon will add a new data source with email addresses.",
+      "relevant_to": [
+        "S1-C-CONSTRAINT"
+      ],
+      "supersedes": [],
+      "superseded_by": [],
+      "contradicts": [],
+      "trap_for": [],
+      "distractor_for": [],
+      "available_from": 3,
+      "available_until": null,
+      "content_digest": "99178ad36e13afa4dcf4b3ce427286dc5e918d7937f0d74f097c4bc558067473"
+    },
+    {
+      "evidence_id": "S1-T3-DEC-002",
+      "scenario": "S1",
+      "checkpoint": 3,
+      "epoch": "foundation",
+      "kind": "decision",
+      "path": "beacon/adr/011-rename-event-gateway.md",
+      "content": "ADR-011: The main ingestion module is renamed to 'event-gateway' (supersedes ADR-004).",
+      "relevant_to": [
+        "S1-H-IDENTITY"
+      ],
+      "supersedes": [
+        "S1-T0-DEC-004"
+      ],
+      "superseded_by": [
+        "S1-T6-DEC-001"
+      ],
+      "contradicts": [],
+      "trap_for": [
+        "S1-H-IDENTITY"
+      ],
+      "distractor_for": [],
+      "available_from": 3,
+      "available_until": 6,
+      "content_digest": "421ec308d783e9b5fc915ba64af962366c7ec2a04dab1ab66dce6dd2b9e59177"
+    },
+    {
+      "evidence_id": "S1-T3-DIST-001",
+      "scenario": "S1",
+      "checkpoint": 3,
+      "epoch": "foundation",
+      "kind": "distractor",
+      "path": "beacon/docs/performance.md",
+      "content": "Beacon performance target is 100,000 events per second.",
+      "relevant_to": [],
+      "supersedes": [],
+      "superseded_by": [],
+      "contradicts": [],
+      "trap_for": [],
+      "distractor_for": [
+        "S1-C-CONSTRAINT"
+      ],
+      "available_from": 3,
+      "available_until": null,
+      "content_digest": "ab8d5dcd1d9174d342ac6fdd6ae2a609f1c0bad8a04555208f770a3c6c449f80"
+    },
+    {
+      "evidence_id": "S1-T3-DIST-002",
+      "scenario": "S1",
+      "checkpoint": 3,
+      "epoch": "foundation",
+      "kind": "distractor",
+      "path": "beacon/docs/reliability.md",
+      "content": "Beacon reliability target is 99.9% uptime.",
+      "relevant_to": [],
+      "supersedes": [],
+      "superseded_by": [],
+      "contradicts": [],
+      "trap_for": [],
+      "distractor_for": [
+        "S1-C-CONSTRAINT"
+      ],
+      "available_from": 3,
+      "available_until": null,
+      "content_digest": "cf84f6ab9612f3d80caf633e7b884c561e1c17d34ee5f5eef5771993101998d6"
+    },
+    {
+      "evidence_id": "S1-T3-BENCH-001",
+      "scenario": "S1",
+      "checkpoint": 3,
+      "epoch": "foundation",
+      "kind": "benchmark",
+      "path": "beacon/benchmarks/t3-benchmark.md",
+      "content": "Beacon benchmark at t3: 85,000 events per second sustained throughput.",
+      "relevant_to": [],
+      "supersedes": [],
+      "superseded_by": [],
+      "contradicts": [],
+      "trap_for": [
+        "S1-I-ABSENT"
+      ],
+      "distractor_for": [],
+      "available_from": 3,
+      "available_until": null,
+      "content_digest": "a0d9df7964cbe8d78955ddf2d1f8b2cdec6364f9c0504078c28c1ceef78dba4a"
+    },
+    {
+      "evidence_id": "S1-T4-DEC-001",
+      "scenario": "S1",
+      "checkpoint": 4,
+      "epoch": "foundation",
+      "kind": "decision",
+      "path": "beacon/adr/012-single-partition-batching.md",
+      "content": "ADR-012: Beacon will use a single partition with batching for non-critical events.",
+      "relevant_to": [
+        "S1-D-FAILED"
+      ],
+      "supersedes": [],
+      "superseded_by": [],
+      "contradicts": [],
+      "trap_for": [],
+      "distractor_for": [],
+      "available_from": 4,
+      "available_until": null,
+      "content_digest": "5c5d495ca261a9b2303a12070b05632a348bfb4c8138c45049b401ff6c51cc35"
+    },
+    {
+      "evidence_id": "S1-T4-ADR-020",
+      "scenario": "S1",
+      "checkpoint": 4,
+      "epoch": "foundation",
+      "kind": "decision",
+      "path": "beacon/adr/020-retention.md",
+      "content": "ADR-020: Beacon data retention policy: raw events are kept for 30 days.",
+      "relevant_to": [
+        "S1-J-PROVENANCE"
+      ],
+      "supersedes": [],
+      "superseded_by": [],
+      "contradicts": [],
+      "trap_for": [],
+      "distractor_for": [],
+      "available_from": 4,
+      "available_until": null,
+      "content_digest": "170d1e78c95adb8a733cb97e7dbdc4545d61cd07475f81723a96964f100527b0"
+    },
+    {
+      "evidence_id": "S1-T4-DIST-001",
+      "scenario": "S1",
+      "checkpoint": 4,
+      "epoch": "foundation",
+      "kind": "distractor",
+      "path": "beacon/docs/capacity.md",
+      "content": "Beacon capacity planning document: projected to handle 1M events/day by t8.",
+      "relevant_to": [],
+      "supersedes": [],
+      "superseded_by": [],
+      "contradicts": [],
+      "trap_for": [],
+      "distractor_for": [
+        "S1-D-FAILED"
+      ],
+      "available_from": 4,
+      "available_until": null,
+      "content_digest": "0854f3d66733ddd0decfc2f48e31979febdb82ccd2507fb481ff2559efbc375e"
+    },
+    {
+      "evidence_id": "S1-T5-DEC-001",
+      "scenario": "S1",
+      "checkpoint": 5,
+      "epoch": "growth",
+      "kind": "decision",
+      "path": "beacon/adr/021-retry-policy.md",
+      "content": "ADR-021: Beacon uses a custom retry policy with exponential backoff (project-local).",
+      "relevant_to": [
+        "S1-E-SCOPE"
+      ],
+      "supersedes": [],
+      "superseded_by": [],
+      "contradicts": [],
+      "trap_for": [],
+      "distractor_for": [],
+      "available_from": 5,
+      "available_until": null,
+      "content_digest": "868333cfebd42b19855969038602fe228adc1fb75dde41e5c3768b250e67f152"
+    },
+    {
+      "evidence_id": "S1-T5-ADR-012",
+      "scenario": "S1",
+      "checkpoint": 5,
+      "epoch": "growth",
+      "kind": "decision",
+      "path": "beacon/adr/012-exactly-once.md",
+      "content": "ADR-012: All events must be processed exactly-once.",
+      "relevant_to": [],
+      "supersedes": [],
+      "superseded_by": [
+        "S1-T6-ADR-015"
+      ],
+      "contradicts": [],
+      "trap_for": [
+        "S1-F-CONTRADICTION"
+      ],
+      "distractor_for": [],
+      "available_from": 5,
+      "available_until": 6,
+      "content_digest": "7f08b5565d7ba2a15586d788a2fe51de5965ead89f057beef169460e10c25ab3"
+    },
+    {
+      "evidence_id": "S1-T5-DEP-001",
+      "scenario": "S1",
+      "checkpoint": 5,
+      "epoch": "growth",
+      "kind": "deprecation",
+      "path": "beacon/deprecations/dep-001.md",
+      "content": "DEP-001: ADR-002 (JSON serialization) is deprecated and no longer valid.",
+      "relevant_to": [
+        "S1-L-EPOCH"
+      ],
+      "supersedes": [],
+      "superseded_by": [],
+      "contradicts": [],
+      "trap_for": [
+        "S1-L-EPOCH"
+      ],
+      "distractor_for": [],
+      "available_from": 5,
+      "available_until": null,
+      "content_digest": "b317cc658f59aab7d09273cc2a0dc5d69428bf0833573e77f0860a52997fafaa"
+    },
+    {
+      "evidence_id": "S1-T5-DIST-001",
+      "scenario": "S1",
+      "checkpoint": 5,
+      "epoch": "growth",
+      "kind": "distractor",
+      "path": "beacon/docs/scaling.md",
+      "content": "Beacon scaling strategy: horizontal scaling with partition-aware consumers.",
+      "relevant_to": [],
+      "supersedes": [],
+      "superseded_by": [],
+      "contradicts": [],
+      "trap_for": [],
+      "distractor_for": [
+        "S1-E-SCOPE"
+      ],
+      "available_from": 5,
+      "available_until": null,
+      "content_digest": "0f6583bc41e8a6367e2020ab782c4ff2271f86fde0cc925e0c86601b370e660f"
+    },
+    {
+      "evidence_id": "S1-T6-DEC-001",
+      "scenario": "S1",
+      "checkpoint": 6,
+      "epoch": "growth",
+      "kind": "decision",
+      "path": "beacon/adr/022-rename-stream-ingest.md",
+      "content": "ADR-022: The main ingestion module is renamed to 'stream-ingest' (supersedes ADR-011).",
+      "relevant_to": [
+        "S1-H-IDENTITY"
+      ],
+      "supersedes": [
+        "S1-T3-DEC-002"
+      ],
+      "superseded_by": [],
+      "contradicts": [],
+      "trap_for": [],
+      "distractor_for": [],
+      "available_from": 6,
+      "available_until": null,
+      "content_digest": "2c20a97ba3b7f531ad24d3637c56ec22bae257170d6ee3e8c833225d91147c41"
+    },
+    {
+      "evidence_id": "S1-T6-ADR-015",
+      "scenario": "S1",
+      "checkpoint": 6,
+      "epoch": "growth",
+      "kind": "decision",
+      "path": "beacon/adr/015-at-least-once.md",
+      "content": "ADR-015: At-least-once processing is acceptable for non-critical events (supersedes ADR-012).",
+      "relevant_to": [
+        "S1-F-CONTRADICTION"
+      ],
+      "supersedes": [
+        "S1-T5-ADR-012"
+      ],
+      "superseded_by": [],
+      "contradicts": [],
+      "trap_for": [],
+      "distractor_for": [],
+      "available_from": 6,
+      "available_until": null,
+      "content_digest": "308a85423c43b1450c1d865f7d8e7ea9e1bb99db688508058d3450408865d885"
+    },
+    {
+      "evidence_id": "S1-T6-DIST-001",
+      "scenario": "S1",
+      "checkpoint": 6,
+      "epoch": "growth",
+      "kind": "distractor",
+      "path": "beacon/docs/alerting.md",
+      "content": "Beacon alerting rules: page on >5% error rate, warn on >1% error rate.",
+      "relevant_to": [],
+      "supersedes": [],
+      "superseded_by": [],
+      "contradicts": [],
+      "trap_for": [],
+      "distractor_for": [
+        "S1-F-CONTRADICTION"
+      ],
+      "available_from": 6,
+      "available_until": null,
+      "content_digest": "710026804875bf7bf67f479d70eddf45756df636efe043bcf0291549c11d6171"
+    },
+    {
+      "evidence_id": "S1-T7-DEC-001",
+      "scenario": "S1",
+      "checkpoint": 7,
+      "epoch": "growth",
+      "kind": "decision",
+      "path": "beacon/adr/023-current-protobuf.md",
+      "content": "ADR-023: Beacon current serialization format is Protobuf (confirmed).",
+      "relevant_to": [],
+      "supersedes": [],
+      "superseded_by": [],
+      "contradicts": [],
+      "trap_for": [
+        "S1-G-HISTORICAL"
+      ],
+      "distractor_for": [],
+      "available_from": 7,
+      "available_until": null,
+      "content_digest": "e2581807de5a97b21308792fc6209b11b3e60abddd2aaeb4e7ece9fbc3d41f8d"
+    },
+    {
+      "evidence_id": "S1-T7-DIST-001",
+      "scenario": "S1",
+      "checkpoint": 7,
+      "epoch": "growth",
+      "kind": "distractor",
+      "path": "beacon/docs/serialization-history.md",
+      "content": "Beacon serialization history: JSON (t0-t1), Protobuf (t1-present).",
+      "relevant_to": [],
+      "supersedes": [],
+      "superseded_by": [],
+      "contradicts": [],
+      "trap_for": [],
+      "distractor_for": [
+        "S1-G-HISTORICAL"
+      ],
+      "available_from": 7,
+      "available_until": null,
+      "content_digest": "5ef02b1e4b15b7f507225a06e481010ae4b3c46a0a2dd718a0bcde3932b9594e"
+    },
+    {
+      "evidence_id": "S1-T8-DIST-001",
+      "scenario": "S1",
+      "checkpoint": 8,
+      "epoch": "growth",
+      "kind": "distractor",
+      "path": "beacon/docs/module-history.md",
+      "content": "Beacon module naming history: ingest-core (t0-t3), event-gateway (t3-t6), stream-ingest (t6-present).",
+      "relevant_to": [],
+      "supersedes": [],
+      "superseded_by": [],
+      "contradicts": [],
+      "trap_for": [],
+      "distractor_for": [
+        "S1-H-IDENTITY"
+      ],
+      "available_from": 8,
+      "available_until": null,
+      "content_digest": "67f7800846fc41b954bee035fa72944bb40c0e176dbd4617a135fe5f7976d825"
+    },
+    {
+      "evidence_id": "S1-T9-DIST-001",
+      "scenario": "S1",
+      "checkpoint": 9,
+      "epoch": "growth",
+      "kind": "distractor",
+      "path": "beacon/docs/performance-targets.md",
+      "content": "Beacon performance targets: 150,000 events per second by t12.",
+      "relevant_to": [],
+      "supersedes": [],
+      "superseded_by": [],
+      "contradicts": [],
+      "trap_for": [],
+      "distractor_for": [
+        "S1-I-ABSENT"
+      ],
+      "available_from": 9,
+      "available_until": null,
+      "content_digest": "082a64d484d97930f89a400568c7b9cd5128e24c87ea2b7893839d990f08f613"
+    },
+    {
+      "evidence_id": "S1-T9-DIST-002",
+      "scenario": "S1",
+      "checkpoint": 9,
+      "epoch": "growth",
+      "kind": "distractor",
+      "path": "beacon/docs/benchmarks.md",
+      "content": "Beacon benchmark history: 85,000 eps at t3, 120,000 eps at t7.",
+      "relevant_to": [],
+      "supersedes": [],
+      "superseded_by": [],
+      "contradicts": [],
+      "trap_for": [],
+      "distractor_for": [
+        "S1-I-ABSENT"
+      ],
+      "available_from": 9,
+      "available_until": null,
+      "content_digest": "a62bc0d99ebbc3c759a1ad689284bd4ba78cf11d8346c4f3cd8de2f2576f9667"
+    },
+    {
+      "evidence_id": "S1-T10-DEP-001",
+      "scenario": "S1",
+      "checkpoint": 10,
+      "epoch": "maturity",
+      "kind": "deprecation",
+      "path": "beacon/deprecations/dep-002.md",
+      "content": "DEP-002: ADR-003 (single partition) is deprecated and no longer valid.",
+      "relevant_to": [
+        "S1-L-EPOCH"
+      ],
+      "supersedes": [],
+      "superseded_by": [],
+      "contradicts": [],
+      "trap_for": [],
+      "distractor_for": [],
+      "available_from": 10,
+      "available_until": null,
+      "content_digest": "8daed503f93e66e4cd02dc37025b06ad106c3a78d0d1f5b954adf8d9e2b39d78"
+    },
+    {
+      "evidence_id": "S1-T10-DIST-001",
+      "scenario": "S1",
+      "checkpoint": 10,
+      "epoch": "maturity",
+      "kind": "distractor",
+      "path": "beacon/docs/retention-comparison.md",
+      "content": "Beacon retention comparison: S1=30 days, S2=90 days, S3=7 days.",
+      "relevant_to": [],
+      "supersedes": [],
+      "superseded_by": [],
+      "contradicts": [],
+      "trap_for": [],
+      "distractor_for": [
+        "S1-J-PROVENANCE"
+      ],
+      "available_from": 10,
+      "available_until": null,
+      "content_digest": "95b3f9b263a56f511d7980b05383b1d338dde180209567e24deda4a46be8490f"
+    },
+    {
+      "evidence_id": "S1-T11-DEC-001",
+      "scenario": "S1",
+      "checkpoint": 11,
+      "epoch": "maturity",
+      "kind": "decision",
+      "path": "beacon/adr/025-encryption.md",
+      "content": "ADR-025: Beacon will add encryption-at-rest for all stored events.",
+      "relevant_to": [
+        "S1-K-CROSS-SYNTHESIS"
+      ],
+      "supersedes": [],
+      "superseded_by": [],
+      "contradicts": [],
+      "trap_for": [],
+      "distractor_for": [],
+      "available_from": 11,
+      "available_until": null,
+      "content_digest": "58082a776a1f38b31e0e1f8c830f02ddd2b87e6ed240f7fedf53083d3e551d56"
+    },
+    {
+      "evidence_id": "S1-T12-DEC-001",
+      "scenario": "S1",
+      "checkpoint": 12,
+      "epoch": "maturity",
+      "kind": "decision",
+      "path": "beacon/adr/026-new-source-config.md",
+      "content": "ADR-026: New data source configuration must comply with all current constraints.",
+      "relevant_to": [
+        "S1-K-CROSS-SYNTHESIS"
+      ],
+      "supersedes": [],
+      "superseded_by": [],
+      "contradicts": [],
+      "trap_for": [],
+      "distractor_for": [],
+      "available_from": 12,
+      "available_until": null,
+      "content_digest": "7eb8ca468bc381a35817c33add035791571acbd9b3932482143b5570c7c1007a"
+    },
+    {
+      "evidence_id": "S1-T12-DIST-001",
+      "scenario": "S1",
+      "checkpoint": 12,
+      "epoch": "maturity",
+      "kind": "distractor",
+      "path": "beacon/docs/encryption-options.md",
+      "content": "Beacon encryption options: AES-256, ChaCha20, RSA-4096.",
+      "relevant_to": [],
+      "supersedes": [],
+      "superseded_by": [],
+      "contradicts": [],
+      "trap_for": [],
+      "distractor_for": [
+        "S1-K-CROSS-SYNTHESIS"
+      ],
+      "available_from": 12,
+      "available_until": null,
+      "content_digest": "c6091c105724a20ea19e80bf3f23a92c81640cb676e3883790ba8ce04e35b46d"
+    },
+    {
+      "evidence_id": "S1-T14-DIST-001",
+      "scenario": "S1",
+      "checkpoint": 14,
+      "epoch": "maturity",
+      "kind": "distractor",
+      "path": "beacon/docs/epoch-summary.md",
+      "content": "Beacon epoch summary: Foundation (t0-4), Growth (t5-9), Maturity (t10-14).",
+      "relevant_to": [],
+      "supersedes": [],
+      "superseded_by": [],
+      "contradicts": [],
+      "trap_for": [],
+      "distractor_for": [
+        "S1-L-EPOCH"
+      ],
+      "available_from": 14,
+      "available_until": null,
+      "content_digest": "37df106f83890e0effa312f012fbba7ef405f782f1fda024dae55f6057b3ef90"
+    },
+    {
+      "evidence_id": "S2-T0-DEC-001",
+      "scenario": "S2",
+      "checkpoint": 0,
+      "epoch": "foundation",
+      "kind": "decision",
+      "path": "marisol/adr/001-partitioning.md",
+      "content": "ADR-001: Marisol will use site-based partitioning for all clinical data.",
+      "relevant_to": [
+        "S2-A-NEXT",
+        "S2-B-SUPERSESSION",
+        "S2-G-HISTORICAL"
+      ],
+      "supersedes": [],
+      "superseded_by": [
+        "S2-T1-DEC-002"
+      ],
+      "contradicts": [],
+      "trap_for": [
+        "S2-B-SUPERSESSION"
+      ],
+      "distractor_for": [],
+      "available_from": 0,
+      "available_until": 1,
+      "content_digest": "be48e20c5f5218a73ec5b0896f3079e2e2b359c7a15a0c8677ea8b04b15be4cf"
+    },
+    {
+      "evidence_id": "S2-T0-DEC-002",
+      "scenario": "S2",
+      "checkpoint": 0,
+      "epoch": "foundation",
+      "kind": "decision",
+      "path": "marisol/adr/002-module-name.md",
+      "content": "ADR-002: The main pipeline module is named 'data-flow'.",
+      "relevant_to": [],
+      "supersedes": [],
+      "superseded_by": [
+        "S2-T4-DEC-001"
+      ],
+      "contradicts": [],
+      "trap_for": [
+        "S2-H-IDENTITY"
+      ],
+      "distractor_for": [],
+      "available_from": 0,
+      "available_until": 4,
+      "content_digest": "9c0733bf2f81406cdfd0f061517fe32daa09d47b20cf5436b28c1a9fedc04353"
+    },
+    {
+      "evidence_id": "S2-T0-CON-001",
+      "scenario": "S2",
+      "checkpoint": 0,
+      "epoch": "foundation",
+      "kind": "constraint",
+      "path": "marisol/constraints/hipaa-encryption.md",
+      "content": "CON-001: All patient data must be encrypted in transit (HIPAA).",
+      "relevant_to": [
+        "S2-C-CONSTRAINT",
+        "S2-K-CROSS-SYNTHESIS"
+      ],
+      "supersedes": [],
+      "superseded_by": [],
+      "contradicts": [],
+      "trap_for": [],
+      "distractor_for": [],
+      "available_from": 0,
+      "available_until": null,
+      "content_digest": "9b17b965f80537e4354ef346f303f2ccd760c5db85a98c20f551dbb85f2682ad"
+    },
+    {
+      "evidence_id": "S2-T1-DEC-001",
+      "scenario": "S2",
+      "checkpoint": 1,
+      "epoch": "foundation",
+      "kind": "decision",
+      "path": "marisol/adr/003-hipaa.md",
+      "content": "ADR-003: Marisol will add HIPAA compliance requirements.",
+      "relevant_to": [
+        "S2-A-NEXT"
+      ],
+      "supersedes": [],
+      "superseded_by": [],
+      "contradicts": [],
+      "trap_for": [],
+      "distractor_for": [],
+      "available_from": 1,
+      "available_until": null,
+      "content_digest": "9440e838d2a8316688066689e30fa1de4a5a1700a06ba553b840fec309690640"
+    },
+    {
+      "evidence_id": "S2-T1-DEC-002",
+      "scenario": "S2",
+      "checkpoint": 1,
+      "epoch": "foundation",
+      "kind": "decision",
+      "path": "marisol/adr/004-protocol-partitioning.md",
+      "content": "ADR-004: Marisol will use protocol-based partitioning (supersedes ADR-001).",
+      "relevant_to": [
+        "S2-B-SUPERSESSION",
+        "S2-E-SCOPE"
+      ],
+      "supersedes": [
+        "S2-T0-DEC-001"
+      ],
+      "superseded_by": [],
+      "contradicts": [],
+      "trap_for": [],
+      "distractor_for": [],
+      "available_from": 1,
+      "available_until": null,
+      "content_digest": "3b393fe4729deaeaaf65a8d2a8f43b532e0af9e23f0ab06f95b7d8fdd13d022c"
+    },
+    {
+      "evidence_id": "S2-T1-DIST-001",
+      "scenario": "S2",
+      "checkpoint": 1,
+      "epoch": "foundation",
+      "kind": "distractor",
+      "path": "marisol/docs/monitoring.md",
+      "content": "Marisol monitoring uses Datadog with custom dashboards.",
+      "relevant_to": [],
+      "supersedes": [],
+      "superseded_by": [],
+      "contradicts": [],
+      "trap_for": [],
+      "distractor_for": [
+        "S2-A-NEXT"
+      ],
+      "available_from": 1,
+      "available_until": null,
+      "content_digest": "bc6ca0314ac995b325e659b4fd0494563006e83af5fbca906cb0482905e77bd9"
+    },
+    {
+      "evidence_id": "S2-T2-DEC-001",
+      "scenario": "S2",
+      "checkpoint": 2,
+      "epoch": "foundation",
+      "kind": "decision",
+      "path": "marisol/adr/005-reject-site.md",
+      "content": "ADR-005: Marisol rejects the proposal to revert to site-based partitioning.",
+      "relevant_to": [
+        "S2-B-SUPERSESSION"
+      ],
+      "supersedes": [],
+      "superseded_by": [],
+      "contradicts": [],
+      "trap_for": [],
+      "distractor_for": [],
+      "available_from": 2,
+      "available_until": null,
+      "content_digest": "f787e0811a51221121137eb48469113274b2c85fc2454ef2d85ec233f010e631"
+    },
+    {
+      "evidence_id": "S2-T2-DEC-002",
+      "scenario": "S2",
+      "checkpoint": 2,
+      "epoch": "foundation",
+      "kind": "decision",
+      "path": "marisol/adr/006-single-pool.md",
+      "content": "ADR-006: Marisol will use a single database connection pool.",
+      "relevant_to": [],
+      "supersedes": [],
+      "superseded_by": [
+        "S2-T3-DEC-002"
+      ],
+      "contradicts": [],
+      "trap_for": [
+        "S2-D-FAILED"
+      ],
+      "distractor_for": [],
+      "available_from": 2,
+      "available_until": 3,
+      "content_digest": "b3c79e424aa1a74e92fe1548b3c771e5e74d4cfb9a6b1cbf2beb5edcd9f7fc98"
+    },
+    {
+      "evidence_id": "S2-T2-DIST-001",
+      "scenario": "S2",
+      "checkpoint": 2,
+      "epoch": "foundation",
+      "kind": "distractor",
+      "path": "marisol/docs/testing.md",
+      "content": "Marisol testing strategy includes unit tests and integration tests.",
+      "relevant_to": [],
+      "supersedes": [],
+      "superseded_by": [],
+      "contradicts": [],
+      "trap_for": [],
+      "distractor_for": [
+        "S2-B-SUPERSESSION"
+      ],
+      "available_from": 2,
+      "available_until": null,
+      "content_digest": "c9f4e4e996c771eb4c01bc2a20ed54ee98823b7569d2af000af753081ba632de"
+    },
+    {
+      "evidence_id": "S2-T3-DEC-001",
+      "scenario": "S2",
+      "checkpoint": 3,
+      "epoch": "foundation",
+      "kind": "decision",
+      "path": "marisol/adr/007-new-api.md",
+      "content": "ADR-007: Marisol will add a new API endpoint for data access.",
+      "relevant_to": [
+        "S2-C-CONSTRAINT"
+      ],
+      "supersedes": [],
+      "superseded_by": [],
+      "contradicts": [],
+      "trap_for": [],
+      "distractor_for": [],
+      "available_from": 3,
+      "available_until": null,
+      "content_digest": "298e75fa1183c1f9cdd13e7867d9a06204f0092a9c0c0e37a72c8f4a60d86f39"
+    },
+    {
+      "evidence_id": "S2-T3-DEC-002",
+      "scenario": "S2",
+      "checkpoint": 3,
+      "epoch": "foundation",
+      "kind": "decision",
+      "path": "marisol/adr/008-multi-pool.md",
+      "content": "ADR-008: Marisol will use multiple connection pools (supersedes ADR-006).",
+      "relevant_to": [
+        "S2-D-FAILED"
+      ],
+      "supersedes": [
+        "S2-T2-DEC-002"
+      ],
+      "superseded_by": [],
+      "contradicts": [],
+      "trap_for": [],
+      "distractor_for": [],
+      "available_from": 3,
+      "available_until": null,
+      "content_digest": "0efc7fe36ddd91865e0f836a37c2d1b6a042d47b06c966d057b75ce0e3d4f668"
+    },
+    {
+      "evidence_id": "S2-T3-DIST-001",
+      "scenario": "S2",
+      "checkpoint": 3,
+      "epoch": "foundation",
+      "kind": "distractor",
+      "path": "marisol/docs/performance.md",
+      "content": "Marisol performance target is 50,000 queries per second.",
+      "relevant_to": [],
+      "supersedes": [],
+      "superseded_by": [],
+      "contradicts": [],
+      "trap_for": [],
+      "distractor_for": [
+        "S2-C-CONSTRAINT"
+      ],
+      "available_from": 3,
+      "available_until": null,
+      "content_digest": "394b6ac65dcdc56b81cf318cb4364184ca6b35d9bfba720b691c85ececa45ab8"
+    },
+    {
+      "evidence_id": "S2-T4-DEC-001",
+      "scenario": "S2",
+      "checkpoint": 4,
+      "epoch": "foundation",
+      "kind": "decision",
+      "path": "marisol/adr/009-rename-trial-pipeline.md",
+      "content": "ADR-009: The main pipeline module is renamed to 'trial-pipeline' (supersedes ADR-002).",
+      "relevant_to": [
+        "S2-H-IDENTITY"
+      ],
+      "supersedes": [
+        "S2-T0-DEC-002"
+      ],
+      "superseded_by": [
+        "S2-T8-DEC-001"
+      ],
+      "contradicts": [],
+      "trap_for": [
+        "S2-H-IDENTITY"
+      ],
+      "distractor_for": [],
+      "available_from": 4,
+      "available_until": 8,
+      "content_digest": "527fde21454164b7ed3c0f0f6790717fbf7a10b12839d2bf0adaa5b8cd5501c1"
+    },
+    {
+      "evidence_id": "S2-T4-ADR-010",
+      "scenario": "S2",
+      "checkpoint": 4,
+      "epoch": "foundation",
+      "kind": "decision",
+      "path": "marisol/adr/010-retention.md",
+      "content": "ADR-010: Marisol data retention policy: patient data kept for 90 days.",
+      "relevant_to": [],
+      "supersedes": [],
+      "superseded_by": [],
+      "contradicts": [],
+      "trap_for": [
+        "S1-J-PROVENANCE"
+      ],
+      "distractor_for": [],
+      "available_from": 4,
+      "available_until": null,
+      "content_digest": "c26f119cdbfb1545f00800a6274b5dc99d6f302be30eda852add7a428022d58e"
+    },
+    {
+      "evidence_id": "S2-T5-DEC-001",
+      "scenario": "S2",
+      "checkpoint": 5,
+      "epoch": "growth",
+      "kind": "decision",
+      "path": "marisol/adr/011-single-pool-bigger.md",
+      "content": "ADR-011: Marisol will use a single connection pool with increased size.",
+      "relevant_to": [
+        "S2-D-FAILED"
+      ],
+      "supersedes": [],
+      "superseded_by": [],
+      "contradicts": [],
+      "trap_for": [],
+      "distractor_for": [],
+      "available_from": 5,
+      "available_until": null,
+      "content_digest": "54c10a0ee97abf4a70335038ac5fdc19e674d99266a40cdbf10821f1d06b0e7e"
+    },
+    {
+      "evidence_id": "S2-T5-BENCH-001",
+      "scenario": "S2",
+      "checkpoint": 5,
+      "epoch": "growth",
+      "kind": "benchmark",
+      "path": "marisol/benchmarks/t5-benchmark.md",
+      "content": "Marisol benchmark at t5: 45,000 queries per second sustained.",
+      "relevant_to": [],
+      "supersedes": [],
+      "superseded_by": [],
+      "contradicts": [],
+      "trap_for": [
+        "S2-I-ABSENT",
+        "S1-I-ABSENT"
+      ],
+      "distractor_for": [],
+      "available_from": 5,
+      "available_until": null,
+      "content_digest": "a4871f0caff3fc3e7a9027942e8d0b6a1a1a16d12c18d08435d3cca9be74e6a7"
+    },
+    {
+      "evidence_id": "S2-T5-DIST-001",
+      "scenario": "S2",
+      "checkpoint": 5,
+      "epoch": "growth",
+      "kind": "distractor",
+      "path": "marisol/docs/scaling.md",
+      "content": "Marisol scaling strategy: vertical scaling with read replicas.",
+      "relevant_to": [],
+      "supersedes": [],
+      "superseded_by": [],
+      "contradicts": [],
+      "trap_for": [],
+      "distractor_for": [
+        "S2-D-FAILED"
+      ],
+      "available_from": 5,
+      "available_until": null,
+      "content_digest": "6df480a1d29d4846f280504b9dc79aee4ce962171db2eb1e77c9b4a36094e409"
+    },
+    {
+      "evidence_id": "S2-T6-ADR-030",
+      "scenario": "S2",
+      "checkpoint": 6,
+      "epoch": "growth",
+      "kind": "decision",
+      "path": "marisol/adr/030-pi-approval.md",
+      "content": "ADR-030: All data exports must be approved by a Principal Investigator.",
+      "relevant_to": [],
+      "supersedes": [],
+      "superseded_by": [
+        "S2-T7-ADR-031"
+      ],
+      "contradicts": [],
+      "trap_for": [
+        "S2-F-CONTRADICTION"
+      ],
+      "distractor_for": [],
+      "available_from": 6,
+      "available_until": 7,
+      "content_digest": "9d62037de93df9c37c463a216b7f76934c07cd0751021bee11a2d7fc0de7365e"
+    },
+    {
+      "evidence_id": "S2-T6-DIST-001",
+      "scenario": "S2",
+      "checkpoint": 6,
+      "epoch": "growth",
+      "kind": "distractor",
+      "path": "marisol/docs/compliance.md",
+      "content": "Marisol compliance: HIPAA, GDPR, 21 CFR Part 11.",
+      "relevant_to": [],
+      "supersedes": [],
+      "superseded_by": [],
+      "contradicts": [],
+      "trap_for": [],
+      "distractor_for": [
+        "S2-E-SCOPE"
+      ],
+      "available_from": 6,
+      "available_until": null,
+      "content_digest": "b7fc360b0f651e2498a57bd194d4667d187612302ea188f4e7d2a312a69587f3"
+    },
+    {
+      "evidence_id": "S2-T7-ADR-031",
+      "scenario": "S2",
+      "checkpoint": 7,
+      "epoch": "growth",
+      "kind": "decision",
+      "path": "marisol/adr/031-auto-export.md",
+      "content": "ADR-031: Automated exports are allowed for de-identified data (supersedes ADR-030).",
+      "relevant_to": [
+        "S2-F-CONTRADICTION"
+      ],
+      "supersedes": [
+        "S2-T6-ADR-030"
+      ],
+      "superseded_by": [],
+      "contradicts": [],
+      "trap_for": [],
+      "distractor_for": [],
+      "available_from": 7,
+      "available_until": null,
+      "content_digest": "19a7e0b1b856b0cb157d9b0da47d91a30ca08813d47e1ab55227b78a493fbe0d"
+    },
+    {
+      "evidence_id": "S2-T7-DIST-001",
+      "scenario": "S2",
+      "checkpoint": 7,
+      "epoch": "growth",
+      "kind": "distractor",
+      "path": "marisol/docs/export-procedures.md",
+      "content": "Marisol export procedures: manual review required for all exports.",
+      "relevant_to": [],
+      "supersedes": [],
+      "superseded_by": [],
+      "contradicts": [],
+      "trap_for": [],
+      "distractor_for": [
+        "S2-F-CONTRADICTION"
+      ],
+      "available_from": 7,
+      "available_until": null,
+      "content_digest": "7a7d11b00bb11435fd407b30a3c88e874b0d8e43f3d471f5cbf2b7ac0055227a"
+    },
+    {
+      "evidence_id": "S2-T8-DEC-001",
+      "scenario": "S2",
+      "checkpoint": 8,
+      "epoch": "growth",
+      "kind": "decision",
+      "path": "marisol/adr/013-rename-clinical-ingest.md",
+      "content": "ADR-013: The main pipeline module is renamed to 'clinical-ingest' (supersedes ADR-009).",
+      "relevant_to": [
+        "S2-H-IDENTITY"
+      ],
+      "supersedes": [
+        "S2-T4-DEC-001"
+      ],
+      "superseded_by": [],
+      "contradicts": [],
+      "trap_for": [],
+      "distractor_for": [],
+      "available_from": 8,
+      "available_until": null,
+      "content_digest": "d3115b6ac1671e63101e9e8c7d8cc764fb68cf47d24cc5b522e27c155f6615ad"
+    },
+    {
+      "evidence_id": "S2-T9-DEC-001",
+      "scenario": "S2",
+      "checkpoint": 9,
+      "epoch": "growth",
+      "kind": "decision",
+      "path": "marisol/adr/014-protocol-later.md",
+      "content": "ADR-014: Marisol partitioning strategy is protocol-based as of t9.",
+      "relevant_to": [],
+      "supersedes": [],
+      "superseded_by": [],
+      "contradicts": [],
+      "trap_for": [
+        "S2-G-HISTORICAL"
+      ],
+      "distractor_for": [],
+      "available_from": 9,
+      "available_until": null,
+      "content_digest": "c9f4aa44d4103593d986f5dd62a820b4751cfe9e7d8accd900adc2fcb3572567"
+    },
+    {
+      "evidence_id": "S2-T9-DIST-001",
+      "scenario": "S2",
+      "checkpoint": 9,
+      "epoch": "growth",
+      "kind": "distractor",
+      "path": "marisol/docs/partitioning-history.md",
+      "content": "Marisol partitioning history: site-based (t0-t1), protocol-based (t1-present).",
+      "relevant_to": [],
+      "supersedes": [],
+      "superseded_by": [],
+      "contradicts": [],
+      "trap_for": [],
+      "distractor_for": [
+        "S2-G-HISTORICAL"
+      ],
+      "available_from": 9,
+      "available_until": null,
+      "content_digest": "47fea675ced3fed38227eae3aad9d958b11c269cfcb1db29c9477627182ec973"
+    },
+    {
+      "evidence_id": "S2-T10-DIST-001",
+      "scenario": "S2",
+      "checkpoint": 10,
+      "epoch": "maturity",
+      "kind": "distractor",
+      "path": "marisol/docs/module-history.md",
+      "content": "Marisol module naming history: data-flow (t0-t4), trial-pipeline (t4-t8), clinical-ingest (t8-present).",
+      "relevant_to": [],
+      "supersedes": [],
+      "superseded_by": [],
+      "contradicts": [],
+      "trap_for": [],
+      "distractor_for": [
+        "S2-H-IDENTITY"
+      ],
+      "available_from": 10,
+      "available_until": null,
+      "content_digest": "570e43828abd6edd1fe443082a8beacedc5f3d137c1b25ab116ab7ed264f969c"
+    },
+    {
+      "evidence_id": "S2-T12-DIST-001",
+      "scenario": "S2",
+      "checkpoint": 12,
+      "epoch": "maturity",
+      "kind": "distractor",
+      "path": "marisol/docs/performance-targets.md",
+      "content": "Marisol performance targets: 75,000 queries per second by t14.",
+      "relevant_to": [],
+      "supersedes": [],
+      "superseded_by": [],
+      "contradicts": [],
+      "trap_for": [],
+      "distractor_for": [
+        "S2-I-ABSENT"
+      ],
+      "available_from": 12,
+      "available_until": null,
+      "content_digest": "418384f1d3c488217d24c4355eb00db3557bcec8eef351222e80fc36b3aa2399"
+    },
+    {
+      "evidence_id": "S2-T12-DIST-002",
+      "scenario": "S2",
+      "checkpoint": 12,
+      "epoch": "maturity",
+      "kind": "distractor",
+      "path": "marisol/docs/benchmarks.md",
+      "content": "Marisol benchmark history: 45,000 qps at t5, 60,000 qps at t9.",
+      "relevant_to": [],
+      "supersedes": [],
+      "superseded_by": [],
+      "contradicts": [],
+      "trap_for": [],
+      "distractor_for": [
+        "S2-I-ABSENT"
+      ],
+      "available_from": 12,
+      "available_until": null,
+      "content_digest": "3394c8ad2c40661ff0654a911da4fe7bf0a9415ac79fd7f28b4ab89a1b7b6d0e"
+    },
+    {
+      "evidence_id": "S2-T13-DEC-001",
+      "scenario": "S2",
+      "checkpoint": 13,
+      "epoch": "maturity",
+      "kind": "decision",
+      "path": "marisol/adr/015-gdpr.md",
+      "content": "ADR-015: Marisol will add GDPR compliance requirements for EU clinical sites.",
+      "relevant_to": [
+        "S2-K-CROSS-SYNTHESIS"
+      ],
+      "supersedes": [],
+      "superseded_by": [],
+      "contradicts": [],
+      "trap_for": [],
+      "distractor_for": [],
+      "available_from": 13,
+      "available_until": null,
+      "content_digest": "dbcb5ef178f707c6d2110997df8a753cf59f8ed6bebdd13d79eef24dc491c0dd"
+    },
+    {
+      "evidence_id": "S2-T14-DEC-001",
+      "scenario": "S2",
+      "checkpoint": 14,
+      "epoch": "maturity",
+      "kind": "decision",
+      "path": "marisol/adr/016-eu-site-config.md",
+      "content": "ADR-016: EU clinical site configuration must comply with all current constraints.",
+      "relevant_to": [
+        "S2-K-CROSS-SYNTHESIS"
+      ],
+      "supersedes": [],
+      "superseded_by": [],
+      "contradicts": [],
+      "trap_for": [],
+      "distractor_for": [],
+      "available_from": 14,
+      "available_until": null,
+      "content_digest": "9ed94055ed0a41467d0c351fede1ea548ccd723e2a124fe5503e78555d8f587a"
+    },
+    {
+      "evidence_id": "S2-T14-DIST-001",
+      "scenario": "S2",
+      "checkpoint": 14,
+      "epoch": "maturity",
+      "kind": "distractor",
+      "path": "marisol/docs/gdpr-options.md",
+      "content": "Marisol GDPR options: data minimization, right to erasure, consent management.",
+      "relevant_to": [],
+      "supersedes": [],
+      "superseded_by": [],
+      "contradicts": [],
+      "trap_for": [],
+      "distractor_for": [
+        "S2-K-CROSS-SYNTHESIS"
+      ],
+      "available_from": 14,
+      "available_until": null,
+      "content_digest": "16de15b42e45eeeba4b91f36304cce4cf9768f27af4ef9584d266912c42d03cb"
+    },
+    {
+      "evidence_id": "S3-T0-DEC-001",
+      "scenario": "S3",
+      "checkpoint": 0,
+      "epoch": "foundation",
+      "kind": "decision",
+      "path": "harbor/adr/001-markdown.md",
+      "content": "ADR-001: Harbor will use Markdown as the target format for all documentation.",
+      "relevant_to": [
+        "S3-A-NEXT",
+        "S3-L-EPOCH"
+      ],
+      "supersedes": [],
+      "superseded_by": [],
+      "contradicts": [],
+      "trap_for": [],
+      "distractor_for": [],
+      "available_from": 0,
+      "available_until": null,
+      "content_digest": "29b198e0d385c3a0fda7e7596cd2e9ea31c8f7265367911f25187217562f0032"
+    },
+    {
+      "evidence_id": "S3-T0-DEC-002",
+      "scenario": "S3",
+      "checkpoint": 0,
+      "epoch": "foundation",
+      "kind": "decision",
+      "path": "harbor/adr/002-manual.md",
+      "content": "ADR-002: Harbor will use manual migration for all documents.",
+      "relevant_to": [],
+      "supersedes": [],
+      "superseded_by": [
+        "S3-T1-DEC-002"
+      ],
+      "contradicts": [],
+      "trap_for": [
+        "S3-B-SUPERSESSION"
+      ],
+      "distractor_for": [],
+      "available_from": 0,
+      "available_until": 1,
+      "content_digest": "b36f9bdb3684cc9c7886b0ea2ed5368d07aacc505f7decc2b30fa66db7fdad45"
+    },
+    {
+      "evidence_id": "S3-T0-DEC-003",
+      "scenario": "S3",
+      "checkpoint": 0,
+      "epoch": "foundation",
+      "kind": "decision",
+      "path": "harbor/adr/003-module-name.md",
+      "content": "ADR-003: The main migration module is named 'doc-migrate'.",
+      "relevant_to": [],
+      "supersedes": [],
+      "superseded_by": [
+        "S3-T4-DEC-002"
+      ],
+      "contradicts": [],
+      "trap_for": [
+        "S3-H-IDENTITY"
+      ],
+      "distractor_for": [],
+      "available_from": 0,
+      "available_until": 4,
+      "content_digest": "d22cc42527959f7270aec0a1ead648347086141929ef4afa92fd7a3e501efde7"
+    },
+    {
+      "evidence_id": "S3-T0-CON-001",
+      "scenario": "S3",
+      "checkpoint": 0,
+      "epoch": "foundation",
+      "kind": "constraint",
+      "path": "harbor/constraints/url-preservation.md",
+      "content": "CON-001: All migrated documents must preserve original URLs.",
+      "relevant_to": [
+        "S3-C-CONSTRAINT"
+      ],
+      "supersedes": [],
+      "superseded_by": [],
+      "contradicts": [],
+      "trap_for": [],
+      "distractor_for": [],
+      "available_from": 0,
+      "available_until": null,
+      "content_digest": "246794a85196c280c7cd6f05d669201b9e93fa47032cdb920cd319a62f4a57ec"
+    },
+    {
+      "evidence_id": "S3-T1-DEC-001",
+      "scenario": "S3",
+      "checkpoint": 1,
+      "epoch": "foundation",
+      "kind": "decision",
+      "path": "harbor/adr/004-cross-ref.md",
+      "content": "ADR-004: Harbor will add cross-reference validation for all migrated documents.",
+      "relevant_to": [
+        "S3-A-NEXT"
+      ],
+      "supersedes": [],
+      "superseded_by": [],
+      "contradicts": [],
+      "trap_for": [],
+      "distractor_for": [],
+      "available_from": 1,
+      "available_until": null,
+      "content_digest": "2cda0492799119013fccbd28a02aaee59a17dc2425c5c1003462fcbc94fcf7ec"
+    },
+    {
+      "evidence_id": "S3-T1-DEC-002",
+      "scenario": "S3",
+      "checkpoint": 1,
+      "epoch": "foundation",
+      "kind": "decision",
+      "path": "harbor/adr/005-automated.md",
+      "content": "ADR-005: Harbor will use automated migration (supersedes ADR-002).",
+      "relevant_to": [
+        "S3-B-SUPERSESSION",
+        "S3-G-HISTORICAL"
+      ],
+      "supersedes": [
+        "S3-T0-DEC-002"
+      ],
+      "superseded_by": [],
+      "contradicts": [],
+      "trap_for": [],
+      "distractor_for": [],
+      "available_from": 1,
+      "available_until": null,
+      "content_digest": "1ef73ebd29fc2da180cdfb95a8400d3b4a76f174b3aba15c3119249186a4533c"
+    },
+    {
+      "evidence_id": "S3-T1-DIST-001",
+      "scenario": "S3",
+      "checkpoint": 1,
+      "epoch": "foundation",
+      "kind": "distractor",
+      "path": "harbor/docs/monitoring.md",
+      "content": "Harbor monitoring tracks migration progress and error rates.",
+      "relevant_to": [],
+      "supersedes": [],
+      "superseded_by": [],
+      "contradicts": [],
+      "trap_for": [],
+      "distractor_for": [
+        "S3-A-NEXT"
+      ],
+      "available_from": 1,
+      "available_until": null,
+      "content_digest": "04dfa3dbf1ced6f209a62460de45e209932c9d4f77671d280be290b9f1b6b6d7"
+    },
+    {
+      "evidence_id": "S3-T2-DEC-001",
+      "scenario": "S3",
+      "checkpoint": 2,
+      "epoch": "foundation",
+      "kind": "decision",
+      "path": "harbor/adr/006-reject-manual.md",
+      "content": "ADR-006: Harbor rejects the proposal to revert to manual migration.",
+      "relevant_to": [
+        "S3-B-SUPERSESSION"
+      ],
+      "supersedes": [],
+      "superseded_by": [],
+      "contradicts": [],
+      "trap_for": [],
+      "distractor_for": [],
+      "available_from": 2,
+      "available_until": null,
+      "content_digest": "c7429f5abea58f26885a8be5db5a3f6ff05b709049a918445fc42d12c7b4ba68"
+    },
+    {
+      "evidence_id": "S3-T2-DEC-002",
+      "scenario": "S3",
+      "checkpoint": 2,
+      "epoch": "foundation",
+      "kind": "decision",
+      "path": "harbor/adr/007-regex.md",
+      "content": "ADR-007: Harbor will use regex-based link rewriting.",
+      "relevant_to": [],
+      "supersedes": [],
+      "superseded_by": [
+        "S3-T3-DEC-001"
+      ],
+      "contradicts": [],
+      "trap_for": [
+        "S3-D-FAILED"
+      ],
+      "distractor_for": [],
+      "available_from": 2,
+      "available_until": 3,
+      "content_digest": "c014cddb33c87e4279c987e1da3b64ccbdc529f681e4808e99838ebe79bd16da"
+    },
+    {
+      "evidence_id": "S3-T2-DIST-001",
+      "scenario": "S3",
+      "checkpoint": 2,
+      "epoch": "foundation",
+      "kind": "distractor",
+      "path": "harbor/docs/testing.md",
+      "content": "Harbor testing strategy includes link validation and content comparison.",
+      "relevant_to": [],
+      "supersedes": [],
+      "superseded_by": [],
+      "contradicts": [],
+      "trap_for": [],
+      "distractor_for": [
+        "S3-B-SUPERSESSION"
+      ],
+      "available_from": 2,
+      "available_until": null,
+      "content_digest": "d0daf848553fbdda8a0940eb7f01d61289ef0326dc64ff1274ba5232cf7dc24a"
+    },
+    {
+      "evidence_id": "S3-T3-DEC-001",
+      "scenario": "S3",
+      "checkpoint": 3,
+      "epoch": "foundation",
+      "kind": "decision",
+      "path": "harbor/adr/008-ast-based.md",
+      "content": "ADR-008: Harbor will use AST-based link rewriting (supersedes ADR-007).",
+      "relevant_to": [
+        "S3-D-FAILED"
+      ],
+      "supersedes": [
+        "S3-T2-DEC-002"
+      ],
+      "superseded_by": [],
+      "contradicts": [],
+      "trap_for": [],
+      "distractor_for": [],
+      "available_from": 3,
+      "available_until": null,
+      "content_digest": "bf91e40d7d1e3d0b19cdb0a787271d69c8e8d88b55d60143bdc6772999068027"
+    },
+    {
+      "evidence_id": "S3-T4-DEC-001",
+      "scenario": "S3",
+      "checkpoint": 4,
+      "epoch": "foundation",
+      "kind": "decision",
+      "path": "harbor/adr/009-new-doc-type.md",
+      "content": "ADR-009: Harbor will add a new document type with different URL patterns.",
+      "relevant_to": [
+        "S3-C-CONSTRAINT"
+      ],
+      "supersedes": [],
+      "superseded_by": [],
+      "contradicts": [],
+      "trap_for": [],
+      "distractor_for": [],
+      "available_from": 4,
+      "available_until": null,
+      "content_digest": "94c27aa29e82cd8003046c5f333b4a4d2eaaec01098dd92086828c56db8dd488"
+    },
+    {
+      "evidence_id": "S3-T4-DEC-002",
+      "scenario": "S3",
+      "checkpoint": 4,
+      "epoch": "foundation",
+      "kind": "decision",
+      "path": "harbor/adr/010-rename-content-shift.md",
+      "content": "ADR-010: The main migration module is renamed to 'content-shift' (supersedes ADR-003).",
+      "relevant_to": [
+        "S3-H-IDENTITY"
+      ],
+      "supersedes": [
+        "S3-T0-DEC-003"
+      ],
+      "superseded_by": [
+        "S3-T9-DEC-001"
+      ],
+      "contradicts": [],
+      "trap_for": [
+        "S3-H-IDENTITY"
+      ],
+      "distractor_for": [],
+      "available_from": 4,
+      "available_until": 9,
+      "content_digest": "bf219105792018392d3a053096f7bbbad1566efe530dcc02b073950e5d8bff59"
+    },
+    {
+      "evidence_id": "S3-T4-ADR-005",
+      "scenario": "S3",
+      "checkpoint": 4,
+      "epoch": "foundation",
+      "kind": "decision",
+      "path": "harbor/adr/005-retention.md",
+      "content": "ADR-005: Harbor documentation retention: 7 days for drafts.",
+      "relevant_to": [],
+      "supersedes": [],
+      "superseded_by": [],
+      "contradicts": [],
+      "trap_for": [
+        "S1-J-PROVENANCE"
+      ],
+      "distractor_for": [],
+      "available_from": 4,
+      "available_until": null,
+      "content_digest": "79a0c27e547e16d6f31ac26ef76c4625db84310b36f770ea42d708b6c03381a0"
+    },
+    {
+      "evidence_id": "S3-T4-DIST-001",
+      "scenario": "S3",
+      "checkpoint": 4,
+      "epoch": "foundation",
+      "kind": "distractor",
+      "path": "harbor/docs/performance.md",
+      "content": "Harbor performance target: 1,000 documents migrated per hour.",
+      "relevant_to": [],
+      "supersedes": [],
+      "superseded_by": [],
+      "contradicts": [],
+      "trap_for": [],
+      "distractor_for": [
+        "S3-C-CONSTRAINT"
+      ],
+      "available_from": 4,
+      "available_until": null,
+      "content_digest": "9c8c4d8a3061a60fe596b5a388d685f66484332d1016486194805ff2195352e5"
+    },
+    {
+      "evidence_id": "S3-T5-DEC-001",
+      "scenario": "S3",
+      "checkpoint": 5,
+      "epoch": "growth",
+      "kind": "decision",
+      "path": "harbor/adr/011-regex-better.md",
+      "content": "ADR-011: Harbor will use regex with better patterns for link rewriting.",
+      "relevant_to": [
+        "S3-D-FAILED"
+      ],
+      "supersedes": [],
+      "superseded_by": [],
+      "contradicts": [],
+      "trap_for": [],
+      "distractor_for": [],
+      "available_from": 5,
+      "available_until": null,
+      "content_digest": "f60d8c716d85a33390d028fb297bb706c6a42708e26f7babc0fd0142099a6a22"
+    },
+    {
+      "evidence_id": "S3-T5-DEP-001",
+      "scenario": "S3",
+      "checkpoint": 5,
+      "epoch": "growth",
+      "kind": "deprecation",
+      "path": "harbor/deprecations/dep-001.md",
+      "content": "DEP-001: ADR-002 (manual migration) is deprecated and no longer valid.",
+      "relevant_to": [
+        "S3-L-EPOCH"
+      ],
+      "supersedes": [],
+      "superseded_by": [],
+      "contradicts": [],
+      "trap_for": [
+        "S3-L-EPOCH"
+      ],
+      "distractor_for": [],
+      "available_from": 5,
+      "available_until": null,
+      "content_digest": "999b81e650b3821202a0f4f4b1e36dc98588cdff41d87b66deae043d3c62b309"
+    },
+    {
+      "evidence_id": "S3-T5-DIST-001",
+      "scenario": "S3",
+      "checkpoint": 5,
+      "epoch": "growth",
+      "kind": "distractor",
+      "path": "harbor/docs/scaling.md",
+      "content": "Harbor scaling strategy: parallel migration workers.",
+      "relevant_to": [],
+      "supersedes": [],
+      "superseded_by": [],
+      "contradicts": [],
+      "trap_for": [],
+      "distractor_for": [
+        "S3-D-FAILED"
+      ],
+      "available_from": 5,
+      "available_until": null,
+      "content_digest": "4ccd055de5406e114463d7e8e3e4a46d55845c06c4969d7f62af536d5acab4df"
+    },
+    {
+      "evidence_id": "S3-T6-ADR-050",
+      "scenario": "S3",
+      "checkpoint": 6,
+      "epoch": "growth",
+      "kind": "decision",
+      "path": "harbor/adr/050-tech-writer-review.md",
+      "content": "ADR-050: All documents must be reviewed by a technical writer.",
+      "relevant_to": [],
+      "supersedes": [],
+      "superseded_by": [
+        "S3-T7-ADR-051"
+      ],
+      "contradicts": [],
+      "trap_for": [
+        "S3-F-CONTRADICTION"
+      ],
+      "distractor_for": [],
+      "available_from": 6,
+      "available_until": 7,
+      "content_digest": "9d04e665ef57e23c03899f20e3b6427ea629c8aa730bed46a14c57d3f348df6c"
+    },
+    {
+      "evidence_id": "S3-T7-ADR-051",
+      "scenario": "S3",
+      "checkpoint": 7,
+      "epoch": "growth",
+      "kind": "decision",
+      "path": "harbor/adr/051-auto-skip-review.md",
+      "content": "ADR-051: Auto-migrated documents skip review if confidence > 95% (supersedes ADR-050).",
+      "relevant_to": [
+        "S3-F-CONTRADICTION"
+      ],
+      "supersedes": [
+        "S3-T6-ADR-050"
+      ],
+      "superseded_by": [],
+      "contradicts": [],
+      "trap_for": [],
+      "distractor_for": [],
+      "available_from": 7,
+      "available_until": null,
+      "content_digest": "ab947d53b35c3e3ce808848faa418a32351a8a71b74f456a77d5b34805b9b475"
+    },
+    {
+      "evidence_id": "S3-T7-DIST-001",
+      "scenario": "S3",
+      "checkpoint": 7,
+      "epoch": "growth",
+      "kind": "distractor",
+      "path": "harbor/docs/confidence-thresholds.md",
+      "content": "Harbor confidence thresholds: 90% for drafts, 95% for final, 99% for published.",
+      "relevant_to": [],
+      "supersedes": [],
+      "superseded_by": [],
+      "contradicts": [],
+      "trap_for": [],
+      "distractor_for": [
+        "S3-F-CONTRADICTION"
+      ],
+      "available_from": 7,
+      "available_until": null,
+      "content_digest": "86d90ffd3371be36ebf35846240377d296eb6fe81841be0b1352319b97156785"
+    },
+    {
+      "evidence_id": "S3-T8-DEC-001",
+      "scenario": "S3",
+      "checkpoint": 8,
+      "epoch": "growth",
+      "kind": "decision",
+      "path": "harbor/adr/012-automated-later.md",
+      "content": "ADR-012: Harbor migration approach is automated as of t8.",
+      "relevant_to": [],
+      "supersedes": [],
+      "superseded_by": [],
+      "contradicts": [],
+      "trap_for": [
+        "S3-G-HISTORICAL"
+      ],
+      "distractor_for": [],
+      "available_from": 8,
+      "available_until": null,
+      "content_digest": "64fa77c949512197e480b715f544753d4c9dc62cbb32d59d0950370f5b2ddea4"
+    },
+    {
+      "evidence_id": "S3-T8-DIST-001",
+      "scenario": "S3",
+      "checkpoint": 8,
+      "epoch": "growth",
+      "kind": "distractor",
+      "path": "harbor/docs/migration-history.md",
+      "content": "Harbor migration history: manual (t0-t1), automated (t1-present).",
+      "relevant_to": [],
+      "supersedes": [],
+      "superseded_by": [],
+      "contradicts": [],
+      "trap_for": [],
+      "distractor_for": [
+        "S3-G-HISTORICAL"
+      ],
+      "available_from": 8,
+      "available_until": null,
+      "content_digest": "e3705717374cf56902d42efcce3ec5a4860705a3962a26c5e35cb4f84e170847"
+    },
+    {
+      "evidence_id": "S3-T9-DEC-001",
+      "scenario": "S3",
+      "checkpoint": 9,
+      "epoch": "growth",
+      "kind": "decision",
+      "path": "harbor/adr/013-rename-doc-transform.md",
+      "content": "ADR-013: The main migration module is renamed to 'doc-transform' (supersedes ADR-010).",
+      "relevant_to": [
+        "S3-H-IDENTITY"
+      ],
+      "supersedes": [
+        "S3-T4-DEC-002"
+      ],
+      "superseded_by": [],
+      "contradicts": [],
+      "trap_for": [],
+      "distractor_for": [],
+      "available_from": 9,
+      "available_until": null,
+      "content_digest": "cd37c62c33332df5fa6f3684bdfc56d2257b947247bd68f004db8f1f71e4bf36"
+    },
+    {
+      "evidence_id": "S3-T10-DEP-001",
+      "scenario": "S3",
+      "checkpoint": 10,
+      "epoch": "maturity",
+      "kind": "deprecation",
+      "path": "harbor/deprecations/dep-002.md",
+      "content": "DEP-002: ADR-007 (regex link rewriting) is deprecated and no longer valid.",
+      "relevant_to": [
+        "S3-L-EPOCH"
+      ],
+      "supersedes": [],
+      "superseded_by": [],
+      "contradicts": [],
+      "trap_for": [],
+      "distractor_for": [],
+      "available_from": 10,
+      "available_until": null,
+      "content_digest": "13fb6f767bd90338ea18c90f1bd69708b12796a7c9448c18bc920e0f02cc60a3"
+    },
+    {
+      "evidence_id": "S3-T10-DIST-001",
+      "scenario": "S3",
+      "checkpoint": 10,
+      "epoch": "maturity",
+      "kind": "distractor",
+      "path": "harbor/docs/module-history.md",
+      "content": "Harbor module naming history: doc-migrate (t0-t4), content-shift (t4-t9), doc-transform (t9-present).",
+      "relevant_to": [],
+      "supersedes": [],
+      "superseded_by": [],
+      "contradicts": [],
+      "trap_for": [],
+      "distractor_for": [
+        "S3-H-IDENTITY"
+      ],
+      "available_from": 10,
+      "available_until": null,
+      "content_digest": "641d7b233815d57d49e4488bdcb848febc74f642a56cbbdda8ed14910ae82cab"
+    },
+    {
+      "evidence_id": "S3-T14-DIST-001",
+      "scenario": "S3",
+      "checkpoint": 14,
+      "epoch": "maturity",
+      "kind": "distractor",
+      "path": "harbor/docs/epoch-summary.md",
+      "content": "Harbor epoch summary: Foundation (t0-4), Growth (t5-9), Maturity (t10-14).",
+      "relevant_to": [],
+      "supersedes": [],
+      "superseded_by": [],
+      "contradicts": [],
+      "trap_for": [],
+      "distractor_for": [
+        "S3-L-EPOCH"
+      ],
+      "available_from": 14,
+      "available_until": null,
+      "content_digest": "9ce8f39faf5c042af52ed0d6ab199361596fdcb8a7862230f745bdebdffe7b8f"
+    }
+  ]
+}
