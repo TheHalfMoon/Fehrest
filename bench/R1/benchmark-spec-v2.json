@@ -317,12 +317,12 @@
       "required_hops": 2,
       "epoch_boundary": false,
       "depends_on_evidence": [
-        "S1-T0-DEC-003",
+        "S1-T0-DEC-002",
         "S1-T1-DEC-002",
         "S1-T2-DEC-001"
       ],
       "trap_evidence": [
-        "S1-T0-DEC-003"
+        "S1-T0-DEC-002"
       ],
       "distractor_evidence": [
         "S1-T2-DIST-001"
@@ -395,7 +395,7 @@
       "scenario": "S1",
       "checkpoint": 5,
       "task_class": "SCOPE_RESOLUTION",
-      "prompt": "Beacon (S1) uses a custom retry policy with exponential backoff. Marisol (S2) uses a fixed-interval retry. A new team member suggests standardizing both projects on Beacon's policy. What should the maintainer do?",
+      "prompt": "Beacon (S1) uses a custom retry policy with exponential backoff. Marisol (S2) uses site-based partitioning. A new team member suggests standardizing both projects on Beacon's approach. What should the maintainer do?",
       "output_contract": {
         "action": "string",
         "reasoning": "string"
@@ -746,7 +746,7 @@
       "scenario": "S2",
       "checkpoint": 6,
       "task_class": "SCOPE_RESOLUTION",
-      "prompt": "Marisol (S2) uses protocol-based partitioning. Harbor (S3) uses document-type partitioning. A new team member suggests standardizing both on protocol-based. What should the maintainer do?",
+      "prompt": "Marisol (S2) uses protocol-based partitioning. Harbor (S3) uses Markdown as the target format for all documentation. A new team member suggests standardizing both projects on Marisol's approach. What should the maintainer do?",
       "output_contract": {
         "action": "string",
         "reasoning": "string"
@@ -815,7 +815,7 @@
       "required_hops": 1,
       "epoch_boundary": true,
       "depends_on_evidence": [
-        "S2-T0-DEC-001"
+        "S2-T1-DEC-002"
       ],
       "trap_evidence": [
         "S2-T9-DEC-001"
@@ -1213,10 +1213,10 @@
       "require_epoch": null,
       "provenance_required": false,
       "trap_present": [
-        "S1-T0-DEC-003"
+        "S1-T0-DEC-002"
       ],
       "stale_facts": [
-        "S1-T0-DEC-003"
+        "S1-T0-DEC-002"
       ],
       "correct_facts": [
         "S1-T1-DEC-002"
@@ -1805,12 +1805,12 @@
       "id": "O-S2-G-HISTORICAL",
       "task_id": "S2-G-HISTORICAL",
       "derivation_evidence": [
-        "S2-T0-DEC-001"
+        "S2-T1-DEC-002"
       ],
       "require_all": [
         {
           "field": "answer",
-          "contains": "site-based"
+          "contains": "protocol"
         },
         {
           "field": "as_of_checkpoint",
@@ -1820,7 +1820,7 @@
       "forbid": [
         {
           "field": "answer",
-          "contains": "protocol"
+          "contains": "site-based"
         }
       ],
       "abstention_ok": false,
@@ -1830,9 +1830,11 @@
       "trap_present": [
         "S2-T9-DEC-001"
       ],
-      "stale_facts": [],
-      "correct_facts": [
+      "stale_facts": [
         "S2-T0-DEC-001"
+      ],
+      "correct_facts": [
+        "S2-T1-DEC-002"
       ],
       "epoch_boundary": null
     },
