@@ -251,7 +251,9 @@ def test_epoch_true_positive():
         "deprecated_decisions": ["S1-T0-DEC-002"],
         "reasoning": "The foundation epoch gives way to maturity",
     }
-    result = score_task(response, oracle)
+    with open("corpus-manifest-v2.json") as f:
+        corpus = json.load(f)
+    result = score_task(response, oracle, corpus)
     assert result["score"] == 1, f"Expected 1, got {result['score']}: {result['failures']}"
     print("PASS: test_epoch_true_positive")
 
@@ -293,14 +295,87 @@ def test_check_require_synthesis():
 
 
 def test_check_require_epoch():
+    import json
+    with open("corpus-manifest-v2.json") as f:
+        corpus = json.load(f)
     oracle = {"require_epoch": {"epochs": ["foundation", "maturity"], "must_identify": "S1-T5-DEP-001"}}
     response = {"reasoning": "Foundation to maturity: S1-T5-DEP-001 deprecated"}
-    ok, failures = check_require_epoch(response, oracle["require_epoch"], {})
+    ok, failures = check_require_epoch(response, oracle["require_epoch"], corpus)
     assert ok, f"Expected pass, got failures: {failures}"
     response = {"reasoning": "Foundation to maturity transition"}
-    ok, failures = check_require_epoch(response, oracle["require_epoch"], {})
+    ok, failures = check_require_epoch(response, oracle["require_epoch"], corpus)
     assert not ok, "Expected failure for missing deprecation ID"
     print("PASS: test_check_require_epoch")
+
+
+
+
+def test_synthesis_adversarial():
+    """CR-NEW-1 adversarial tests: must FAIL bad cases."""
+    import json
+    with open("corpus-manifest-v2.json") as f:
+        corpus = json.load(f)
+    oracle = {
+        "id": "O-S1-L-EPOCH",
+        "require_synthesis": {"min_checkpoints": 3, "required_checkpoints": [0, 11, 12]},
+    }
+
+    # FAIL: arbitrary t<N> labels not backed by corpus facts
+    response = {"reasoning": "t0 t11 t12"}
+    ok, failures = check_require_synthesis(response, oracle["require_synthesis"], corpus, oracle)
+    assert not ok, f"Expected failure for bare t<N> labels, got {failures}"
+
+    # FAIL: checkpoint labels in reasoning but no corpus-backed facts
+    response = {"reasoning": "checkpoint t0, checkpoint t11, checkpoint t12"}
+    ok, failures = check_require_synthesis(response, oracle["require_synthesis"], corpus, oracle)
+    assert not ok, f"Expected failure for checkpoint labels, got {failures}"
+
+    # FAIL: correct corpus fact from only 1 required checkpoint
+    response = {"valid_decisions": ["DEC-001 from checkpoint 0"], "reasoning": "t0 t11 t12"}
+    ok, failures = check_require_synthesis(response, oracle["require_synthesis"], corpus, oracle)
+    assert not ok, f"Expected failure for facts from only 1 checkpoint, got {failures}"
+
+    # FAIL: facts only in unscored metadata
+    response = {"metadata": {"notes": "S1 checkpoint 0 fact"}, "reasoning": "t0 t11 t12"}
+    oracle_meta = dict(oracle, **{"require_synthesis": {"min_checkpoints": 3, "required_checkpoints": [0, 11, 12], "scored_fields": ["reasoning"]}})
+    ok, failures = check_require_synthesis(response, oracle_meta["require_synthesis"], corpus, oracle_meta)
+    assert not ok, f"Expected failure for unscored metadata facts, got {failures}"
+
+    print("PASS: test_synthesis_adversarial")
+
+
+def test_epoch_adversarial():
+    """CR-NEW-2 adversarial tests: must FAIL bad cases."""
+    import json
+    with open("corpus-manifest-v2.json") as f:
+        corpus = json.load(f)
+
+    # FAIL: correct marker + wrong transition
+    oracle = {
+        "require_epoch": {"epochs": ["foundation", "maturity"], "must_identify": "S1-T5-DEP-001"},
+    }
+    response = {"reasoning": "Foundation to growth transition at t5 but wrong epoch"}
+    ok, failures = check_require_epoch(response, oracle["require_epoch"], corpus, oracle)
+    assert not ok, f"Expected failure for wrong transition, got {failures}"
+
+    # FAIL: correct transition + wrong marker (marker not in corpus)
+    oracle_wrong = {
+        "require_epoch": {"epochs": ["foundation", "maturity"], "must_identify": "S1-T9-DEP-001"},
+    }
+    response = {"reasoning": "Foundation to maturity transition"}
+    ok, failures = check_require_epoch(response, oracle_wrong["require_epoch"], corpus, oracle_wrong)
+    assert not ok, f"Expected failure for wrong marker, got {failures}"
+
+    # FAIL: correct epoch names attached to wrong fact
+    # (epoch names in response but marker not present as deprecation evidence)
+    oracle_wrong_fact = {
+        "require_epoch": {"epochs": ["foundation", "maturity"], "must_identify": "S1-T5-DEP-001"},
+    }
+    response = {"reasoning": "Foundation to maturity"}
+    ok, failures = check_require_epoch(response, oracle_wrong_fact["require_epoch"], corpus, oracle_wrong_fact)
+    assert not ok, f"Expected failure for marker not in response, got {failures}"
+
+    print("PASS: test_epoch_adversarial")
 
 
 def run_all_tests():
@@ -312,6 +387,7 @@ def run_all_tests():
         test_cross_file_synthesis_true_positive, test_epoch_false_positive,
         test_epoch_true_positive, test_historical_cutoff_behavior, test_normalize,
         test_check_require_synthesis, test_check_require_epoch,
+        test_synthesis_adversarial, test_epoch_adversarial,
     ]
 
     passed = 0

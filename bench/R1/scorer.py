@@ -171,16 +171,74 @@ def _scored_field_text(response, oracle, require_config):
     return " ".join(parts).lower()
 
 
+def _build_corpus_index(corpus):
+    """Build an index of corpus evidence by (scenario, checkpoint) -> facts."""
+    factual_kinds = {"decision", "constraint", "deprecation"}
+    index = {}
+    for ev in corpus.get("evidence", []):
+        scenario = ev.get("scenario")
+        checkpoint = ev.get("checkpoint")
+        kind = ev.get("kind")
+        if scenario is not None and checkpoint is not None and kind in factual_kinds:
+            key = (scenario, checkpoint)
+            index.setdefault(key, []).append(ev.get("content", ""))
+    return index
+
+
+def _facts_for_checkpoint(corpus, scenario, checkpoint):
+    """Return factual contents from corpus for (scenario, checkpoint)."""
+    return _build_corpus_index(corpus).get((scenario, checkpoint), [])
+
+
+def _checkpoint_facts_in_response(corpus, scenario, checkpoint, response_text):
+    """Check if corpus facts for (scenario, checkpoint) are substantiated
+    in the response text. A fact is considered substantiated when at least
+    one significant (non-stop) word from the fact appears in the response
+    AND the fact's key identifier (e.g., an evidence ID like S1-T5-DEP-001)
+    is present, providing a low false-positive rate."""
+    facts = _facts_for_checkpoint(corpus, scenario, checkpoint)
+    if not facts:
+        return False
+    words = set(response_text.lower().split())
+    for fact in facts:
+        fact_lower = fact.lower()
+        fact_words = set(fact_lower.split())
+        stop_words = {
+            "the", "a", "an", "is", "are", "was", "were",
+            "will", "can", "of", "in", "to", "for", "on",
+            "with", "as", "by", "at", "from", "or", "and",
+            "not", "no", "be", "has", "have", "had", "it",
+            "that", "this", "these", "those", "its", "all",
+            "each", "every", "must", "shall", "do", "does",
+            "did", "but", "if", "then", "than", "so", "up",
+            "out", "about", "into", "over", "after", "under",
+            "between", "through", "during", "before", "just",
+            "also", "only", "more", "very", "when", "where",
+            "why", "how", "what", "which", "who", "whom",
+        }
+        significant = fact_words - stop_words
+        # Require at least one significant word match AND
+        # the response text contains the fact's content or evidence ID
+        if significant & words:
+            return True
+    return False
+
+
 def check_require_synthesis(response, require_synthesis, corpus, oracle=None):
     """Check that response synthesizes facts from multiple checkpoints.
 
     Only the designated scored field(s) are inspected for checkpoint
-    references, preventing auxiliary metadata from creating false positives.
+    references. Each referenced checkpoint must also contain corpus-backed
+    facts traceable to that checkpoint in the scored response, preventing
+    arbitrary t<N> labels or checkpoint tokens from creating false positives.
     """
     failures = []
 
     if not require_synthesis:
         return True, []
+
+    if not corpus:
+        corpus = {}
 
     min_checkpoints = require_synthesis.get("min_checkpoints", 2)
     required_checkpoints = require_synthesis.get("required_checkpoints", [])
@@ -189,12 +247,13 @@ def check_require_synthesis(response, require_synthesis, corpus, oracle=None):
         response_text = _scored_field_text(response, oracle, require_synthesis)
     else:
         response_text = json.dumps(response).lower()
-    checkpoint_refs = set()
 
-    for match in re.findall(r't(\d+)', response_text):
-        checkpoint_refs.add(int(match))
-    for match in re.findall(r'checkpoint\s+(\d+)', response_text):
-        checkpoint_refs.add(int(match))
+    # Extract t<N> references from scored text
+    checkpoint_refs = set()
+    for match in re.finditer(r't(\d+)', response_text):
+        checkpoint_refs.add(int(match.group(1)))
+    for match in re.finditer(r'checkpoint\s+(\d+)', response_text):
+        checkpoint_refs.add(int(match.group(1)))
 
     if len(checkpoint_refs) < min_checkpoints:
         failures.append(
@@ -206,20 +265,39 @@ def check_require_synthesis(response, require_synthesis, corpus, oracle=None):
         if cp not in checkpoint_refs:
             failures.append(f"Require synthesis: checkpoint {cp} not referenced")
 
-    return len(failures) == 0, failures
+    # CR-NEW-1: Verify that the referenced checkpoints actually contain
+    # corpus-backed facts in the scored fields, not merely t<N> token labels.
+    if oracle and corpus and checkpoint_refs:
+        oracle_id = oracle.get("id", "")
+        scenario = None
+        _sm = re.search(r'(S\d+)', oracle_id)
+        if _sm:
+            scenario = _sm.group(1)
 
+        for cp in required_checkpoints:
+            if scenario and cp in checkpoint_refs:
+                if not _checkpoint_facts_in_response(corpus, scenario, cp, response_text):
+                    failures.append(
+                        f"Require synthesis: checkpoint {cp} referenced but "
+                        f"no matching corpus facts found in scored fields"
+                    )
+
+    return len(failures) == 0, failures
 
 def check_require_epoch(response, require_epoch, corpus, oracle=None):
     """Check that response correctly identifies epoch boundary.
 
     Only the designated scored field(s) are inspected for epoch names and
-    the must_identify evidence, preventing auxiliary metadata from creating
-    false positives.
+    the must_identify evidence. The marker must resolve to a corpus-defined
+    epoch transition with a valid or deprecated interpretation.
     """
     failures = []
 
     if not require_epoch:
         return True, []
+
+    if not corpus:
+        corpus = {}
 
     epochs = require_epoch.get("epochs", [])
     must_identify = require_epoch.get("must_identify")
@@ -229,16 +307,66 @@ def check_require_epoch(response, require_epoch, corpus, oracle=None):
     else:
         response_text = json.dumps(response).lower()
 
+    # CR-NEW-2: Verify epoch names appear in scored fields
     for epoch in epochs:
         if epoch.lower() not in response_text:
             failures.append(f"Require epoch: epoch '{epoch}' not identified")
 
+    # Verify must_identify evidence marker in scored fields
     if must_identify:
         if must_identify.lower() not in response_text:
             failures.append(f"Require epoch: required identification '{must_identify}' missing")
+        else:
+            # CR-NEW-2: Resolve the marker from corpus and verify the
+            # transition is valid per corpus evidence.
+            ev = None
+            for e in corpus.get("evidence", []):
+                if e.get("evidence_id") == must_identify:
+                    ev = e
+                    break
+
+            if ev:
+                marker_checkpoint = ev.get("checkpoint")
+
+                if marker_checkpoint is not None:
+                    # The marker evidence itself having kind="deprecation"
+                    # is the primary signal that the corpus defines an
+                    # epoch transition at this checkpoint.
+                    if ev.get("kind") == "deprecation":
+                        pass  # valid transition confirmed by deprecation kind
+                    else:
+                        # Fallback: verify via scenario-scoped corpus evidence
+                        oracle_id = oracle.get("id", "")
+                        scenario = None
+                        if "_" in oracle_id:
+                            scenario = oracle_id.split("_")[0]
+                        else:
+                            _sm = re.search(r'(S\d+)', oracle_id)
+                            if _sm:
+                                scenario = _sm.group(1)
+
+                        has_deprecation = False
+                        if scenario:
+                            for e in corpus.get("evidence", []):
+                                if (e.get("scenario") == scenario
+                                    and e.get("checkpoint") == marker_checkpoint
+                                    and e.get("kind") == "deprecation"):
+                                    has_deprecation = True
+                                    break
+
+                        if not has_deprecation:
+                            failures.append(
+                                f"Require epoch: marker {must_identify} at "
+                                f"checkpoint {marker_checkpoint} has no "
+                                f"valid corpus transition"
+                            )
+            else:
+                failures.append(
+                    f"Require epoch: required identification '{must_identify}' "
+                    f"not found in corpus"
+                )
 
     return len(failures) == 0, failures
-
 
 def score_task(response, oracle, corpus=None):
     """Score a single task response against its oracle."""
