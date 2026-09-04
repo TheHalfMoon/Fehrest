@@ -66,6 +66,9 @@ R1_V2_ORACLES=COMPLETE
 R1_V2_SCORER_IMPLEMENTATION=COMPLETE
 R1_V2_SCORER_TESTS=PASS
 R1_V2_MACHINE_VALIDATION=PASS
+R1_V2_VALIDATION_CONVERGENCE=COMPLETE
+R1_V2_MUTATION_TESTING=PASS
+R1_V2_EXACT_HEAD_CI=PASS
 R1_V2_SESSION_ARITHMETIC=DERIVED_AND_VALIDATED
 R1_V2_HUMAN_DOCS_RECONCILED=YES
 R1_V2_CURRENT_FRONTIER_RECONCILED=YES
@@ -76,6 +79,12 @@ Validation evidence:
 - `python bench/R1/test_scorer.py`: 20/20 tests pass (includes 4 adversarial tests)
 - `python bench/R1/validate.py`: exits 0 with all validation checks including field-level canonical-derived equality and genuine mutation testing
 - CI pipeline `.github/workflows/bench-r1-validation.yml` added: test-scorer, validate, canonical-equality jobs
+- PR #34 merged (ec7a1ea → f8a0dd5): harden post-merge validation convergence
+- `python bench/R1/test_validate.py`: 41/41 tests pass (6 test classes)
+- Field-level canonical-vs-derived equality verified on main
+- Genuine mutation testing with deepcopy+TemporaryDirectory verified on main
+- `test-validator` job added to exact-head CI
+- `test_scorer.py`, `test_validate.py`, `validate.py`, `git diff --check` all pass on main
 - 30 tasks, 30 oracles, 96 evidence items generated
 - 12 task classes derived from task definitions
 - 12 distinct checkpoints (t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t12, t14; t11 absent)
