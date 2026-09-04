@@ -1,0 +1,77 @@
+name: Bench R1 Validation
+
+on:
+  pull_request:
+    paths:
+      - 'bench/R1/**'
+      - '.github/workflows/bench-r1-validation.yml'
+  push:
+    branches: [r1-v2-preregistration-rebuild, main]
+
+jobs:
+  test-scorer:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact head
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install pytest
+
+      - name: Run scorer tests
+        run: |
+          cd bench/R1
+          python3 test_scorer.py
+        shell: bash
+
+  validate:
+    runs-on: ubuntu-latest
+    needs: test-scorer
+    steps:
+      - name: Checkout exact head
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Run validator
+        run: |
+          python3 bench/R1/validate.py
+        shell: bash
+
+  canonical-equality:
+    runs-on: ubuntu-latest
+    needs: validate
+    steps:
+      - name: Checkout exact head
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Verify single-source-of-truth
+        run: |
+          cd bench/R1
+          python3 -c "
+          import json
+          with open('benchmark-spec-v2.json') as f: spec = json.load(f)
+          with open('tasks-v2.json') as f: tasks = json.load(f)
+          with open('oracles-v2.json') as f: oracles = json.load(f)
+          with open('corpus-manifest-v2.json') as f: corpus = json.load(f)
+          # Verify spec is authoritative
+          assert len(tasks) == len(spec.get('tasks', [])), 'tasks count mismatch'
+          assert len(oracles) == len(spec.get('oracles', [])), 'oracles count mismatch'
+          assert len(corpus.get('evidence', [])) == len(spec.get('corpus', [])), 'corpus count mismatch'
+          print('PASS: benchmark-spec-v2.json is single source of truth')
+          "
+        shell: bash

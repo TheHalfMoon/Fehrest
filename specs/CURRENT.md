@@ -11,7 +11,7 @@ ARCHITECTURE=FROZEN
 PHASE_T_IMPLEMENTATION=TECHNICALLY_COMPLETE
 PHASE_T_PRODUCT_THESIS=NOT_YET_TERMINAL
 ACTIVE_EXECUTION_FRONTIER=R1
-ACTIVE_R1_SUBGATE=CEILING_EFFECT_DETECTED_AWAITING_NEW_PREREGISTRATION
+ACTIVE_R1_SUBGATE=R1_V2_PREREGISTRATION_REBUILD_COMPLETE_AWAITING_REVIEW
 R1_REPLACEMENT_EXECUTOR_VERSION=11
 R1_REPLACEMENT_EXECUTOR_SHA256=92ee711067d65bd7d68a0204becc916d3e9322fa975d815d8da6126e8c31dd89
 R1_REPLACEMENT_V8_PREPARE_RESULT=FAIL_CLOSED_BEFORE_MODEL_CALLS
@@ -53,6 +53,41 @@ ISSUE_11_STATUS=CLOSED
 ```
 
 The outer operator bridge initially failed due to a schema mismatch (expected field names not in supervisor output). The result file was post-hoc augmented with 3 derived fields. The original supervisor bytes are not recoverable. The augmented result file is not accepted as scientific evidence and must not be used as a substitute for the preserved immutable evidence. All closure criteria were independently verified from immutable evidence (runner stdout, records, raw archive, execution order, seal outputs, scientific bindings). Binding verification uses the sealed source-batch arming-manifest identity `2e360072931ac2adfbdbba94da20d9198f8b24474852429545bcd14cd8653205`; the replacement arming manifest `a7ae52b503d6c7b66cf03624aa78bd82b0349d5b02e9e0537b6a7985e1eff2ae` is a distinct execution artifact and must not be conflated with that sealed source binding.
+
+## R1-v2 preregistration rebuild status
+
+The R1-v2 preregistration and benchmark package has been rebuilt from a single authoritative machine-readable specification (`bench/R1/benchmark-spec-v2.json`). All dependent artifacts are derived from this spec:
+
+```text
+R1_V2_SINGLE_SOURCE_OF_TRUTH=COMPLETE
+R1_V2_CORPUS=COMPLETE
+R1_V2_TASKS=COMPLETE
+R1_V2_ORACLES=COMPLETE
+R1_V2_SCORER_IMPLEMENTATION=COMPLETE
+R1_V2_SCORER_TESTS=PASS
+R1_V2_MACHINE_VALIDATION=PASS
+R1_V2_SESSION_ARITHMETIC=DERIVED_AND_VALIDATED
+R1_V2_HUMAN_DOCS_RECONCILED=YES
+R1_V2_CURRENT_FRONTIER_RECONCILED=YES
+```
+
+Validation evidence:
+- `python bench/R1/validate.py` exits 0
+- `python bench/R1/test_scorer.py`: 20/20 tests pass (includes 4 adversarial tests)
+- `python bench/R1/validate.py`: exits 0 with all checks including canonical-vs-derived equality and mutation tests
+- CI pipeline `.github/workflows/bench-r1-validation.yml` added: test-scorer, validate, canonical-equality jobs
+- 30 tasks, 30 oracles, 96 evidence items generated
+- 12 task classes derived from task definitions
+- 12 distinct checkpoints (t1-t14, excluding t0 and t11-t13)
+- 21 tasks before t14 for maintenance lag testing
+
+**Pending independent review:**
+```text
+R1_V2_SCIENTIFIC_REVIEW=PENDING
+R1_V2_STATISTICAL_REVIEW=PENDING
+```
+
+The rebuild required no new founder route decision. The existing authorized scope (`ROUTE=NEW_PREREGISTRATION`, `MODEL_STRATEGY=KEEP_REPRESENTATIVE_STRONG_MODEL`, `TASK_STRATEGY=INCREASE_DISCRIMINATING_DIFFICULTY`) covers the implementation methodology.
 
 ## Variance pilot scoring result
 

@@ -1,0 +1,1090 @@
+[
+  {
+    "id": "O-S1-A-NEXT",
+    "task_id": "S1-A-NEXT",
+    "derivation_evidence": [
+      "S1-T0-DEC-001",
+      "S1-T1-DEC-001"
+    ],
+    "require_all": [
+      {
+        "field": "action",
+        "contains": "schema registry"
+      }
+    ],
+    "forbid": [
+      {
+        "field": "action",
+        "contains": "ignore"
+      }
+    ],
+    "abstention_ok": false,
+    "require_synthesis": null,
+    "require_epoch": null,
+    "provenance_required": false,
+    "trap_present": [
+      "S1-T0-DEC-002"
+    ],
+    "stale_facts": [],
+    "correct_facts": [
+      "S1-T1-DEC-001"
+    ],
+    "epoch_boundary": null
+  },
+  {
+    "id": "O-S1-B-SUPERSESSION",
+    "task_id": "S1-B-SUPERSESSION",
+    "derivation_evidence": [
+      "S1-T1-DEC-002",
+      "S1-T2-DEC-001"
+    ],
+    "require_all": [
+      {
+        "field": "action",
+        "contains": "reject"
+      },
+      {
+        "field": "reasoning",
+        "contains": "Protobuf"
+      }
+    ],
+    "forbid": [
+      {
+        "field": "action",
+        "contains": "accept"
+      }
+    ],
+    "abstention_ok": false,
+    "require_synthesis": null,
+    "require_epoch": null,
+    "provenance_required": false,
+    "trap_present": [
+      "S1-T0-DEC-002"
+    ],
+    "stale_facts": [
+      "S1-T0-DEC-002"
+    ],
+    "correct_facts": [
+      "S1-T1-DEC-002"
+    ],
+    "epoch_boundary": null
+  },
+  {
+    "id": "O-S1-C-CONSTRAINT",
+    "task_id": "S1-C-CONSTRAINT",
+    "derivation_evidence": [
+      "S1-T0-CON-001",
+      "S1-T3-DEC-001"
+    ],
+    "require_all": [
+      {
+        "field": "action",
+        "contains": "hash"
+      },
+      {
+        "field": "reasoning",
+        "contains": "PII"
+      }
+    ],
+    "forbid": [
+      {
+        "field": "action",
+        "contains": "skip"
+      }
+    ],
+    "abstention_ok": false,
+    "require_synthesis": null,
+    "require_epoch": null,
+    "provenance_required": false,
+    "trap_present": [],
+    "stale_facts": [],
+    "correct_facts": [
+      "S1-T0-CON-001"
+    ],
+    "epoch_boundary": null
+  },
+  {
+    "id": "O-S1-D-FAILED",
+    "task_id": "S1-D-FAILED",
+    "derivation_evidence": [
+      "S1-T1-DEC-003",
+      "S1-T2-DEC-002",
+      "S1-T4-DEC-001"
+    ],
+    "require_all": [
+      {
+        "field": "action",
+        "contains": "reject"
+      },
+      {
+        "field": "reasoning",
+        "contains": "bottleneck"
+      }
+    ],
+    "forbid": [
+      {
+        "field": "action",
+        "contains": "accept"
+      }
+    ],
+    "abstention_ok": false,
+    "require_synthesis": null,
+    "require_epoch": null,
+    "provenance_required": false,
+    "trap_present": [
+      "S1-T1-DEC-003"
+    ],
+    "stale_facts": [
+      "S1-T1-DEC-003"
+    ],
+    "correct_facts": [
+      "S1-T2-DEC-002"
+    ],
+    "epoch_boundary": null
+  },
+  {
+    "id": "O-S1-E-SCOPE",
+    "task_id": "S1-E-SCOPE",
+    "derivation_evidence": [
+      "S1-T5-DEC-001",
+      "S2-T0-DEC-001"
+    ],
+    "require_all": [
+      {
+        "field": "action",
+        "contains": "reject"
+      },
+      {
+        "field": "reasoning",
+        "contains": "project-local"
+      }
+    ],
+    "forbid": [
+      {
+        "field": "action",
+        "contains": "standardize"
+      }
+    ],
+    "abstention_ok": false,
+    "require_synthesis": null,
+    "require_epoch": null,
+    "provenance_required": false,
+    "trap_present": [],
+    "stale_facts": [],
+    "correct_facts": [
+      "S1-T5-DEC-001"
+    ],
+    "epoch_boundary": null
+  },
+  {
+    "id": "O-S1-F-CONTRADICTION",
+    "task_id": "S1-F-CONTRADICTION",
+    "derivation_evidence": [
+      "S1-T5-ADR-012",
+      "S1-T6-ADR-015"
+    ],
+    "require_all": [
+      {
+        "field": "conflict_flagged",
+        "equals": true
+      },
+      {
+        "field": "reasoning",
+        "contains": "at-least-once"
+      }
+    ],
+    "forbid": [
+      {
+        "field": "action",
+        "contains": "exactly-once"
+      }
+    ],
+    "abstention_ok": false,
+    "require_synthesis": null,
+    "require_epoch": null,
+    "provenance_required": false,
+    "trap_present": [
+      "S1-T5-ADR-012"
+    ],
+    "stale_facts": [
+      "S1-T5-ADR-012"
+    ],
+    "correct_facts": [
+      "S1-T6-ADR-015"
+    ],
+    "epoch_boundary": null
+  },
+  {
+    "id": "O-S1-G-HISTORICAL",
+    "task_id": "S1-G-HISTORICAL",
+    "derivation_evidence": [
+      "S1-T1-DEC-002"
+    ],
+    "require_all": [
+      {
+        "field": "answer",
+        "contains": "Protobuf"
+      },
+      {
+        "field": "as_of_checkpoint",
+        "equals": 1
+      }
+    ],
+    "forbid": [
+      {
+        "field": "answer",
+        "contains": "JSON"
+      }
+    ],
+    "abstention_ok": false,
+    "require_synthesis": null,
+    "require_epoch": null,
+    "provenance_required": false,
+    "trap_present": [
+      "S1-T7-DEC-001"
+    ],
+    "stale_facts": [],
+    "correct_facts": [
+      "S1-T1-DEC-002"
+    ],
+    "epoch_boundary": null
+  },
+  {
+    "id": "O-S1-H-IDENTITY",
+    "task_id": "S1-H-IDENTITY",
+    "derivation_evidence": [
+      "S1-T0-DEC-004",
+      "S1-T3-DEC-002",
+      "S1-T6-DEC-001"
+    ],
+    "require_all": [
+      {
+        "field": "answer",
+        "contains": "stream-ingest"
+      }
+    ],
+    "forbid": [
+      {
+        "field": "answer",
+        "contains": "ingest-core"
+      },
+      {
+        "field": "answer",
+        "contains": "event-gateway"
+      }
+    ],
+    "abstention_ok": false,
+    "require_synthesis": null,
+    "require_epoch": null,
+    "provenance_required": false,
+    "trap_present": [
+      "S1-T0-DEC-004",
+      "S1-T3-DEC-002"
+    ],
+    "stale_facts": [
+      "S1-T0-DEC-004",
+      "S1-T3-DEC-002"
+    ],
+    "correct_facts": [
+      "S1-T6-DEC-001"
+    ],
+    "epoch_boundary": null
+  },
+  {
+    "id": "O-S1-I-ABSENT",
+    "task_id": "S1-I-ABSENT",
+    "derivation_evidence": [],
+    "require_all": [
+      {
+        "field": "abstain",
+        "equals": true
+      }
+    ],
+    "forbid": [
+      {
+        "field": "action",
+        "contains": "throughput"
+      }
+    ],
+    "abstention_ok": true,
+    "require_synthesis": null,
+    "require_epoch": null,
+    "provenance_required": false,
+    "trap_present": [
+      "S1-T3-BENCH-001",
+      "S2-T5-BENCH-001"
+    ],
+    "stale_facts": [],
+    "correct_facts": [],
+    "epoch_boundary": null
+  },
+  {
+    "id": "O-S1-J-PROVENANCE",
+    "task_id": "S1-J-PROVENANCE",
+    "derivation_evidence": [
+      "S1-T4-ADR-020"
+    ],
+    "require_all": [
+      {
+        "field": "evidence_id",
+        "equals": "S1-T4-ADR-020"
+      }
+    ],
+    "forbid": [
+      {
+        "field": "evidence_id",
+        "contains": "S2-"
+      },
+      {
+        "field": "evidence_id",
+        "contains": "S3-"
+      }
+    ],
+    "abstention_ok": false,
+    "require_synthesis": null,
+    "require_epoch": null,
+    "provenance_required": true,
+    "trap_present": [
+      "S2-T4-ADR-010",
+      "S3-T4-ADR-005"
+    ],
+    "stale_facts": [],
+    "correct_facts": [
+      "S1-T4-ADR-020"
+    ],
+    "epoch_boundary": null
+  },
+  {
+    "id": "O-S1-K-CROSS-SYNTHESIS",
+    "task_id": "S1-K-CROSS-SYNTHESIS",
+    "derivation_evidence": [
+      "S1-T0-CON-001",
+      "S1-T11-DEC-001",
+      "S1-T12-DEC-001"
+    ],
+    "require_all": [
+      {
+        "field": "action",
+        "contains": "hash"
+      },
+      {
+        "field": "action",
+        "contains": "encrypt"
+      }
+    ],
+    "forbid": [],
+    "abstention_ok": false,
+    "require_synthesis": {
+      "min_checkpoints": 3,
+      "required_checkpoints": [
+        0,
+        11,
+        12
+      ]
+    },
+    "require_epoch": null,
+    "provenance_required": false,
+    "trap_present": [],
+    "stale_facts": [],
+    "correct_facts": [
+      "S1-T0-CON-001",
+      "S1-T11-DEC-001"
+    ],
+    "epoch_boundary": null
+  },
+  {
+    "id": "O-S1-L-EPOCH",
+    "task_id": "S1-L-EPOCH",
+    "derivation_evidence": [
+      "S1-T0-DEC-001",
+      "S1-T0-DEC-002",
+      "S1-T5-DEP-001",
+      "S1-T10-DEP-001"
+    ],
+    "require_all": [
+      {
+        "field": "valid_decisions",
+        "contains": "S1-T0-DEC-001"
+      },
+      {
+        "field": "deprecated_decisions",
+        "contains": "S1-T0-DEC-002"
+      }
+    ],
+    "forbid": [],
+    "abstention_ok": false,
+    "require_synthesis": null,
+    "require_epoch": {
+      "epochs": [
+        "foundation",
+        "maturity"
+      ],
+      "must_identify": "S1-T5-DEP-001"
+    },
+    "provenance_required": false,
+    "trap_present": [
+      "S1-T5-DEP-001"
+    ],
+    "stale_facts": [
+      "S1-T0-DEC-002"
+    ],
+    "correct_facts": [
+      "S1-T0-DEC-001",
+      "S1-T10-DEP-001"
+    ],
+    "epoch_boundary": "foundation->maturity"
+  },
+  {
+    "id": "O-S2-A-NEXT",
+    "task_id": "S2-A-NEXT",
+    "derivation_evidence": [
+      "S2-T0-DEC-001",
+      "S2-T1-DEC-001"
+    ],
+    "require_all": [
+      {
+        "field": "action",
+        "contains": "HIPAA"
+      }
+    ],
+    "forbid": [
+      {
+        "field": "action",
+        "contains": "ignore"
+      }
+    ],
+    "abstention_ok": false,
+    "require_synthesis": null,
+    "require_epoch": null,
+    "provenance_required": false,
+    "trap_present": [],
+    "stale_facts": [],
+    "correct_facts": [
+      "S2-T1-DEC-001"
+    ],
+    "epoch_boundary": null
+  },
+  {
+    "id": "O-S2-B-SUPERSESSION",
+    "task_id": "S2-B-SUPERSESSION",
+    "derivation_evidence": [
+      "S2-T1-DEC-002",
+      "S2-T2-DEC-001"
+    ],
+    "require_all": [
+      {
+        "field": "action",
+        "contains": "reject"
+      },
+      {
+        "field": "reasoning",
+        "contains": "protocol"
+      }
+    ],
+    "forbid": [
+      {
+        "field": "action",
+        "contains": "revert"
+      }
+    ],
+    "abstention_ok": false,
+    "require_synthesis": null,
+    "require_epoch": null,
+    "provenance_required": false,
+    "trap_present": [
+      "S2-T0-DEC-001"
+    ],
+    "stale_facts": [
+      "S2-T0-DEC-001"
+    ],
+    "correct_facts": [
+      "S2-T1-DEC-002"
+    ],
+    "epoch_boundary": null
+  },
+  {
+    "id": "O-S2-C-CONSTRAINT",
+    "task_id": "S2-C-CONSTRAINT",
+    "derivation_evidence": [
+      "S2-T0-CON-001",
+      "S2-T3-DEC-001"
+    ],
+    "require_all": [
+      {
+        "field": "action",
+        "contains": "encrypt"
+      },
+      {
+        "field": "reasoning",
+        "contains": "transit"
+      }
+    ],
+    "forbid": [
+      {
+        "field": "action",
+        "contains": "skip"
+      }
+    ],
+    "abstention_ok": false,
+    "require_synthesis": null,
+    "require_epoch": null,
+    "provenance_required": false,
+    "trap_present": [],
+    "stale_facts": [],
+    "correct_facts": [
+      "S2-T0-CON-001"
+    ],
+    "epoch_boundary": null
+  },
+  {
+    "id": "O-S2-D-FAILED",
+    "task_id": "S2-D-FAILED",
+    "derivation_evidence": [
+      "S2-T2-DEC-002",
+      "S2-T3-DEC-002",
+      "S2-T5-DEC-001"
+    ],
+    "require_all": [
+      {
+        "field": "action",
+        "contains": "reject"
+      },
+      {
+        "field": "reasoning",
+        "contains": "timeout"
+      }
+    ],
+    "forbid": [
+      {
+        "field": "action",
+        "contains": "accept"
+      }
+    ],
+    "abstention_ok": false,
+    "require_synthesis": null,
+    "require_epoch": null,
+    "provenance_required": false,
+    "trap_present": [
+      "S2-T2-DEC-002"
+    ],
+    "stale_facts": [
+      "S2-T2-DEC-002"
+    ],
+    "correct_facts": [
+      "S2-T3-DEC-002"
+    ],
+    "epoch_boundary": null
+  },
+  {
+    "id": "O-S2-E-SCOPE",
+    "task_id": "S2-E-SCOPE",
+    "derivation_evidence": [
+      "S2-T1-DEC-002",
+      "S3-T0-DEC-001"
+    ],
+    "require_all": [
+      {
+        "field": "action",
+        "contains": "reject"
+      },
+      {
+        "field": "reasoning",
+        "contains": "project-local"
+      }
+    ],
+    "forbid": [
+      {
+        "field": "action",
+        "contains": "standardize"
+      }
+    ],
+    "abstention_ok": false,
+    "require_synthesis": null,
+    "require_epoch": null,
+    "provenance_required": false,
+    "trap_present": [],
+    "stale_facts": [],
+    "correct_facts": [
+      "S2-T1-DEC-002"
+    ],
+    "epoch_boundary": null
+  },
+  {
+    "id": "O-S2-F-CONTRADICTION",
+    "task_id": "S2-F-CONTRADICTION",
+    "derivation_evidence": [
+      "S2-T6-ADR-030",
+      "S2-T7-ADR-031"
+    ],
+    "require_all": [
+      {
+        "field": "conflict_flagged",
+        "equals": true
+      },
+      {
+        "field": "reasoning",
+        "contains": "automated"
+      }
+    ],
+    "forbid": [
+      {
+        "field": "action",
+        "contains": "PI approval"
+      }
+    ],
+    "abstention_ok": false,
+    "require_synthesis": null,
+    "require_epoch": null,
+    "provenance_required": false,
+    "trap_present": [
+      "S2-T6-ADR-030"
+    ],
+    "stale_facts": [
+      "S2-T6-ADR-030"
+    ],
+    "correct_facts": [
+      "S2-T7-ADR-031"
+    ],
+    "epoch_boundary": null
+  },
+  {
+    "id": "O-S2-G-HISTORICAL",
+    "task_id": "S2-G-HISTORICAL",
+    "derivation_evidence": [
+      "S2-T1-DEC-002"
+    ],
+    "require_all": [
+      {
+        "field": "answer",
+        "contains": "protocol"
+      },
+      {
+        "field": "as_of_checkpoint",
+        "equals": 2
+      }
+    ],
+    "forbid": [
+      {
+        "field": "answer",
+        "contains": "site-based"
+      }
+    ],
+    "abstention_ok": false,
+    "require_synthesis": null,
+    "require_epoch": null,
+    "provenance_required": false,
+    "trap_present": [
+      "S2-T9-DEC-001"
+    ],
+    "stale_facts": [
+      "S2-T0-DEC-001"
+    ],
+    "correct_facts": [
+      "S2-T1-DEC-002"
+    ],
+    "epoch_boundary": null
+  },
+  {
+    "id": "O-S2-H-IDENTITY",
+    "task_id": "S2-H-IDENTITY",
+    "derivation_evidence": [
+      "S2-T0-DEC-002",
+      "S2-T4-DEC-001",
+      "S2-T8-DEC-001"
+    ],
+    "require_all": [
+      {
+        "field": "answer",
+        "contains": "clinical-ingest"
+      }
+    ],
+    "forbid": [
+      {
+        "field": "answer",
+        "contains": "data-flow"
+      },
+      {
+        "field": "answer",
+        "contains": "trial-pipeline"
+      }
+    ],
+    "abstention_ok": false,
+    "require_synthesis": null,
+    "require_epoch": null,
+    "provenance_required": false,
+    "trap_present": [
+      "S2-T0-DEC-002",
+      "S2-T4-DEC-001"
+    ],
+    "stale_facts": [
+      "S2-T0-DEC-002",
+      "S2-T4-DEC-001"
+    ],
+    "correct_facts": [
+      "S2-T8-DEC-001"
+    ],
+    "epoch_boundary": null
+  },
+  {
+    "id": "O-S2-I-ABSENT",
+    "task_id": "S2-I-ABSENT",
+    "derivation_evidence": [],
+    "require_all": [
+      {
+        "field": "abstain",
+        "equals": true
+      }
+    ],
+    "forbid": [
+      {
+        "field": "action",
+        "contains": "latency"
+      }
+    ],
+    "abstention_ok": true,
+    "require_synthesis": null,
+    "require_epoch": null,
+    "provenance_required": false,
+    "trap_present": [
+      "S2-T5-BENCH-001"
+    ],
+    "stale_facts": [],
+    "correct_facts": [],
+    "epoch_boundary": null
+  },
+  {
+    "id": "O-S2-K-CROSS-SYNTHESIS",
+    "task_id": "S2-K-CROSS-SYNTHESIS",
+    "derivation_evidence": [
+      "S2-T0-CON-001",
+      "S2-T13-DEC-001",
+      "S2-T14-DEC-001"
+    ],
+    "require_all": [
+      {
+        "field": "action",
+        "contains": "encrypt"
+      },
+      {
+        "field": "action",
+        "contains": "GDPR"
+      }
+    ],
+    "forbid": [],
+    "abstention_ok": false,
+    "require_synthesis": {
+      "min_checkpoints": 3,
+      "required_checkpoints": [
+        0,
+        13,
+        14
+      ]
+    },
+    "require_epoch": null,
+    "provenance_required": false,
+    "trap_present": [],
+    "stale_facts": [],
+    "correct_facts": [
+      "S2-T0-CON-001",
+      "S2-T13-DEC-001"
+    ],
+    "epoch_boundary": null
+  },
+  {
+    "id": "O-S3-A-NEXT",
+    "task_id": "S3-A-NEXT",
+    "derivation_evidence": [
+      "S3-T0-DEC-001",
+      "S3-T1-DEC-001"
+    ],
+    "require_all": [
+      {
+        "field": "action",
+        "contains": "cross-reference"
+      }
+    ],
+    "forbid": [
+      {
+        "field": "action",
+        "contains": "ignore"
+      }
+    ],
+    "abstention_ok": false,
+    "require_synthesis": null,
+    "require_epoch": null,
+    "provenance_required": false,
+    "trap_present": [],
+    "stale_facts": [],
+    "correct_facts": [
+      "S3-T1-DEC-001"
+    ],
+    "epoch_boundary": null
+  },
+  {
+    "id": "O-S3-B-SUPERSESSION",
+    "task_id": "S3-B-SUPERSESSION",
+    "derivation_evidence": [
+      "S3-T1-DEC-002",
+      "S3-T2-DEC-001"
+    ],
+    "require_all": [
+      {
+        "field": "action",
+        "contains": "reject"
+      },
+      {
+        "field": "reasoning",
+        "contains": "automated"
+      }
+    ],
+    "forbid": [
+      {
+        "field": "action",
+        "contains": "revert"
+      }
+    ],
+    "abstention_ok": false,
+    "require_synthesis": null,
+    "require_epoch": null,
+    "provenance_required": false,
+    "trap_present": [
+      "S3-T0-DEC-002"
+    ],
+    "stale_facts": [
+      "S3-T0-DEC-002"
+    ],
+    "correct_facts": [
+      "S3-T1-DEC-002"
+    ],
+    "epoch_boundary": null
+  },
+  {
+    "id": "O-S3-C-CONSTRAINT",
+    "task_id": "S3-C-CONSTRAINT",
+    "derivation_evidence": [
+      "S3-T0-CON-001",
+      "S3-T4-DEC-001"
+    ],
+    "require_all": [
+      {
+        "field": "action",
+        "contains": "preserve"
+      },
+      {
+        "field": "reasoning",
+        "contains": "URL"
+      }
+    ],
+    "forbid": [
+      {
+        "field": "action",
+        "contains": "skip"
+      }
+    ],
+    "abstention_ok": false,
+    "require_synthesis": null,
+    "require_epoch": null,
+    "provenance_required": false,
+    "trap_present": [],
+    "stale_facts": [],
+    "correct_facts": [
+      "S3-T0-CON-001"
+    ],
+    "epoch_boundary": null
+  },
+  {
+    "id": "O-S3-D-FAILED",
+    "task_id": "S3-D-FAILED",
+    "derivation_evidence": [
+      "S3-T2-DEC-002",
+      "S3-T3-DEC-001",
+      "S3-T5-DEC-001"
+    ],
+    "require_all": [
+      {
+        "field": "action",
+        "contains": "reject"
+      },
+      {
+        "field": "reasoning",
+        "contains": "regex"
+      }
+    ],
+    "forbid": [
+      {
+        "field": "action",
+        "contains": "accept"
+      }
+    ],
+    "abstention_ok": false,
+    "require_synthesis": null,
+    "require_epoch": null,
+    "provenance_required": false,
+    "trap_present": [
+      "S3-T2-DEC-002"
+    ],
+    "stale_facts": [
+      "S3-T2-DEC-002"
+    ],
+    "correct_facts": [
+      "S3-T3-DEC-001"
+    ],
+    "epoch_boundary": null
+  },
+  {
+    "id": "O-S3-F-CONTRADICTION",
+    "task_id": "S3-F-CONTRADICTION",
+    "derivation_evidence": [
+      "S3-T6-ADR-050",
+      "S3-T7-ADR-051"
+    ],
+    "require_all": [
+      {
+        "field": "conflict_flagged",
+        "equals": true
+      },
+      {
+        "field": "reasoning",
+        "contains": "confidence"
+      }
+    ],
+    "forbid": [
+      {
+        "field": "action",
+        "contains": "review"
+      }
+    ],
+    "abstention_ok": false,
+    "require_synthesis": null,
+    "require_epoch": null,
+    "provenance_required": false,
+    "trap_present": [
+      "S3-T6-ADR-050"
+    ],
+    "stale_facts": [
+      "S3-T6-ADR-050"
+    ],
+    "correct_facts": [
+      "S3-T7-ADR-051"
+    ],
+    "epoch_boundary": null
+  },
+  {
+    "id": "O-S3-G-HISTORICAL",
+    "task_id": "S3-G-HISTORICAL",
+    "derivation_evidence": [
+      "S3-T1-DEC-002"
+    ],
+    "require_all": [
+      {
+        "field": "answer",
+        "contains": "automated"
+      },
+      {
+        "field": "as_of_checkpoint",
+        "equals": 1
+      }
+    ],
+    "forbid": [
+      {
+        "field": "answer",
+        "contains": "manual"
+      }
+    ],
+    "abstention_ok": false,
+    "require_synthesis": null,
+    "require_epoch": null,
+    "provenance_required": false,
+    "trap_present": [
+      "S3-T8-DEC-001"
+    ],
+    "stale_facts": [],
+    "correct_facts": [
+      "S3-T1-DEC-002"
+    ],
+    "epoch_boundary": null
+  },
+  {
+    "id": "O-S3-H-IDENTITY",
+    "task_id": "S3-H-IDENTITY",
+    "derivation_evidence": [
+      "S3-T0-DEC-003",
+      "S3-T4-DEC-002",
+      "S3-T9-DEC-001"
+    ],
+    "require_all": [
+      {
+        "field": "answer",
+        "contains": "doc-transform"
+      }
+    ],
+    "forbid": [
+      {
+        "field": "answer",
+        "contains": "doc-migrate"
+      },
+      {
+        "field": "answer",
+        "contains": "content-shift"
+      }
+    ],
+    "abstention_ok": false,
+    "require_synthesis": null,
+    "require_epoch": null,
+    "provenance_required": false,
+    "trap_present": [
+      "S3-T0-DEC-003",
+      "S3-T4-DEC-002"
+    ],
+    "stale_facts": [
+      "S3-T0-DEC-003",
+      "S3-T4-DEC-002"
+    ],
+    "correct_facts": [
+      "S3-T9-DEC-001"
+    ],
+    "epoch_boundary": null
+  },
+  {
+    "id": "O-S3-L-EPOCH",
+    "task_id": "S3-L-EPOCH",
+    "derivation_evidence": [
+      "S3-T0-DEC-001",
+      "S3-T0-DEC-002",
+      "S3-T5-DEP-001",
+      "S3-T10-DEP-001"
+    ],
+    "require_all": [
+      {
+        "field": "valid_decisions",
+        "contains": "S3-T0-DEC-001"
+      },
+      {
+        "field": "deprecated_decisions",
+        "contains": "S3-T0-DEC-002"
+      }
+    ],
+    "forbid": [],
+    "abstention_ok": false,
+    "require_synthesis": null,
+    "require_epoch": {
+      "epochs": [
+        "foundation",
+        "maturity"
+      ],
+      "must_identify": "S3-T5-DEP-001"
+    },
+    "provenance_required": false,
+    "trap_present": [
+      "S3-T5-DEP-001"
+    ],
+    "stale_facts": [
+      "S3-T0-DEC-002"
+    ],
+    "correct_facts": [
+      "S3-T0-DEC-001",
+      "S3-T10-DEP-001"
+    ],
+    "epoch_boundary": "foundation->maturity"
+  }
+]
