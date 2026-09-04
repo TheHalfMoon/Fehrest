@@ -145,7 +145,7 @@ Distractors share keywords, document naming conventions, and structural patterns
 | t12 | 2 | Cross-file synthesis |
 | t14 | 3 | Terminal epoch reasoning |
 
-**27 of the 30 tasks are issued before t14**, testing maintenance lag, staleness, and knowledge decay across the full project lifecycle. The harness asserts that tasks are distributed across at least 8 distinct checkpoints (actual: 12).
+**27 of the 30 tasks are issued before t14**, testing maintenance lag, staleness, and knowledge decay across the full project lifecycle. The harness asserts that tasks are distributed across at least 12 distinct checkpoints (actual: 12).
 
 ### 5.3 Task identities (frozen)
 
@@ -557,7 +557,7 @@ Before execution, the following checklist must be independently reviewed:
 |---|---|---|
 | CONSTRUCT_VALIDITY | PENDING | Tasks measure continuation correctness, not trivia retrieval |
 | DIFFICULTY_WITHOUT_ARTIFICIALITY | PENDING | Complexity from structural depth, not linguistic obscurity |
-| TASK_TIMELINE_VALIDITY | PENDING | 12 distinct checkpoints, 21 tasks before t14 |
+| TASK_TIMELINE_VALIDITY | PENDING | 12 distinct checkpoints, 27 of the 30 tasks are issued before t14 |
 | TEMPORAL_LEAKAGE | PENDING | Corpus manifest encodes available_from/until |
 | NO_INFORMATION_LEAKAGE | PENDING | Future-evidence vocabulary check; structural vocabulary subtraction |
 | NO_ARM_FAVORING | PENDING | Neutral arm identifiers; same model condition for all arms |
