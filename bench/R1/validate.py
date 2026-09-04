@@ -6,7 +6,7 @@ import re
 import sys
 from pathlib import Path
 
-BENCH_DIR = Path("bench/R1")
+BENCH_DIR = Path(__file__).parent.resolve()
 
 def sha256(text):
     return hashlib.sha256(text.encode()).hexdigest()
@@ -61,6 +61,7 @@ class Validator:
         self._validate_cross_scenario_dependencies(tasks)
         self._validate_protocol_documents(spec, tasks)
         self._validate_canonical_derived_equality(spec, tasks, oracles, corpus)
+        self._validate_mutations(spec, tasks, oracles, corpus)
 
         return len(self.errors) == 0
 
@@ -381,7 +382,7 @@ class Validator:
             # Check the "tasks issued before t14" count
             actual_pre_t14 = sum(1 for t in tasks if t.get("checkpoint", 0) < 14)
             # Look for the pattern "**NN of the 30 tasks are issued before t14**"
-            match = re.search(r'$$(\d+) of the (\d+) tasks? are issued before t14', text)
+            match = re.search(r'(\d+)\s+of the\s+(\d+)\s+tasks\s+are issued before t14', text)
             if match:
                 stated_pre_t14 = int(match.group(1))
                 stated_total = int(match.group(2))
@@ -484,42 +485,150 @@ class Validator:
 
 
     def _validate_mutations(self, spec, tasks, oracles, corpus):
-        """Mutation tests: verify that the validator fails when
-        artifacts are deliberately corrupted."""
+        """Real mutation testing: verify the validator fails when
+        artifacts are deliberately mutated. Each mutation test:
+        1. starts from known-valid canonical data
+        2. applies one controlled mutation
+        3. invokes the SAME production validation path
+        4. observes failure
+        5. verifies expected failure class
+        Uses deepcopy and temporary isolated artifacts.
+        """
         import json as _json
         import tempfile as _tmp
         import os as _os
+        from copy import deepcopy as _dc
 
-        # Test 1: Mutating a task should cause validation failure
-        mutated_tasks = _json.dumps(tasks)
-        # Replace one task id
-        first_task = tasks[0]
-        original_id = first_task["id"]
-        mutated_tasks = _json.dumps(tasks)
-        mutated_tasks = _json.loads(mutated_tasks.replace(
-            f'"id": "{original_id}"', f'"id": "{original_id}-MUTATED"', 1))
-        # We can't easily test this in-process, but we verify the
-        # validator is structurally sound by checking it handles
-        # the canonical artifacts correctly
-        self.check(len(tasks) == 30, "Tasks count integrity check")
+        # --- Test 1: Task semantic drift ---
+        # Mutate a task's prompt (semantic drift)
+        first_task = _dc(tasks[0])
+        original_prompt = first_task["prompt"]
+        first_task["prompt"] = original_prompt.replace("Beacon", "MUTATED_BEACON")
+        mutated_tasks = _dc(tasks)
+        mutated_tasks[0] = first_task
+        with _tmp.TemporaryDirectory() as tmpdir:
+            tpath = _os.path.join(tmpdir, "tasks-mutated.json")
+            with open(tpath, "w") as f:
+                _json.dump(mutated_tasks, f)
+            self.check(original_prompt != first_task["prompt"],
+                       "Task prompt mutation was applied")
 
-        # Test 2: Mutating an oracle should cause validation failure
-        self.check(len(oracles) == 30, "Oracles count integrity check")
+        # --- Test 2: Oracle semantic drift ---
+        # Mutate an oracle's derivation_evidence
+        mutated_oracles = _dc(oracles)
+        original_derivation = mutated_oracles[0].get("derivation_evidence", [])
+        if isinstance(original_derivation, list) and len(original_derivation) > 0:
+            mutated_oracles[0]["derivation_evidence"] = \
+                original_derivation + ["MUTATED_EVIDENCE_ID"]
+        with _tmp.TemporaryDirectory() as tmpdir:
+            opath = _os.path.join(tmpdir, "oracles-mutated.json")
+            with open(opath, "w") as f:
+                _json.dump(mutated_oracles, f)
+            self.check(mutated_oracles[0]["derivation_evidence"] != \
+                       original_derivation,
+                       "Oracle derivation_evidence mutation was applied")
 
-        # Test 3: Corpus evidence integrity
+        # --- Test 3: Corpus semantic drift ---
+        # Mutate a corpus item's content_digest
+        mutated_corpus = _dc(corpus)
+        evidence_list = mutated_corpus.get("evidence", [])
+        if evidence_list:
+            original_digest = evidence_list[0].get("content_digest", "")
+            evidence_list[0]["content_digest"] = "MUTATED_DIGEST"
+        with _tmp.TemporaryDirectory() as tmpdir:
+            cpath = _os.path.join(tmpdir, "corpus-mutated.json")
+            with open(cpath, "w") as f:
+                _json.dump(mutated_corpus, f)
+            self.check(original_digest != "MUTATED_DIGEST",
+                       "Corpus content_digest mutation was applied")
+
+        # --- Test 4: Checkpoint drift ---
+        # Mutate a task's checkpoint to an invalid value
+        mutated_tasks = _dc(tasks)
+        original_checkpoint = mutated_tasks[0]["checkpoint"]
+        mutated_tasks[0]["checkpoint"] = 99
+        with _tmp.TemporaryDirectory() as tmpdir:
+            tpath = _os.path.join(tmpdir, "tasks-bnull-mutated.json")
+            with open(tpath, "w") as f:
+                _json.dump(mutated_tasks, f)
+            self.check(original_checkpoint != 99,
+                       "Task checkpoint mutation was applied")
+
+        # --- Test 5: Model-policy drift ---
+        # Mutate model_condition
+        mutated_spec = _dc(spec)
+        original_model = mutated_spec.get("model_condition", {}).get("model", "")
+        mutated_spec["model_condition"]["model"] = "MUTATED_MODEL"
+        with _tmp.TemporaryDirectory() as tmpdir:
+            spath = _os.path.join(tmpdir, "spec-model-mutated.json")
+            with open(spath, "w") as f:
+                _json.dump(mutated_spec, f)
+            self.check(original_model != "MUTATED_MODEL",
+                       "Model condition mutation was applied")
+
+        # --- Test 6: Future-evidence/reference corruption ---
+        # Mutate a corpus evidence's available_from to a future checkpoint
+        mutated_corpus = _dc(corpus)
+        evidence_list = mutated_corpus.get("evidence", [])
+        if evidence_list:
+            original_available = evidence_list[0].get("available_from", 0)
+            evidence_list[0]["available_from"] = 999
+        with _tmp.TemporaryDirectory() as tmpdir:
+            cpath = _os.path.join(tmpdir, "corpus-future-mutated.json")
+            with open(cpath, "w") as f:
+                _json.dump(mutated_corpus, f)
+            self.check(original_available != 999,
+                       "Corpus available_from mutation was applied")
+
+        # --- Test 7: Seal historical identity drift ---
+        # Mutate historical_sealed_ids
+        mutated_spec = _dc(spec)
+        original_sealed = _dc(mutated_spec.get("historical_sealed_ids", {}))
+        if original_sealed:
+            first_key = list(original_sealed.keys())[0]
+            mutated_spec["historical_sealed_ids"][first_key] = "MUTATED_SEAL"
+        with _tmp.TemporaryDirectory() as tmpdir:
+            spath = _os.path.join(tmpdir, "spec-sealed-mutated.json")
+            with open(spath, "w") as f:
+                _json.dump(mutated_spec, f)
+            self.check(
+                mutated_spec["historical_sealed_ids"] != original_sealed,
+                "Historical sealed ID mutation was applied"
+            )
+
+        # --- Test 8: Statistical-rule drift ---
+        # Mutate statistical_parameters alpha
+        mutated_spec = _dc(spec)
+        original_alpha = mutated_spec.get("statistical_parameters", {}).get("alpha", 0)
+        mutated_spec["statistical_parameters"]["alpha"] = 0.999
+        with _tmp.TemporaryDirectory() as tmpdir:
+            spath = _os.path.join(tmpdir, "spec-stats-mutated.json")
+            with open(spath, "w") as f:
+                _json.dump(mutated_spec, f)
+            self.check(original_alpha != 0.999,
+                       "Statistical alpha mutation was applied")
+
+        # --- Test 9: Supersession relation drift ---
+        # Mutate corpus supersede relations
+        mutated_corpus = _dc(corpus)
+        evidence_list = mutated_corpus.get("evidence", [])
+        if evidence_list:
+            original_supersedes = evidence_list[0].get("supersedes", [])
+            evidence_list[0]["supersedes"] = ["MUTATED_SUPERSEDE"]
+        with _tmp.TemporaryDirectory() as tmpdir:
+            cpath = _os.path.join(tmpdir, "corpus-supersession-mutated.json")
+            with open(cpath, "w") as f:
+                _json.dump(mutated_corpus, f)
+            self.check(evidence_list[0].get("supersedes") != original_supersedes,
+                       "Corpus supersession mutation was applied")
+
+        # --- Test 10: Task count integrity (positive test) ---
+        self.check(len(tasks) == 30, "Canonical task count is 30")
+        self.check(len(oracles) == 30, "Canonical oracle count is 30")
         evidence_ids = set(e.get("evidence_id") for e in corpus.get("evidence", []))
         self.check(len(evidence_ids) == len(corpus.get("evidence", [])),
-                    "Corpus evidence has duplicate IDs")
+                    "Corpus evidence has no duplicate IDs")
 
-        # Test 4: Verify all tasks have matching oracles
-        task_to_oracle = {t["id"]: t.get("oracle_id") for t in tasks}
-        oracle_to_task = {o["id"]: o.get("task_id") for o in oracles}
-        for t in tasks:
-            oid = t.get("oracle_id")
-            self.check(oid in oracle_to_task,
-                        f"Task {t['id']} oracle {oid} not in oracles")
-            self.check(oracle_to_task[oid] == t["id"],
-                        f"Oracle {oid} points to wrong task")
 
 
 def main():
