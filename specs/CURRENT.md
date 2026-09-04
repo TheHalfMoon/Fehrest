@@ -73,7 +73,9 @@ R1_V2_CURRENT_FRONTIER_RECONCILED=YES
 
 Validation evidence:
 - `python bench/R1/validate.py` exits 0
-- `python bench/R1/test_scorer.py`: 18/18 tests pass
+- `python bench/R1/test_scorer.py`: 20/20 tests pass (includes 4 adversarial tests)
+- `python bench/R1/validate.py`: exits 0 with all checks including canonical-vs-derived equality and mutation tests
+- CI pipeline `.github/workflows/bench-r1-validation.yml` added: test-scorer, validate, canonical-equality jobs
 - 30 tasks, 30 oracles, 96 evidence items generated
 - 12 task classes derived from task definitions
 - 12 distinct checkpoints (t1-t14, excluding t0 and t11-t13)
