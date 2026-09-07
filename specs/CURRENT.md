@@ -82,48 +82,60 @@ Validation evidence:
 - PR #34 merged (ec7a1ea → f8a0dd5): harden post-merge validation convergence
 - `python bench/R1/test_validate.py`: 41/41 tests pass (6 test classes)
 - `python bench/R1/test_r1v2_statistical_design.py`: 19/19 static statistical design proofs (K=30/29/20/15/14/0, psi edges, N_pairs/r_conf bounds, task-class loss, B_NULL ordering)
-- `python bench/R1/test_review_binding.py`: 18/18 review-binding validations (candidate freshness, digest drift, stale packet, formula, empirical-data leakage, PASS without evidence, SEALED without prerequisites)
-- `python bench/R1/generate_manifest.py --check` → PASS (artifact map verified; parent-candidate warning allowed for self-reference)
+- `python bench/R1/test_review_binding.py`: 19/19 review-binding validations (candidate freshness, digest drift, stale packet, formula, empirical-data leakage, PASS without evidence, SEALED without prerequisites, self-reference-safe binding)
+- `python bench/R1/generate_manifest.py --check` → PASS (artifact map verified; candidate self-reference model: manifest candidate bcfcd2f → review candidate ad55e14, artifact map matches HEAD)
 - Field-level canonical-vs-derived equality verified on main
 - Genuine mutation testing with deepcopy+TemporaryDirectory verified on main
 - `test-validator`, `test-r1v2-statistical-design`, `test-review-binding`, `manifest-check` jobs added to exact-head CI
 - `test_scorer.py`, `test_validate.py`, `test_r1v2_statistical_design.py`, `test_review_binding.py`, `validate.py`, `git diff --check` all pass on main
-- Deterministic SHA-256 artifact manifest `bench/R1/artifact-manifest-v2.json` generated via `generate_manifest.py` (18 artifacts, manifest_sha256 a78584..., candidate f1289ff → e144870)
+- Deterministic SHA-256 artifact manifest `bench/R1/artifact-manifest-v2.json` generated via `generate_manifest.py` (18 artifacts, manifest_sha256 d10b557..., candidate 3999454 → ad55e14)
 - PR #35 merged (review/r1-v2-independent-review-convergence deb769b → f1289ff): repair statistical, scientific, sealing packets for independent-review convergence
 - PR #36 merged (fix/r1-v2-postmerge-manifest-alignment a85a572 → e144870): align manifest and review-binding test for merge-commit HEAD
+- PR #41 merged (fix/r1-v2-review-candidate-binding-convergence 38c60bb/3999454/65f9a46 → ad55e14): make sealing procedure self-reference-safe (external binding via CURRENT + issues), harden review binding to 19 tests (require 18 artifacts, candidate-tree equality, fail closed on stale NOT_YET_FROZEN), regenerate manifest
 - 30 tasks, 30 oracles, 96 evidence items generated
 - 12 task classes derived from task definitions
 - 12 distinct checkpoints (t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t12, t14; t11 absent)
 - 27 of the 30 tasks are issued before t14 for maintenance lag testing
-- Exact-head CI on `deb769b` (PR #35) and `a85a572` (PR #36) and merge heads `f1289ff`/`e144870`: 7/7 Bench jobs + verify-artifacts PASS
+- Exact-head CI on `deb769b` (PR #35), `a85a572` (PR #36), merge heads `f1289ff`/`e144870`, and `65f9a46` (PR #41 head): 7/7 Bench jobs + verify-artifacts PASS; verify-artifacts PASS on merge `ad55e14`
 
-**Internally qualified review candidate (frozen):**
+**Internally qualified review candidate (frozen) — current:**
 ```text
-REVIEW_CANDIDATE_COMMIT=e1448705cf0bebb17533b6f4dd202c2eaa707172
-REVIEW_CANDIDATE_TREE=fd841c56a1debd5845b37d81f84bf586cb435411
-MANIFEST_CANDIDATE_COMMIT=f1289ff031ce209a7a38f12980258fba191419b8
-MANIFEST_SHA256=a78584247f6e48b7b75271af7cf608280c9a10228cf3ab04f3d8a4930cf8eabd
+REVIEW_CANDIDATE_COMMIT=ad55e14096105163aaf5315718570c415f7b85cc
+REVIEW_CANDIDATE_TREE=878f973c3d5755472da2bb4f0067b529e3a9a77f
+MANIFEST_CANDIDATE_COMMIT=39994546512c95b54e1b19280a05638193bf9f13
+MANIFEST_CANDIDATE_TREE=bcfcd2fc36941b536665db575a9932e93ee3fd39
+MANIFEST_SHA256=d10b5579fc5ad9532e90adb535054a374277e1cedb7ee50eb9bd01901e1b3af5
 MANIFEST_ARTIFACTS=18 (benchmark-spec, tasks, oracles, corpus, scorer, validate, test_scorer, test_validate, test_r1v2, test_review_binding, prereg, variance-pilot, maintenance, generate_manifest, bench-r1-validation.yml, scientific packet, statistical packet, sealing procedure)
 PR_34_HEAD=ec7a1eac5d6c45a8d4795b99bd1b41351dd72eef
 PR_34_MERGE=f8a0dd5e9b06e137a53157e99732d71d635f9a0f
 REVIEW_PACKET_COMMIT=ae155e5804922b41926163beacaf03b34f09b6cf
-CURRENT_MAIN_AT_QUALIFICATION=e1448705cf0bebb17533b6f4dd202c2eaa707172
+PR_41_MERGE=ad55e14096105163aaf5315718570c415f7b85cc
+PR_41_HEAD=65f9a465d4aa997802789d92f0cb2b25ebc8c5cd
+PR_41_PRE_MANIFEST_CANDIDATE=39994546512c95b54e1b19280a05638193bf9f13
+CURRENT_MAIN_AT_QUALIFICATION=ad55e14096105163aaf5315718570c415f7b85cc
+PRIOR_REVIEW_CANDIDATE=e1448705cf0bebb17533b6f4dd202c2eaa707172
+PRIOR_REVIEW_CANDIDATE_TREE=fd841c56a1debd5845b37d81f84bf586cb435411
+PRIOR_MANIFEST_SHA256=a78584247f6e48b7b75271af7cf608280c9a10228cf3ab04f3d8a4930cf8eabd
+PRIOR_AFFECTED_REVIEW=STALE (load-bearing artifacts changed: bench/R1/test_review_binding.py, docs/canonical/R1_V2_SEALING_PROCEDURE.md, bench/R1/artifact-manifest-v2.json — per stale-review law)
+PRIOR_INDEPENDENT_REVIEW_EVIDENCE=NONE (issues #37/#38 had 0 qualified comments — preserved as superseded stale surfaces, not PASS/FAIL)
 ```
 
-**Pending independent review (issues created 2026-09-07, STATUS=PENDING):**
+**Pending independent review — reconciled to current candidate (2026-09-08):**
 ```text
-R1_V2_SCIENTIFIC_REVIEW=PENDING  → issue #37 "R1-v2 Independent Scientific Review — e144870 (PENDING)"
-R1_V2_STATISTICAL_REVIEW=PENDING → issue #38 "R1-v2 Independent Statistical Review — e144870 (PENDING)"
+R1_V2_SCIENTIFIC_REVIEW=PENDING  → new issue required binding ad55e14/878f973/d10b557... (prior issue #37 "e144870 (PENDING)" SUPERSEDED/STALE)
+R1_V2_STATISTICAL_REVIEW=PENDING → new issue required binding ad55e14/878f973/d10b557... (prior issue #38 "e144870 (PENDING)" SUPERSEDED/STALE)
+NEW_ISSUE_BINDING_SOURCE=specs/CURRENT.md (this file) + docs/canonical/R1_V2_SEALING_PROCEDURE.md + bench/R1/artifact-manifest-v2.json — issues must bind EXACT_REVIEW_CANDIDATE_COMMIT/TREE + MANIFEST_SHA256 + all 16/18 required sections
+PRIOR_ISSUES_37_38=STALE — load-bearing change per docs/canonical/R1_V2_SEALING_PROCEDURE.md stale rule; no independent evidence was present, so no PASS/REJECT is fabricated
 ```
-Each issue binds EXACT_REVIEW_CANDIDATE_COMMIT/TREE + MANIFEST_SHA256 + packet paths + required sections + acceptance/rejection/stale rules + NO_EXECUTION_AUTHORITY. Hermes may not self-issue PASS; independent evidence required. If no qualified independent reviewer is available via authorized environment, this remains the external blocker after all repository-local work is exhausted.
+Each new issue must bind EXACT_REVIEW_CANDIDATE_COMMIT/TREE + MANIFEST_SHA256 + packet paths + required sections + acceptance/rejection/stale rules + NO_EXECUTION_AUTHORITY. Hermes may not self-issue PASS; independent evidence required. If no qualified independent reviewer is available via authorized environment, this remains the external blocker after all repository-local work is exhausted.
 
-**Review package internal qualification:**
+**Review package internal qualification — converged:**
 ```text
 R1_V2_STATISTICAL_PACKET=REPAIRED (pairing unit (task,repeat), power formula, symbol table, B_NULL before PSI, static proofs)
 R1_V2_SCIENTIFIC_PACKET=REPAIRED (stratified R1_V1 vs R1_V2_DESIGN vs R1_V2_EMPIRICAL_DATA=NONE, per-arm fairness, ceiling routing)
-R1_V2_SEALING_PROCEDURE=REPAIRED (correct identities, SEALING_PREPARATION_PENDING, candidate states, stale rules)
-R1_V2_ARTIFACT_MANIFEST=GENERATED (deterministic SHA-256, 18 artifacts)
-R1_V2_REVIEW_BINDING_VALIDATION=ADDED (18 + 19 tests, fail-closed)
+R1_V2_SEALING_PROCEDURE=REPAIRED_SELF_REFERENCE_SAFE (external binding via CURRENT + issues, no embedded latest-main SHA, candidate-binding law explicit)
+R1_V2_ARTIFACT_MANIFEST=REGENERATED_SELF_REFERENCE_SAFE (deterministic SHA-256, 18 artifacts, candidate 3999454 (bcfcd2f) → ad55e14 (878f973), manifest_sha d10b557...)
+R1_V2_REVIEW_BINDING_VALIDATION=HARDENED (19 tests, fail-closed on stale NOT_YET_FROZEN, historical main binding, missing artifacts, tree mismatch)
 ```
 
 The rebuild required no new founder route decision. The existing authorized scope (`ROUTE=NEW_PREREGISTRATION`, `MODEL_STRATEGY=KEEP_REPRESENTATIVE_STRONG_MODEL`, `TASK_STRATEGY=INCREASE_DISCRIMINATING_DIFFICULTY`) covers the implementation methodology.
