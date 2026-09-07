@@ -96,7 +96,7 @@ Validation evidence:
 - 12 task classes derived from task definitions
 - 12 distinct checkpoints (t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t12, t14; t11 absent)
 - 27 of the 30 tasks are issued before t14 for maintenance lag testing
-- Exact-head CI on `deb769b` (PR #35), `a85a572` (PR #36), merge heads `f1289ff`/`e144870`, and `65f9a46` (PR #41 head): 7/7 Bench jobs + verify-artifacts PASS; verify-artifacts PASS on merge `ad55e14`
+- Exact-head CI on `deb769b` (PR #35), `a85a572` (PR #36), merge heads `f1289ff`/`e144870`, PR #41 head `65f9a46`, and exact review candidate `ad55e14`: 7/7 Bench jobs + verify-artifacts PASS; candidate push runs `34169748858` / `34169748870` both completed successfully
 
 **Internally qualified review candidate (frozen) — current:**
 ```text
@@ -120,14 +120,22 @@ PRIOR_AFFECTED_REVIEW=STALE (load-bearing artifacts changed: bench/R1/test_revie
 PRIOR_INDEPENDENT_REVIEW_EVIDENCE=NONE (issues #37/#38 had 0 qualified comments — preserved as superseded stale surfaces, not PASS/FAIL)
 ```
 
-**Pending independent review — reconciled to current candidate (2026-09-08):**
+**Pending independent review — active exact-candidate surfaces (2026-09-08):**
 ```text
-R1_V2_SCIENTIFIC_REVIEW=PENDING  → new issue required binding ad55e14/878f973/d10b557... (prior issue #37 "e144870 (PENDING)" SUPERSEDED/STALE)
-R1_V2_STATISTICAL_REVIEW=PENDING → new issue required binding ad55e14/878f973/d10b557... (prior issue #38 "e144870 (PENDING)" SUPERSEDED/STALE)
-NEW_ISSUE_BINDING_SOURCE=specs/CURRENT.md (this file) + docs/canonical/R1_V2_SEALING_PROCEDURE.md + bench/R1/artifact-manifest-v2.json — issues must bind EXACT_REVIEW_CANDIDATE_COMMIT/TREE + MANIFEST_SHA256 + all 16/18 required sections
-PRIOR_ISSUES_37_38=STALE — load-bearing change per docs/canonical/R1_V2_SEALING_PROCEDURE.md stale rule; no independent evidence was present, so no PASS/REJECT is fabricated
+R1_V2_SCIENTIFIC_REVIEW=PENDING  → issue #43 binds ad55e14096105163aaf5315718570c415f7b85cc / 878f973c3d5755472da2bb4f0067b529e3a9a77f / d10b5579fc5ad9532e90adb535054a374277e1cedb7ee50eb9bd01901e1b3af5
+R1_V2_STATISTICAL_REVIEW=PENDING → issue #44 binds ad55e14096105163aaf5315718570c415f7b85cc / 878f973c3d5755472da2bb4f0067b529e3a9a77f / d10b5579fc5ad9532e90adb535054a374277e1cedb7ee50eb9bd01901e1b3af5
+ACTIVE_SCIENTIFIC_REVIEW_ISSUE=43
+ACTIVE_STATISTICAL_REVIEW_ISSUE=44
+INDEPENDENT_SCIENTIFIC_REVIEW_EVIDENCE=NONE
+INDEPENDENT_STATISTICAL_REVIEW_EVIDENCE=NONE
+PRIOR_ISSUES_37_38=SUPERSEDED_STALE_NO_INDEPENDENT_EVIDENCE
+DUPLICATE_ISSUE_45=CLOSED_DUPLICATE_OF_43_NO_AUTHORITY_EFFECT
+CURRENT_AUTHORIZED_LOCAL_WORK=EXHAUSTED
+PROJECT_COMPLETE=NO
+BLOCKER=INDEPENDENT_SCIENTIFIC_AND_STATISTICAL_REVIEW_PENDING
+NEXT_ACTION=QUALIFIED_INDEPENDENT_REVIEWERS_MUST_REVIEW_EXACT_BOUND_R1_V2_CANDIDATE_ON_ISSUES_43_AND_44
 ```
-Each new issue must bind EXACT_REVIEW_CANDIDATE_COMMIT/TREE + MANIFEST_SHA256 + packet paths + required sections + acceptance/rejection/stale rules + NO_EXECUTION_AUTHORITY. Hermes may not self-issue PASS; independent evidence required. If no qualified independent reviewer is available via authorized environment, this remains the external blocker after all repository-local work is exhausted.
+Issues #43 and #44 bind the exact immutable review candidate commit/tree/manifest, packet paths, required sections, acceptance/rejection/stale rules, and `NO_EXECUTION_AUTHORITY`. Exact-candidate CI evidence is recorded on both issues. Hermes may not self-issue PASS; independent evidence is required. Until that external evidence exists, sealing, model execution, Spec 002 activation, and product implementation remain prohibited.
 
 **Review package internal qualification — converged:**
 ```text
