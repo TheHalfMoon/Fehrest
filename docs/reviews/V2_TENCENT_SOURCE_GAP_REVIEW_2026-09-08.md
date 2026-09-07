@@ -3,20 +3,23 @@
 **Status:** REVIEW / NON-AUTHORIZING  
 **Inputs:** current Fehrest V2 proposal set + qualified source review for Tencent/RoMem, Tencent/WeKnora and Tencent/SkillHone  
 **Execution effect:** NONE  
-**Canonical frontier:** unchanged; live `specs/CURRENT.md` wins
+**Canonical frontier:** unchanged; live `specs/CURRENT.md` wins  
+**Superseding depth layer:** `V2_TENCENT_CODE_LEVEL_GAP_REVIEW_2026-09-08.md`
 
-> The purpose of this review is to find structural gaps exposed by the three new sources without converting donor capabilities into requirements. It preserves the current one-frontier, canonical-vs-derived, local-first and evidence-first model.
+> This was the first capability-level source review. It identified `TG-01..TG-14`. A later code-level pass added `TG-15..TG-28` and refined ownership of side-effect execution from the earlier broad 007 assignment into the proposed `007A/007B` authoring split. This document remains preserved as the first-pass evidence; use the plan amendment and code-level review for the converged future plan.
 
 ## 1. Review verdict
 
-The current V2 proposal already has strong phase decomposition, but the new sources expose a set of contracts that were either implicit or split across several future specs.
+The current V2 proposal already has strong phase decomposition, but the new sources expose contracts that were either implicit or split across several future specs.
 
-This review does **not** recommend new top-level Spec IDs. It assigns each gap to an existing owner so the program does not grow merely because new donors were discovered.
+This first pass did **not** recommend new top-level Spec IDs. The deeper review likewise avoids immediate roadmap renumbering, while adding an authoring-time decomposition for overloaded responsibilities.
 
 ```text
-NEW_GAPS_IDENTIFIED=14
-NEW_GAPS_WITH_OWNER_OR_EXPLICIT_GATE=14/14
-NEW_TOP_LEVEL_SPECS_REQUIRED=0
+FIRST_PASS_GAPS_IDENTIFIED=14
+FIRST_PASS_GAPS_WITH_OWNER_OR_EXPLICIT_GATE=14/14
+DEEP_PASS_TOTAL_GAPS=28
+DEEP_PASS_GAPS_WITH_OWNER_OR_AUTHORING_GATE=28/28
+CURRENT_TOP_LEVEL_SPEC_RENUMBERING=NO
 KNOWN_NEW_DEPENDENCY_CYCLES=0
 R1_SEMANTICS_CHANGED=NO
 R1_REVIEW_CANDIDATE_CHANGED=NO
@@ -41,7 +44,7 @@ A graph/vector/model-derived score could silently replace deterministic provenan
 006 owns canonical temporal truth/resolution
 004 owns temporal/graph capability experiment
 005 may own a retained derived provider
-007 may consume derived rank only after canonical scope/time filtering
+007A may consume derived rank only after canonical scope/time filtering
 ```
 
 ### Required invariant
@@ -119,183 +122,144 @@ High-influence objects require explicit human confirmation unless a later founde
 
 ## 5. TG-04 — Resident memory versus on-demand memory is not an explicit context policy
 
-**Source trigger:** WeKnora persistent profile context + `search_memory` recall.
+**Source trigger:** WeKnora long-term-memory retrieval behavior.
 
 ### Gap
 
-006 owns memory and 007 owns context compilation, but the proposal does not require a policy for which durable memories are resident in every request versus recalled only when relevant.
-
-### Risks
-
-```text
-unnecessary token cost
-privacy overexposure
-stale-context persistence
-cross-task contamination
-hidden priority bias
-```
+Some memories may be consistently useful while others should only be retrieved for a relevant task. Treating both identically creates privacy, token and staleness problems.
 
 ### Owner
 
-006 defines memory metadata needed for residency/relevance; 007 owns the compiler/residency policy and receipts.
+006 classifies memory semantics; 007A owns context residency/selection policy and receipts.
 
-### Required benchmark
-
-Compare at minimum:
+### Required rule
 
 ```text
-minimal resident profile + on-demand recall
-vs
-all eligible memory injected
-vs
-strong no-memory / repository-native baseline
+MEMORY_CANONICAL_STATE != CONTEXT_RESIDENCY
+RESIDENT_CONTEXT != ALL_ACTIVE_MEMORY
 ```
 
-Measure quality, privacy exposure, token cost and stale-use rate.
+Context receipts should explain resident, recalled and excluded decisions.
 
 ---
 
-## 6. TG-05 — Editable derived chunks/wiki pages can become shadow canonical state
+## 6. TG-05 — Editable derived surfaces can create shadow canonical state
 
-**Source trigger:** WeKnora chunk editing, wiki editing and rollback.
+**Source trigger:** WeKnora document/chunk/wiki revision surfaces.
 
 ### Gap
 
-The V2 plan has canonical notes/documents and derived retrieval, but does not explicitly state what happens when a user edits a derived chunk, generated wiki page or graph-derived summary.
-
-### Risk
-
-The visible product can diverge from canonical source while the derived representation becomes de facto truth.
+A user may edit what appears to be a durable document while the underlying object is a retrieval chunk, generated wiki page or graph projection.
 
 ### Owner
 
-```text
-003 owns derived projection rebuild/equality
-010 owns canonical object/open-format semantics
-011 owns editing/history UX
-012 owns graph/search presentation
-```
+003 projection semantics + 010 canonical object ownership + 011 editing UX.
 
-### Required invariant
+### Required rule
 
 ```text
-EDIT_DERIVED_STATE_DIRECTLY=NO
+USER_DURABLE_EDIT -> CANONICAL_WRITER_OR_CANONICAL_PROPOSAL
+DIRECT_DURABLE_EDIT_OF_DERIVED_PROJECTION=NO
 ```
-
-A user edit must either:
-
-1. mutate an explicitly canonical object through the canonical writer; or
-2. create a canonical annotation/proposal/reference with provenance; or
-3. be rejected as editing a disposable projection.
-
-Rebuild from canonical state must never silently erase a user-authored durable edit.
 
 ---
 
-## 7. TG-06 — Execution admission/receipt ownership is under-specified in the V2 spec map
+## 7. TG-06 — General execution admission and receipt semantics need one owner
 
-**Source trigger:** WeKnora session-persistent sandboxes and SkillHone executable helpers.
+**Source trigger:** WeKnora sandbox/tool execution.
 
-### Gap
+### First-pass finding
 
-007 owns grants/context and later specs own models/web/extensions, but the proposal does not clearly assign one owner for durable external-execution admission, attempt identity, fencing and terminal receipts.
+The original first pass assigned this to broad future 007.
 
-### Risk
+### Deep-pass correction
 
-013, 014 and 021 could independently implement incompatible retry and authority semantics.
+The code-level review found that placing read-context compilation and side-effect execution in one semantic owner overloads 007. The converged plan proposes:
+
+```text
+007A = context/read gateway
+007B = delegated execution/fencing/receipt foundation
+```
 
 ### Owner
 
-007 must own a general execution-admission/receipt foundation. 013, 014 and 021 consume it and may add provider-specific metadata, never alternate authority.
+Proposed future 007B.
 
-### Required contract family
+### Required primitives
 
 ```text
 ExecutionAdmission
 ExecutionAttemptId
 FencingGeneration
 ExecutorAudience
-EffectiveScope
-ReservedBudget
-DispatchIntent
-StartedEvidence
+DurableDispatchIntent
 TerminalReceipt
-IndeterminateState
+IndeterminateExecution
 ReconciliationEvidence
 ```
 
-### Required invariant
-
-```text
-FAILED_PROCESS_STATUS != RETRY_SAFE
-NO_DURABLE_DISPATCH_INTENT -> NO_DISPATCH
-INDETERMINATE -> NO_BLIND_RETRY
-```
+Provider queue state does not own safe retry or side-effect truth.
 
 ---
 
-## 8. TG-07 — External/scoped API key identity can be confused with canonical principal identity
+## 8. TG-07 — External credential identity can be mistaken for Fehrest principal authority
 
-**Source trigger:** WeKnora scoped API keys/principal model.
+**Source trigger:** WeKnora API/service key patterns.
 
 ### Gap
 
-007 defines principal/session/grant concepts but the proposal does not explicitly require external credential identities to map into, rather than define, Fehrest principals.
+An API key ID, provider user ID or service account identifier can accidentally become the canonical principal.
 
 ### Owner
 
-007 baseline; 018 organization extension; 021 connector/extension credentials consume the same rule.
+007A baseline principal mapping; 018 organization/service-account extension.
 
-### Required invariant
+### Rule
 
 ```text
-API_KEY_ID != CANONICAL_PRINCIPAL_ID
-EXTERNAL_IDENTITY != GRANT
-CREDENTIAL_POSSESSION != SCOPE_WIDENING
+EXTERNAL_CREDENTIAL_ID != FEHREST_PRINCIPAL_ID
 ```
 
-Every external identity mapping must be auditable, revocable and fail closed on ambiguity.
+Rotation/revocation may change credentials without changing stable Fehrest identity.
 
 ---
 
-## 9. TG-08 — Queue/worker concurrency lacks canonical idempotency and fencing semantics
+## 9. TG-08 — Queue retry is not side-effect idempotency/fencing
 
-**Source trigger:** WeKnora task queue and worker-pool governance.
+**Source trigger:** WeKnora worker/task queue behavior.
 
 ### Gap
 
-Operational queues are likely for model/tool/automation work, but queue retry semantics are not currently separated from safe execution semantics.
+A queue can redeliver work, but cannot determine whether a prior external side effect happened.
 
 ### Owner
 
-007 owns attempt/fencing/idempotent admission. Provider/runtime specs may own scheduling and concurrency tuning only.
+Proposed 007B.
 
-### Required rules
+### Required rule
 
 ```text
-QUEUE_JOB_ID != EXECUTION_ATTEMPT_ID
-WORKER_RETRY != AUTHORIZED_RETRY
-CONCURRENCY_LIMIT != AUTHORIZATION
-PROVIDER_ACK != DURABLE_COMPLETION_RECEIPT
+QUEUE_RETRY != SAFE_RETRY
+WORKER_LEASE != EXECUTION_AUTHORITY
 ```
 
-Recovery tests must cover crash after durable dispatch intent but before provider acknowledgement.
+Every side-effect attempt has durable identity, fencing and reconciliation semantics.
 
 ---
 
-## 10. TG-09 — Skill artifacts have no explicit lifecycle/ownership model
+## 10. TG-09 — Skill artifact lifecycle lacks explicit canonical ownership
 
-**Source trigger:** SkillHone whole-skill optimization.
+**Source trigger:** SkillHone + WeKnora skill catalogs.
 
 ### Gap
 
-021 covers extension manifests and automation but not a first-class lifecycle for skills containing instructions, executable helpers, references and assets.
+A future skill system needs package/revision/source/eval/release/rollback ownership rather than treating a skill as a mutable prompt folder.
 
 ### Owner
 
-021.
+021 authoring gate; potentially 021B if split is required.
 
-### Required future model
+### Candidate entities
 
 ```text
 SkillPackage
@@ -308,181 +272,153 @@ SkillReleaseState
 SkillRollbackTarget
 ```
 
-Skill executable helpers must pass the same capability/execution boundary as any other external tool.
-
 ---
 
-## 11. TG-10 — Held-out evaluation isolation is not mandatory for skill evolution
+## 11. TG-10 — Held-out evaluation isolation is a security boundary
 
-**Source trigger:** SkillHone eval/skill split.
+**Source trigger:** SkillHone private eval isolation.
 
 ### Gap
 
-The program requires benchmarks but does not require optimization/evolution systems to be structurally unable to read held-out probes/gold labels.
+Prompt instructions not to inspect gold evidence are insufficient when an optimizer can access the same filesystem/process credentials.
 
 ### Owner
 
-021 for skill evolution; reusable benchmark-security pattern may be consumed by later optimization systems.
+021 authoring gate / proposed 021B.
 
-### Required invariant
+### Rule
 
 ```text
-HELD_OUT_EVAL_DATA=EVIDENCE_ARTIFACT
-OPTIMIZER_READ_ACCESS_TO_HELD_OUT_GOLD=NO
-PROMPT_CONVENTION_IS_NOT_ISOLATION
+OPTIMIZER_ACCESS != HELD_OUT_GOLD_ACCESS
 ```
 
-The isolation mechanism must be enforced by process/filesystem/capability boundaries and tested adversarially.
+Enforce with filesystem/process/capability separation and leakage tests.
 
 ---
 
-## 12. TG-11 — Persistent decision history is not clearly separated from memory
+## 12. TG-11 — Persistent decision history can be mistaken for active memory
 
-**Source trigger:** SkillHone persistent decision history.
+**Source trigger:** SkillHone Git-native diagnosis/change/outcome history.
 
 ### Gap
 
-A development decision history is valuable, but the current product vision could tempt a later implementation to ingest every optimization trajectory directly into durable memory.
+Optimization evidence and trajectories are valuable but are not automatically user-confirmed durable memory.
 
 ### Owner
 
-021 owns skill-evolution decision evidence. 006 may accept explicit Memory Proposals derived from that evidence, never raw automatic promotion.
+021 evidence lifecycle; 006 only consumes explicit Memory Proposals.
 
-### Required invariant
+### Rule
 
 ```text
-DECISION_HISTORY=EVIDENCE
-TRAJECTORY=EVIDENCE
-MERGED_SKILL_DIFF=SOURCE_EVIDENCE
-NONE_OF_THE_ABOVE=AUTO_ACTIVE_MEMORY
+DECISION_HISTORY != ACTIVE_MEMORY
+TRAJECTORY != MEMORY
 ```
 
 ---
 
-## 13. TG-12 — Generated wiki/knowledge crystallization lacks an explicit authority transition
+## 13. TG-12 — Generated wiki/summary state needs explicit authority transitions
 
-**Source trigger:** WeKnora auto-wiki.
+**Source trigger:** WeKnora generated knowledge/wiki surfaces.
 
 ### Gap
 
-Fehrest has notes, memory proposals and team crystallization UX, but the transition from generated summary/wiki output to durable canonical content is not explicit.
+A useful generated page may appear authoritative while still being a model/derived artifact.
 
 ### Owner
 
-010 owns canonical document/object representation; 006 owns memory promotion; 011/019 own personal/team review UX; 013 may generate drafts.
+010 canonical object transitions + 006 memory proposal semantics + 011 UX.
 
-### Required states
+### Required distinction
 
 ```text
 GENERATED_DRAFT
+DERIVED_REBUILDABLE_VIEW
 USER_SAVED_CANONICAL_DOCUMENT
+CANONICAL_PROPOSAL
 MEMORY_PROPOSAL
 APPROVED_MEMORY
 ```
 
-These states must not collapse into one another.
-
 ---
 
-## 14. TG-13 — Session-persistent sandbox state can outlive its grant or secret policy
+## 14. TG-13 — Persistent sandbox can outlive the authority that created it
 
-**Source trigger:** WeKnora persistent Docker/E2B/Cube sandboxes.
+**Source trigger:** WeKnora session-persistent sandboxes.
 
 ### Gap
 
-A session-persistent sandbox improves workflows but creates stale credential, stale grant and leftover-artifact risk.
+A sandbox may remain alive after grant/network/secret policy changes.
 
 ### Owner
 
-007 owns grant/execution admission; 018 may extend org policy; 021 owns extension/skill sandbox product integration.
+Proposed 007B.
 
-### Required tests
+### Rule
 
-```text
-grant revoked while sandbox alive
-credential reference rotated
-network scope narrowed
-session expires
-snapshot restored under different principal
-artifact from prior attempt reused
-sandbox provider unavailable
-```
+Every side-effectful call rechecks generation-bound authority; sandbox existence is never enough.
 
-A live sandbox does not imply a live authority chain.
+The code-level review expands this through TG-21/TG-22.
 
 ---
 
-## 15. TG-14 — Source-license admission is documented but lacks a standard reusable evidence record
+## 15. TG-14 — Source-admission evidence needs a reusable contract
 
-**Source trigger:** RoMem's missing root license and WeKnora's mixed third-party license surface.
+**Source trigger:** all three donors.
 
 ### Gap
 
-Program invariant I-17 requires provenance/rights, but future specs could each record source admission differently.
+Per-file code reuse at scale needs consistent provenance/rights/transformation/security evidence.
 
-### Owner/gate
+### Owner
 
-Program engineering method + each adopting spec research/Ponytail gate.
+Program engineering method / active owning spec per reused unit.
 
-### Required evidence schema
+### Resolution
+
+The follow-up now provides:
 
 ```text
-SOURCE_REPOSITORY
-SOURCE_COMMIT
-SOURCE_PATH
-SOURCE_BLOB_OR_DIGEST
-COPYRIGHT_ORIGIN
-LICENSE_OR_PERMISSION_BASIS
-THIRD_PARTY_STATUS
-ATTRIBUTION_REQUIREMENTS
-SECURITY_REVIEW
-ADOPTION_CLASS=USE|ADAPT|STUDY|BENCHMARK|DEFER|REJECT
-AUTHORIZED_BY
+docs/research/FOUNDER_SOURCE_USE_AUTHORIZATION_2026-09-08.md
+docs/research/SOURCE_REUSE_ADAPTATION_MATRIX_2026-09-08.md
 ```
 
-Absence of a provable rights basis forces `STUDY/BENCHMARK` or `DEFER`, not code reuse.
+Founder direct source-use permission is recorded, while exact public-license and nested third-party status remain independently recorded.
 
-## 16. Cross-gap dependency check
+---
 
-No new top-level spec is necessary if ownership is enforced as follows:
+# 16. Deep-pass continuation
+
+The code-level pass adds:
 
 ```text
-004/005 = optional derived temporal/graph intelligence
-006     = canonical temporal memory and promotion semantics
-007     = context + principal/grant + execution-admission foundation
-009     = trusted vertical proof including temporal/promotion safety
-010/011 = canonical document state + edit/history UX
-013/014 = model/web consumers of 007 execution authority
-018     = organization policy extension
-021     = extension/skill lifecycle and held-out evolution gates
+TG-15 bitemporal precision
+TG-16 temporal model/checkpoint identity
+TG-17 canonical retention vs retrieval forgetting
+TG-18 proposal-pipeline durability/idempotency
+TG-19 derived affinity/interest influence
+TG-20 supersession-key collision
+TG-21 remote resource binding vs authority
+TG-22 policy/config/skill generation fencing
+TG-23 artifact promotion boundary
+TG-24 DNS/SSRF/egress semantics
+TG-25 skill-install supply chain/privilege
+TG-26 audit evidence vs output truncation
+TG-27 eval redaction/score lineage
+TG-28 optimizer attribution/contamination
 ```
 
-This preserves the existing dependency spine rather than adding donor-shaped phases.
+See `V2_TENCENT_CODE_LEVEL_GAP_REVIEW_2026-09-08.md` for the load-bearing detail.
 
-## 17. New strategic kill criteria
-
-Future specs must be willing to reject donor-inspired complexity when any of these are true:
+# 17. Final first-pass reconciliation
 
 ```text
-TEMPORAL_RERANK_GAIN_NOT_MATERIAL -> reject/defer RoMem-like derived temporal layer
-MEMORY_RESIDENCY_GAIN_NOT_MATERIAL -> use simpler context policy
-CONFIRMATION_FRICTION_EXCEEDS_SAFETY_GAIN -> redesign, do not silently auto-promote
-DERIVED_EDIT_CANNOT_ROUNDTRIP -> do not expose editable derived surface
-SANDBOX_POLICY_NOT_ENFORCEABLE -> deny requested execution mode
-SKILL_OPTIMIZATION_FAILS_HELD_OUT_GENERALIZATION -> reject auto-evolution path
-SKILL_EVAL_LEAKAGE_DETECTED -> invalidate optimization evidence
-SOURCE_RIGHTS_UNPROVEN -> no code reuse
-```
-
-## 18. Final gap disposition
-
-```text
-TENCENT_SOURCE_GAP_REVIEW=COMPLETE
-GAPS_IDENTIFIED=14
-GAPS_OWNED_OR_GATED=14
-NEW_SPEC_IDS=0
-KNOWN_NEW_SEMANTIC_OVERLAP_WITHOUT_OWNER=0
-KNOWN_NEW_AUTHORIZATION_BYPASS=0
+FIRST_PASS_PRESERVED_AS_EVIDENCE=YES
+FIRST_PASS_STALE_OWNERSHIP_CORRECTED=YES
+TOTAL_SOURCE_DRIVEN_GAPS=28
+GAPS_WITH_OWNER_OR_AUTHORING_GATE=28/28
+FOUNDER_SOURCE_USE_PERMISSION=RECORDED
 R1_CHANGED=NO
+R1_REVIEW_CANDIDATE_CHANGED=NO
 PRODUCT_IMPLEMENTATION_AUTHORIZED=NO
 ```
