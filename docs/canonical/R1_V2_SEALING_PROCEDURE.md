@@ -1,17 +1,19 @@
 # R1-v2 Sealing Procedure
 
-**Status:** `SEALING_PREPARATION_PENDING` — corrected 2026-09-07
+**Status:** `SEALING_PREPARATION_PENDING` — candidate-binding convergence 2026-09-08
 
-> Prior revision claimed `PREPARATION_COMPLETE` while packet semantics were inconsistent, exact review candidate was not frozen, and independent review surfaces did not exist. That claim is withdrawn. Truthful status under repository vocabulary is `SEALING_PREPARATION_PENDING` until all prerequisites in §1 are satisfied, packets are internally qualified, and `REVIEW_CANDIDATE` is frozen at an immutable commit/tree.
+> `SEALING_PREPARATION_PENDING` means repository-local qualification may be complete while sealing authority is still blocked by independent review. The exact immutable `REVIEW_CANDIDATE` is bound outside this self-referential file by `specs/CURRENT.md` and the active independent-review issues after exact-head qualification. This procedure intentionally does not hard-code its own containing commit as "latest main" or as a frozen candidate.
 
 **Prerequisites (current truth):**
 - R1_V2_MACHINE_VALIDATION=PASS
 - R1_V2_VALIDATION_CONVERGENCE=COMPLETE
 - R1_V2_MUTATION_TESTING=PASS
-- R1_V2_EXACT_HEAD_CI=PASS (verify-artifacts + Bench R1 Validation on `0d206ca` — see §6)
-- R1_V2_SCIENTIFIC_REVIEW=PENDING  (`PENDING_INDEPENDENT_REVIEW` in packets — independent evidence required)
-- R1_V2_STATISTICAL_REVIEW=PENDING (`PENDING_INDEPENDENT_REVIEW` in packets — independent evidence required)
-- REVIEW_CANDIDATE=NOT_YET_FROZEN (this branch is `WORKING_CANDIDATE`; no `SEALED_CANDIDATE` exists)
+- R1_V2_EXACT_HEAD_CI=REQUIRED_ON_BOUND_REVIEW_CANDIDATE
+- R1_V2_SCIENTIFIC_REVIEW=PENDING (`PENDING_INDEPENDENT_REVIEW` — independent evidence required)
+- R1_V2_STATISTICAL_REVIEW=PENDING (`PENDING_INDEPENDENT_REVIEW` — independent evidence required)
+- REVIEW_CANDIDATE_BINDING_SOURCE=`specs/CURRENT.md` + active independent-review issues
+- SEALED_CANDIDATE=NONE
+- EXECUTION_CANDIDATE=NONE
 
 ---
 
@@ -48,6 +50,11 @@ If independent review genuinely requires a qualified external reviewer who is un
 | `EXECUTION_CANDIDATE` | `SEALED_CANDIDATE` plus bound `model_condition`, `runtime_policy`, `reasoning_effort`, `execution_manifest`, and sealed `session_arithmetic` — the only commit permitted to govern `runs/*` | execution manifest digest, model/runtime binding | No — any model/runtime/seed/arm mutation invalidates batch |
 
 Independent review must bind to an **exact immutable `REVIEW_CANDIDATE` commit/tree and artifact manifest** — not to "latest main" generically.
+
+The authoritative candidate identity is external to this file:
+- `specs/CURRENT.md` records the operational pointer;
+- the active independent-review issues record the exact commit/tree/manifest binding;
+- this procedure records the binding law, not a self-referential SHA.
 
 - If a reviewer approves `WORKING_CANDIDATE` and the branch moves before merge, that approval is **stale** and a fresh exact-head review is required.
 - If a load-bearing artifact (`bench/R1/*`, `docs/canonical/R1_V2*`, `.github/workflows/bench-r1-validation.yml`) changes after review, `AFFECTED_REVIEW=STALE`.
@@ -95,48 +102,39 @@ bench/R1/test_review_binding.py: PASS (candidate freshness, digest binding, pack
 .github/workflows/verify-artifacts.yml: verify-artifacts PASS
 ```
 
-### Step 6: Exact candidate commit/tree binding — identities verified live 2026-09-07
+### Step 6: Exact candidate commit/tree binding — no self-reference
 
-This section corrects stale labeling in prior revision. Values are mechanically read via `git rev-parse` and `gh pr view`; do not hand-invent hashes.
+The frozen review identity must be obtained mechanically from Git and recorded in `specs/CURRENT.md` plus the active scientific/statistical review issues. Do not hand-invent hashes and do not embed a "latest main" identity in this file.
+
+This separation is intentional: a file cannot reliably pin the SHA of the commit that contains its own bytes without creating a self-reference cycle. The deterministic artifact manifest therefore binds artifact bytes and may carry the generator's pre-manifest candidate commit/tree, while the authoritative review surface binds the exact immutable post-qualification commit/tree.
+
+Required binding record:
 
 ```text
-# Live main (verified 2026-09-07):
-CURRENT_MAIN_COMMIT=0d206cac9a6e5ebfe3d47401aa1f081a587af60f
-CURRENT_MAIN_TREE=6943decf800574906b76b0abd7dc5a3460cef072
-
-# PR #34 history (for provenance, not authority):
-PR_34_HEAD=ec7a1eac5d6c45a8d4795b99bd1b41351dd72eef   # commit ec7a1ea
-PR_34_MERGE=f8a0dd5e9b06e137a53157e99732d71d635f9a0f   # merge commit f8a0dd5 (Merge PR #34)
-
-# Review-packet commit (docs-only, NOT a PR merge):
-REVIEW_PACKET_COMMIT=ae155e5804922b41926163beacaf03b34f09b6cf  # "docs: add R1-v2 independent review packets"
-
-# Correct labeling:
-#   ae155e5 == REVIEW_PACKET_COMMIT — it is NOT PR #34's merge and NOT latest main
-#   f8a0dd5 == PR_34_MERGE
-#   0d206ca == CURRENT_MAIN (sealing procedure added here; latest main)
-```
-
-**On this branch (`review/r1-v2-independent-review-convergence`):**
-```text
-WORKING_CANDIDATE_COMMIT=0d206cac9a6e5ebfe3d47401aa1f081a587af60f  # base — will advance on this branch
-WORKING_CANDIDATE_TREE=6943decf800574906b76b0abd7dc5a3460cef072  # base
-REVIEW_CANDIDATE=NOT_YET_FROZEN — packet is WORKING_CANDIDATE for internal qualification only
-SEALED_CANDIDATE=NONE
-EXECUTION_CANDIDATE=NONE
-```
-
-When `REVIEW_CANDIDATE` is frozen, this file will be updated to pin:
-```text
-REVIEW_CANDIDATE_COMMIT=<exact SHA>
-REVIEW_CANDIDATE_TREE=<exact tree SHA>
-MANIFEST_SHA256=<sha256 of bench/R1/artifact-manifest-v2.json>
-ARTIFACT_SHA256S=<per-file deterministic SHA-256 map>
+REVIEW_CANDIDATE_COMMIT=<exact immutable Git commit from CURRENT/review issue>
+REVIEW_CANDIDATE_TREE=<exact tree for REVIEW_CANDIDATE_COMMIT>
+MANIFEST_CANDIDATE_COMMIT=<candidate_commit recorded by artifact-manifest-v2.json>
+MANIFEST_CANDIDATE_TREE=<candidate_tree recorded by artifact-manifest-v2.json>
+MANIFEST_SHA256=<manifest_sha256 recorded by artifact-manifest-v2.json>
+ARTIFACT_SHA256S=<all 18 deterministic artifact digests>
 MODEL_CONDITION=gpt-5.6-terra / medium / 0.0 / 1024 / []
 REASONING_EFFORT=medium
-RUNTIME_POLICY=WARN-ON-FLOATING-ALIAS, FAIL_CLOSED_ON_DRIFT
+RUNTIME_POLICY=FAIL_CLOSED_ON_IDENTITY_DRIFT; MODEL_VERSION_PIN_STATUS=UNAVAILABLE_FLOATING_ALIAS_RECORD_PER_RUN
 SESSION_ARITHMETIC=252+600+120=972
 ```
+
+Binding validity requires all of:
+
+```text
+REVIEW_CANDIDATE_COMMIT_EXISTS=YES
+REVIEW_CANDIDATE_TREE_MATCHES_COMMIT=YES
+MANIFEST_ARTIFACT_MAP_MATCHES_REVIEW_CANDIDATE_BYTES=YES
+EXACT_HEAD_CI_ON_REVIEW_CANDIDATE=PASS
+SCIENTIFIC_REVIEW_ISSUE_BINDS_EXACT_CANDIDATE=YES
+STATISTICAL_REVIEW_ISSUE_BINDS_EXACT_CANDIDATE=YES
+```
+
+A docs-only `specs/CURRENT.md` update after the load-bearing candidate is frozen does not stale the candidate. Any change to a load-bearing artifact does.
 
 ### Step 7: Do NOT seal
 
@@ -194,19 +192,24 @@ BLOCKER=<exact external gate, e.g., INDEPENDENT_STATISTICAL_REVIEWER_UNAVAILABLE
 NEXT_ACTION=<exact external action required>
 ```
 
-## 6. Exact-head CI on live main (verified 2026-09-07)
+## 6. Exact-head CI authority
+
+Exact-head qualification belongs to the immutable `REVIEW_CANDIDATE`, not to a historical `main` SHA copied into this procedure.
+
+At minimum, the bound candidate must have successful evidence for:
 
 ```text
-commit 0d206ca (main) tree 6943decf
-verify-artifacts=PASS
-Bench R1 Validation:
-  test-scorer=PASS
-  test-validator=PASS
-  validate=PASS
-  canonical-equality=PASS
+verify-artifacts
+test-scorer
+test-validator
+test-statistical-design
+test-review-binding
+validate
+canonical-equality
+manifest-check
 ```
 
-Exact-head qualification for `REVIEW_CANDIDATE` must re-establish `PASS` after packets/manifest/validation are added on that candidate. Do not carry `0d206ca` CI as authority for a later mutated head.
+Never carry CI from an older commit as authority for a mutated candidate. `specs/CURRENT.md` and the active review issues must identify the candidate whose CI was actually checked.
 
 ## 7. Historical ceiling routing — preserved
 
