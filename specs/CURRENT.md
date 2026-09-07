@@ -78,22 +78,52 @@ Validation evidence:
 - `python bench/R1/validate.py` exits 0
 - `python bench/R1/test_scorer.py`: 20/20 tests pass (includes 4 adversarial tests)
 - `python bench/R1/validate.py`: exits 0 with all validation checks including field-level canonical-derived equality and genuine mutation testing
-- CI pipeline `.github/workflows/bench-r1-validation.yml` added: test-scorer, validate, canonical-equality jobs
+- CI pipeline `.github/workflows/bench-r1-validation.yml` expanded to 7 jobs: test-scorer, test-validator, test-statistical-design, test-review-binding, validate, canonical-equality, manifest-check
 - PR #34 merged (ec7a1ea → f8a0dd5): harden post-merge validation convergence
 - `python bench/R1/test_validate.py`: 41/41 tests pass (6 test classes)
+- `python bench/R1/test_r1v2_statistical_design.py`: 19/19 static statistical design proofs (K=30/29/20/15/14/0, psi edges, N_pairs/r_conf bounds, task-class loss, B_NULL ordering)
+- `python bench/R1/test_review_binding.py`: 18/18 review-binding validations (candidate freshness, digest drift, stale packet, formula, empirical-data leakage, PASS without evidence, SEALED without prerequisites)
+- `python bench/R1/generate_manifest.py --check` → PASS (artifact map verified; parent-candidate warning allowed for self-reference)
 - Field-level canonical-vs-derived equality verified on main
 - Genuine mutation testing with deepcopy+TemporaryDirectory verified on main
-- `test-validator` job added to exact-head CI
-- `test_scorer.py`, `test_validate.py`, `validate.py`, `git diff --check` all pass on main
+- `test-validator`, `test-r1v2-statistical-design`, `test-review-binding`, `manifest-check` jobs added to exact-head CI
+- `test_scorer.py`, `test_validate.py`, `test_r1v2_statistical_design.py`, `test_review_binding.py`, `validate.py`, `git diff --check` all pass on main
+- Deterministic SHA-256 artifact manifest `bench/R1/artifact-manifest-v2.json` generated via `generate_manifest.py` (18 artifacts, manifest_sha256 a78584..., candidate f1289ff → e144870)
+- PR #35 merged (review/r1-v2-independent-review-convergence deb769b → f1289ff): repair statistical, scientific, sealing packets for independent-review convergence
+- PR #36 merged (fix/r1-v2-postmerge-manifest-alignment a85a572 → e144870): align manifest and review-binding test for merge-commit HEAD
 - 30 tasks, 30 oracles, 96 evidence items generated
 - 12 task classes derived from task definitions
 - 12 distinct checkpoints (t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t12, t14; t11 absent)
 - 27 of the 30 tasks are issued before t14 for maintenance lag testing
+- Exact-head CI on `deb769b` (PR #35) and `a85a572` (PR #36) and merge heads `f1289ff`/`e144870`: 7/7 Bench jobs + verify-artifacts PASS
 
-**Pending independent review:**
+**Internally qualified review candidate (frozen):**
 ```text
-R1_V2_SCIENTIFIC_REVIEW=PENDING
-R1_V2_STATISTICAL_REVIEW=PENDING
+REVIEW_CANDIDATE_COMMIT=e1448705cf0bebb17533b6f4dd202c2eaa707172
+REVIEW_CANDIDATE_TREE=fd841c56a1debd5845b37d81f84bf586cb435411
+MANIFEST_CANDIDATE_COMMIT=f1289ff031ce209a7a38f12980258fba191419b8
+MANIFEST_SHA256=a78584247f6e48b7b75271af7cf608280c9a10228cf3ab04f3d8a4930cf8eabd
+MANIFEST_ARTIFACTS=18 (benchmark-spec, tasks, oracles, corpus, scorer, validate, test_scorer, test_validate, test_r1v2, test_review_binding, prereg, variance-pilot, maintenance, generate_manifest, bench-r1-validation.yml, scientific packet, statistical packet, sealing procedure)
+PR_34_HEAD=ec7a1eac5d6c45a8d4795b99bd1b41351dd72eef
+PR_34_MERGE=f8a0dd5e9b06e137a53157e99732d71d635f9a0f
+REVIEW_PACKET_COMMIT=ae155e5804922b41926163beacaf03b34f09b6cf
+CURRENT_MAIN_AT_QUALIFICATION=e1448705cf0bebb17533b6f4dd202c2eaa707172
+```
+
+**Pending independent review (issues created 2026-09-07, STATUS=PENDING):**
+```text
+R1_V2_SCIENTIFIC_REVIEW=PENDING  → issue #37 "R1-v2 Independent Scientific Review — e144870 (PENDING)"
+R1_V2_STATISTICAL_REVIEW=PENDING → issue #38 "R1-v2 Independent Statistical Review — e144870 (PENDING)"
+```
+Each issue binds EXACT_REVIEW_CANDIDATE_COMMIT/TREE + MANIFEST_SHA256 + packet paths + required sections + acceptance/rejection/stale rules + NO_EXECUTION_AUTHORITY. Hermes may not self-issue PASS; independent evidence required. If no qualified independent reviewer is available via authorized environment, this remains the external blocker after all repository-local work is exhausted.
+
+**Review package internal qualification:**
+```text
+R1_V2_STATISTICAL_PACKET=REPAIRED (pairing unit (task,repeat), power formula, symbol table, B_NULL before PSI, static proofs)
+R1_V2_SCIENTIFIC_PACKET=REPAIRED (stratified R1_V1 vs R1_V2_DESIGN vs R1_V2_EMPIRICAL_DATA=NONE, per-arm fairness, ceiling routing)
+R1_V2_SEALING_PROCEDURE=REPAIRED (correct identities, SEALING_PREPARATION_PENDING, candidate states, stale rules)
+R1_V2_ARTIFACT_MANIFEST=GENERATED (deterministic SHA-256, 18 artifacts)
+R1_V2_REVIEW_BINDING_VALIDATION=ADDED (18 + 19 tests, fail-closed)
 ```
 
 The rebuild required no new founder route decision. The existing authorized scope (`ROUTE=NEW_PREREGISTRATION`, `MODEL_STRATEGY=KEEP_REPRESENTATIVE_STRONG_MODEL`, `TASK_STRATEGY=INCREASE_DISCRIMINATING_DIFFICULTY`) covers the implementation methodology.
