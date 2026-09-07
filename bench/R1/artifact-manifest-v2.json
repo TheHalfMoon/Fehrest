@@ -1,7 +1,7 @@
 {
   "artifact_count": 18,
   "artifacts": {
-    ".github/workflows/bench-r1-validation.yml": "2349412eaf744ef0aca55681f4f614e17dc463d27658be7b0dca42b5618c4782",
+    ".github/workflows/bench-r1-validation.yml": "0dfd76e4c542b0c91f7087e111b46a87270f99eeaadbd850389ec6a57fc5fe92",
     "bench/R1/MAINTENANCE-V2.md": "1ac80b5b4c33bf43e70292b6296020157d83e514aac2cbd92f22630740ff32a9",
     "bench/R1/PREREGISTRATION-V2.md": "016666f5d231153fc9b4620700f8a522697ce91881ca850e4e1ee7c4ebbc72bb",
     "bench/R1/VARIANCE-PILOT-V2.md": "f44a673fd2f8dbf68b7697b4168662e1e111e46e6fe57ff00f76c99274937612",
@@ -20,13 +20,13 @@
     "docs/canonical/R1_V2_SEALING_PROCEDURE.md": "bf48f5be4a6cfd9b94720c02e95c00aa0d80695bc586271ae50ae5347db54543",
     "docs/canonical/R1_V2_STATISTICAL_REVIEW_PACKET.md": "70f989f400c292044aad09b4378469c9bcd20b9eafd1220e9696449ab9cef5e4"
   },
-  "candidate_commit": "1358daa007baeec032939f976d4eb9d757475b73",
-  "candidate_tree": "7567f653ef33a206df05fa4b46294537a244c6c5",
+  "candidate_commit": "5d8bc077fd6e64d05c4096437d8468db30b86aae",
+  "candidate_tree": "705c6f8b9eb32ab1716751f66b89173b3c570372",
   "historical_sealed_ids": {
     "R1_V1_1_SEALED_COMMIT": "ed79d8ecee08e4ce4dd384edaffc4a27cfd6d37c",
     "R1_V1_CEILING_EFFECT_EVIDENCE": "d99c21773b50daab9f0fd04f8b3bf34cf9f6e3ec7d11c2555132841ddcd2096b"
   },
-  "manifest_sha256": "d3a59db98d70bcbd5c5a9b1ac9de1c3c1480cba9b69bb5d9e32ecb049457d1ad",
+  "manifest_sha256": "44647539e42ef53e00416b0499b7d378e8fb1a2d3c22707f948a8f4551d7d749",
   "model_condition": {
     "max_output_tokens": 1024,
     "model": "gpt-5.6-terra",
