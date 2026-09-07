@@ -12,7 +12,7 @@
     "bench/R1/scorer.py": "1d28b1ffc38b2587a48d9681dc78bcbd4d8aff98654cbf227153b2f18135774d",
     "bench/R1/tasks-v2.json": "4e77b63e785a2d1e2e90b5a763686ce3fbfd16c4d6e0238e8c639c395cd41647",
     "bench/R1/test_r1v2_statistical_design.py": "923189b44aad2097f69e9095614b11da8ca899371e9ddf09ab7ceaab765a9d33",
-    "bench/R1/test_review_binding.py": "23cb3016f377e22b85be3f34b5148924a67c6440d18f341457e8fe9630621ecd",
+    "bench/R1/test_review_binding.py": "090ce26553196920bbec2c2254e9f7302d5a7db58202d81c93d6fc80a9fbdd70",
     "bench/R1/test_scorer.py": "b8b55dea6846354eb9007fbb1ecc7493b0bf9a9744691004cf8af304e8938f63",
     "bench/R1/test_validate.py": "2bf47e15503ab2bdb83ed8d8555f498e4e1c2c40a7a991f9ff0079e012a3abda",
     "bench/R1/validate.py": "a78405b62d606ae0f9a294b5a1ad17b77c7178a47617f8e7aa6850a997e53b6e",
@@ -20,13 +20,13 @@
     "docs/canonical/R1_V2_SEALING_PROCEDURE.md": "bf48f5be4a6cfd9b94720c02e95c00aa0d80695bc586271ae50ae5347db54543",
     "docs/canonical/R1_V2_STATISTICAL_REVIEW_PACKET.md": "70f989f400c292044aad09b4378469c9bcd20b9eafd1220e9696449ab9cef5e4"
   },
-  "candidate_commit": "5d8bc077fd6e64d05c4096437d8468db30b86aae",
-  "candidate_tree": "705c6f8b9eb32ab1716751f66b89173b3c570372",
+  "candidate_commit": "f1289ff031ce209a7a38f12980258fba191419b8",
+  "candidate_tree": "58f21b9911bc000a87731232ae43a938c9f5a246",
   "historical_sealed_ids": {
     "R1_V1_1_SEALED_COMMIT": "ed79d8ecee08e4ce4dd384edaffc4a27cfd6d37c",
     "R1_V1_CEILING_EFFECT_EVIDENCE": "d99c21773b50daab9f0fd04f8b3bf34cf9f6e3ec7d11c2555132841ddcd2096b"
   },
-  "manifest_sha256": "44647539e42ef53e00416b0499b7d378e8fb1a2d3c22707f948a8f4551d7d749",
+  "manifest_sha256": "a78584247f6e48b7b75271af7cf608280c9a10228cf3ab04f3d8a4930cf8eabd",
   "model_condition": {
     "max_output_tokens": 1024,
     "model": "gpt-5.6-terra",
