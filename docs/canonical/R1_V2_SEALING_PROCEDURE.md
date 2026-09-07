@@ -218,7 +218,7 @@ CEILING_EFFECT = NOT_THESIS_FALSIFICATION
 NO_SILENT_CONTINUATION
 ```
 
-Do not silently invent `SECOND_CEILING = THESIS_NOT_SUPPORTED`. If a different interpretation is desired for R1-v2, it must be explicitly preregistered and independently reviewed before execution.
+Do not silently invent `SECOND_CEILING = THESIS_NOT_SUPPORTED` (`SECOND_CEILING` is `NOT_PREREGISTERED`). If a different interpretation is desired for R1-v2, it must be explicitly preregistered and independently reviewed before execution.
 
 ## 8. References
 

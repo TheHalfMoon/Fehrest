@@ -243,7 +243,7 @@ Fehrest's thesis is **explicitly falsifiable** (PREREG §§23–24, §30; VARIAN
   THESIS_NOT_SUPPORTED → trigger F-1 review; do not begin Spec 002 by default
   THESIS_FAIL          → halt product expansion
   ```
-  `SECOND_CEILING = THESIS_NOT_SUPPORTED` is **not preregistered** and must not be invented. If a different interpretation were desired for R1-v2, it would require an explicitly preregistered and independently reviewed amendment **before** execution (statistical packet §17).
+  `SECOND_CEILING = THESIS_NOT_SUPPORTED` is **not preregistered** (`SECOND_CEILING = THESIS_NOT_SUPPORTED` is `NOT_PREREGISTERED`) and must not be invented. If a different interpretation were desired for R1-v2, it would require an explicitly preregistered and independently reviewed amendment **before** execution (statistical packet §17).
 - If **B4 gives essentially the same continuation quality at lower complexity and reasonable maintenance cost**, that is **evidence against** the Fehrest thesis and is reported as such (PREREG §§6.1, 30; MAINTENANCE-V2.md §10 "Why B5 could lose this"). `THESIS_NOT_SUPPORTED` and `THESIS_FAIL` remain distinct terminal verdicts under PREREG §24.
 - No composite score is computed; weighting was not preregistered (PREREG §9). Effect estimates are reported as power-analysis inputs with uncertainty, not as product claims.
 - No feature will be added in response to any R1-v2 result (`GRAPH=NO`, `VECTORS=NO`, `AUTO_MEMORY=NO`, etc. — PREREG §30).
