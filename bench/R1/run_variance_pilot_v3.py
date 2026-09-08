@@ -43,9 +43,9 @@ REPO_ROOT = BENCH_DIR.parent.parent.resolve()
 RUNS_DIR = REPO_ROOT / "runs" / "variance-pilot-v3"
 RAW_DIR = RUNS_DIR / "raw"
 
-SEALED_CANDIDATE_COMMIT = "REPLACE_WITH_SEALED_V3_COMMIT"
-SEALED_CANDIDATE_TREE = "REPLACE_WITH_SEALED_V3_TREE"
-SEALED_MANIFEST_SHA256 = "REPLACE_WITH_SEALED_V3_MANIFEST"
+SEALED_CANDIDATE_COMMIT = "bec381fe845f7aac4cf0384b4c68918fc896145e"
+SEALED_CANDIDATE_TREE = "a8f79dc66abc187e9af3c592e4eb9c94db75d3ed"
+SEALED_MANIFEST_SHA256 = "2e2f234063f001b01003a40636e4373ff5e8cafe8b2759456bd1e3f4cab93156"
 SEALED_MODEL_CONDITION = {"model": "gpt-5.6-terra", "reasoning_effort": "medium", "temperature": 0.0, "max_output_tokens": 1024, "tool_set": []}
 EXPECTED_SESSIONS = {"maintenance": 252, "comparison": 600, "calibration": 120, "total": 972}
 ARMS_COMPARISON = ["B0", "B1", "B3", "B4", "B5"]

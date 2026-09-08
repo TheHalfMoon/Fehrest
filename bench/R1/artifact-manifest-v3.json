@@ -20,8 +20,8 @@
     "docs/canonical/R1_V3_SEALING_PROCEDURE.md": "19f23065d35ff9c9c1297f4c7358042181af4ca826c66f5c23285c3eccf043a0",
     "docs/canonical/R1_V3_STATISTICAL_REVIEW_PACKET.md": "46b93bdf5e315cc76b3850cd89eb7dce6544e4e93030f0acc7c5509baabc4818"
   },
-  "candidate_commit": "5e360813513ca6445a24b37cb28c05bbeddf5cdc",
-  "candidate_tree": "502467f58794029410d4cf2b798e6cf9fe884ab1",
+  "candidate_commit": "bec381fe845f7aac4cf0384b4c68918fc896145e",
+  "candidate_tree": "a8f79dc66abc187e9af3c592e4eb9c94db75d3ed",
   "historical_sealed_ids": {
     "R1_V1_1_SEALED_COMMIT": "ed79d8ecee08e4ce4dd384edaffc4a27cfd6d37c",
     "R1_V1_CEILING_EFFECT_EVIDENCE": "d99c21773b50daab9f0fd04f8b3bf34cf9f6e3ec7d11c2555132841ddcd2096b"
