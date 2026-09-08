@@ -12,21 +12,21 @@
     "bench/R1/scorer.py": "1d28b1ffc38b2587a48d9681dc78bcbd4d8aff98654cbf227153b2f18135774d",
     "bench/R1/tasks-v2.json": "4e77b63e785a2d1e2e90b5a763686ce3fbfd16c4d6e0238e8c639c395cd41647",
     "bench/R1/test_r1v2_statistical_design.py": "923189b44aad2097f69e9095614b11da8ca899371e9ddf09ab7ceaab765a9d33",
-    "bench/R1/test_review_binding.py": "124bf523eb39784e56b73012b1267a74e465b8bd32bcc4f648703387cc43f5bb",
+    "bench/R1/test_review_binding.py": "68d8639eb2216f3c5492a40c69ed98186b608da29c3b7339aee143baf9076a3d",
     "bench/R1/test_scorer.py": "b8b55dea6846354eb9007fbb1ecc7493b0bf9a9744691004cf8af304e8938f63",
     "bench/R1/test_validate.py": "2bf47e15503ab2bdb83ed8d8555f498e4e1c2c40a7a991f9ff0079e012a3abda",
     "bench/R1/validate.py": "a78405b62d606ae0f9a294b5a1ad17b77c7178a47617f8e7aa6850a997e53b6e",
-    "docs/canonical/R1_V2_SCIENTIFIC_REVIEW_PACKET.md": "729037b97fc4725ab4c1379c51a28e7d880314ab58216ce81df6a62e73d9861c",
-    "docs/canonical/R1_V2_SEALING_PROCEDURE.md": "d0a123d8b48a08ac5575fb4ea0ca2c5f024ddcbc31703d0917e6ad63d7a077ca",
-    "docs/canonical/R1_V2_STATISTICAL_REVIEW_PACKET.md": "70f989f400c292044aad09b4378469c9bcd20b9eafd1220e9696449ab9cef5e4"
+    "docs/canonical/R1_V2_SCIENTIFIC_REVIEW_PACKET.md": "8a8fb4404e870e6fef3d78f4b0b9e43840062ba2870cfb07a839a0c24fe30766",
+    "docs/canonical/R1_V2_SEALING_PROCEDURE.md": "d2fd090edefe788cd6aca801dcf7db4c72f78091116838b09ff9e4ac8e5395fc",
+    "docs/canonical/R1_V2_STATISTICAL_REVIEW_PACKET.md": "6186b056b95e2d3993e53d1aee6497846c9cdde8eb695e46afd8ddeed7b1f887"
   },
-  "candidate_commit": "39994546512c95b54e1b19280a05638193bf9f13",
-  "candidate_tree": "bcfcd2fc36941b536665db575a9932e93ee3fd39",
+  "candidate_commit": "c3f196d6ce9f24239e85eb5e6088c6f60144d336",
+  "candidate_tree": "3a95687474ffdb930d02c0eae8c2467ca007a13a",
   "historical_sealed_ids": {
     "R1_V1_1_SEALED_COMMIT": "ed79d8ecee08e4ce4dd384edaffc4a27cfd6d37c",
     "R1_V1_CEILING_EFFECT_EVIDENCE": "d99c21773b50daab9f0fd04f8b3bf34cf9f6e3ec7d11c2555132841ddcd2096b"
   },
-  "manifest_sha256": "d10b5579fc5ad9532e90adb535054a374277e1cedb7ee50eb9bd01901e1b3af5",
+  "manifest_sha256": "a050c4380937c9cda33c5368c23a2f96eea2b382f5463e2e93e345bfb7246962",
   "model_condition": {
     "max_output_tokens": 1024,
     "model": "gpt-5.6-terra",

@@ -1,9 +1,10 @@
 # R1-v2 Independent Scientific Review Packet
 
-**Status:** `PENDING_INDEPENDENT_REVIEW`
+**Status:** `SUPERSEDED_BY_FOUNDER_GOVERNANCE_DECISION_2026-09-08 — HUMAN_REVIEW_OPTIONAL, INTERNAL_QUALIFICATION_GATING`
 
 **Created:** 2026-09-04
 **Revised:** 2026-09-07 — convergence repair (branch `review/r1-v2-independent-review-convergence`)
+**Amended:** 2026-09-08 — `FOUNDER_DECISION=REMOVE_MANDATORY_HUMAN_INDEPENDENT_REVIEW_GATE` (see `docs/canonical/FOUNDER_GOVERNANCE_DECISION_2026-09-08_REMOVE_MANDATORY_HUMAN_REVIEW.md`); `HUMAN_INDEPENDENT_REVIEW=OPTIONAL`, `HUMAN_REVIEW_BLOCKING_AUTHORITY=NO`; `INDEPENDENT_HUMAN_REVIEW_REQUIREMENT=SUPERSEDED_BY_FOUNDER_GOVERNANCE_DECISION`; internal deterministic qualification now gates sealing.
 
 **Candidate binding (WORKING_CANDIDATE at this revision):**
 ```text
@@ -22,6 +23,7 @@ Review must bind to an exact immutable `REVIEW_CANDIDATE` commit/tree + artifact
 - R1_V2_EXACT_HEAD_CI=PASS
 - `python bench/R1/validate.py`, `test_validate.py`, `test_scorer.py` all PASS on `0d206ca`
 - PR #34 merged (`f8a0dd5` = merge, `ec7a1ea` = head) — see sealing procedure for identities
+- **Founder governance 2026-09-08:** `INDEPENDENT_HUMAN_REVIEW_REQUIREMENT=SUPERSEDED_BY_FOUNDER_GOVERNANCE_DECISION`, `HUMAN_REVIEW_BLOCKING_AUTHORITY=NO`
 
 **Hard boundaries (must not be violated):**
 - R1_V2_MODEL_EXECUTION=PROHIBITED
@@ -30,8 +32,10 @@ Review must bind to an exact immutable `REVIEW_CANDIDATE` commit/tree + artifact
 - R1_V2_UNBLINDING=PROHIBITED
 - SPEC_002_ACTIVATION=PROHIBITED
 - PRODUCT_IMPLEMENTATION=PROHIBITED
-- R1_V2_SCIENTIFIC_REVIEW=PENDING
-- R1_V2_STATISTICAL_REVIEW=PENDING
+- R1_V2_SCIENTIFIC_REVIEW=HUMAN_REVIEW_OPTIONAL (mandatory gate SUPERSEDED_BY_FOUNDER_GOVERNANCE_DECISION_2026-09-08)
+- R1_V2_STATISTICAL_REVIEW=HUMAN_REVIEW_OPTIONAL (mandatory gate SUPERSEDED_BY_FOUNDER_GOVERNANCE_DECISION_2026-09-08)
+- R1_V2_SCIENTIFIC_DESIGN_SELF_AUDIT=REQUIRED (internal 16-section deterministic qualification)
+- R1_V2_STATISTICAL_DESIGN_SELF_AUDIT=REQUIRED (internal 18-section deterministic qualification)
 
 **Evidence stratification — this packet enforces it:**
 
@@ -49,7 +53,7 @@ Prior packet phrasing that implied `R1_V2_EMPIRICAL_DATA` already existed is cor
 
 ## 1. CONSTRUCT_VALIDITY
 
-**Status:** `PENDING_INDEPENDENT_REVIEW`
+**Status:** `INTERNALLY_QUALIFIED — HUMAN_REVIEW_OPTIONAL_PER_FOUNDER_DECISION_2026-09-08`
 
 Tasks measure **continuation correctness**, not trivia retrieval. Each of the 30 tasks is a `what should the maintainer do next?` prompt requiring project continuation under evolving state, not fact lookup. 12 task classes (NEXT_ACTION, SUPERSESSION_AVOIDANCE, CONSTRAINT_RETENTION, FAILED_APPROACH_AVOIDANCE, SCOPE_RESOLUTION, CONTRADICTION_HANDLING, HISTORICAL_REASONING, IDENTITY_CONTINUITY, ABSTENTION, PROVENANCE, CROSS_FILE_SYNTHESIS, EPOCH_BOUNDARY) are derived from structural definitions in `PREREGISTRATION-V2.md` §5.1 and frozen task identities §5.3. Prompt design tests diagnostic reasoning (temporal chaining, supersession, constraint retention, cross-file synthesis, epoch-boundary validity) — see `benchmark-spec-v2.json: tasks[].task_class` and `corpus-manifest-v2.json: evidence.available_from` lineage.
 
@@ -57,7 +61,7 @@ Validator `test_validate.py: TestCanonicalValidation.test_task_classes` verifies
 
 ## 2. DIFFICULTY_WITHOUT_ARTIFICIALITY
 
-**Status:** `PENDING_INDEPENDENT_REVIEW`
+**Status:** `INTERNALLY_QUALIFIED — HUMAN_REVIEW_OPTIONAL_PER_FOUNDER_DECISION_2026-09-08`
 
 Complexity is **structural, not linguistic-obscurity** (PREREG §3, §3.1). Mechanisms are legitimate project phenomena:
 
@@ -80,7 +84,7 @@ See also §7 BASELINE_FAIRNESS and §10 CEILING_RISK for how difficulty is falsi
 
 ## 3. TASK_TIMELINE_VALIDITY
 
-**Status:** `PENDING_INDEPENDENT_REVIEW`
+**Status:** `INTERNALLY_QUALIFIED — HUMAN_REVIEW_OPTIONAL_PER_FOUNDER_DECISION_2026-09-08`
 
 | Quantity | Value | Source / verification |
 |---|---|---|
@@ -96,7 +100,7 @@ Timeline verified against `benchmark-spec-v2.json`, `tasks-v2.json`, `oracles-v2
 
 ## 4. TEMPORAL_LEAKAGE
 
-**Status:** `PENDING_INDEPENDENT_REVIEW`
+**Status:** `INTERNALLY_QUALIFIED — HUMAN_REVIEW_OPTIONAL_PER_FOUNDER_DECISION_2026-09-08`
 
 Corpus manifest encodes `available_from` (= checkpoint) and `available_until` per evidence item. A task at checkpoint `t` may only depend on evidence with `available_from ≤ t`. Validator `_validate_no_future_leakage` rejects any `task.depends_on_evidence` that references future evidence. Mutation test 6 in `validate.py:_validate_mutations` (and `test_validate.py:test_future_evidence_mutation_detected`) corrupts `available_from` to 999 and verifies detection. Structural temporal subtraction is also enforced: `VARIANCE-PILOT-V2.md` §4 maintainer sees nothing from `Tj > i`.
 
@@ -104,13 +108,13 @@ No R1-v2 empirical leakage claim — this is a static design obligation.
 
 ## 5. NO_INFORMATION_LEAKAGE
 
-**Status:** `PENDING_INDEPENDENT_REVIEW`
+**Status:** `INTERNALLY_QUALIFIED — HUMAN_REVIEW_OPTIONAL_PER_FOUNDER_DECISION_2026-09-08`
 
 Beyond temporal leakage, **future-evidence vocabulary subtraction** is enforced: distractor/trap documents share keywords and naming conventions but contain no privileged future facts that would shortcut the task. Validator `_validate_evidence_dependencies` + `_validate_corpus` verifies every `depends_on_evidence` / `trap_evidence` / `distractor_evidence` exists in the corpus, and `test_validate.py:test_no_future_leakage` proves no forward reference. Maintainer sessions are task-blind (`MAINTENANCE-V2.md` §3): the maintainer never sees tasks, oracles, or scoring rules and is never told that anything will matter later — so even if a distractor were informative, the maintainer cannot exploit task knowledge.
 
 ## 6. NO_ARM_FAVORING
 
-**Status:** `PENDING_INDEPENDENT_REVIEW`
+**Status:** `INTERNALLY_QUALIFIED — HUMAN_REVIEW_OPTIONAL_PER_FOUNDER_DECISION_2026-09-08`
 
 Neutral arm identifiers `B-NULL, B0, B1, B3, B4, B5` contain no evaluative language like "Fehrest" or "baseline" in model-visible prompts. Arm identity is stripped before scorer adjudication (PREREG §14). Same model condition for all arms (`PREREG §11`: `gpt-5.6-terra`, `medium`, `0.0`, `1024`, `[]`). Construction documented in `PREREGISTRATION-V2.md` §6 / `benchmark-spec-v2.json: arms`.
 
@@ -118,7 +122,7 @@ This does **not** mean mechanisms are identical — see §7 for intentionally di
 
 ## 7. BASELINE_FAIRNESS
 
-**Status:** `PENDING_INDEPENDENT_REVIEW`
+**Status:** `INTERNALLY_QUALIFIED — HUMAN_REVIEW_OPTIONAL_PER_FOUNDER_DECISION_2026-09-08`
 
 Strong simple baselines are **preserved, not weakened** (PREREG §6.1: "B0, B1, B3, B4 are not weakened because they performed well in R1-v1"). The scientific requirement is a *fair preregistered comparison*, not identical mechanism.
 
@@ -140,7 +144,7 @@ Key fairness notes:
 
 ## 8. SCORER_VALIDITY
 
-**Status:** `PENDING_INDEPENDENT_REVIEW`
+**Status:** `INTERNALLY_QUALIFIED — HUMAN_REVIEW_OPTIONAL_PER_FOUNDER_DECISION_2026-09-08`
 
 Deterministic scorer `fehrest-r1 score` ("scorer.py"), arm identity stripped before adjudication. No human adjudication in the pilot (PREREG §14; VARIANCE-PILOT §5). Rules (PREREG §8):
 
@@ -157,13 +161,13 @@ Additions in v2 (`require_synthesis`, `require_epoch`) are **not substring-only 
 
 ## 9. ORACLE_VALIDITY
 
-**Status:** `PENDING_INDEPENDENT_REVIEW`
+**Status:** `INTERNALLY_QUALIFIED — HUMAN_REVIEW_OPTIONAL_PER_FOUNDER_DECISION_2026-09-08`
 
 30 oracles, each mapping to exactly one task (`oracle.task_id` ↔ `task.oracle_id`, 1:1). Fields `require_all`, `forbid`, `trap_present`, `stale_facts`, `correct_facts`, `require_synthesis`, `require_epoch`, `provenance_required` are frozen in `oracles-v2.json` and derived from `benchmark-spec-v2.json: oracles`. Every `derivation_evidence` entry exists in `corpus-manifest-v2.json` (validator `_validate_evidence_dependencies`). `require_all`/`forbid` are field-scoped; `stale_facts`/`correct_facts` distinguish trap vs current. Field-level canonical equality between `benchmark-spec-v2.json: oracles` and `oracles-v2.json` confirmed (`validate.py:_validate_canonical_derived_equality`, `test_validate.py: TestCanonicalDerivedEquality`).
 
 ## 10. CEILING_RISK
 
-**Status:** `PENDING_INDEPENDENT_REVIEW`
+**Status:** `INTERNALLY_QUALIFIED — HUMAN_REVIEW_OPTIONAL_PER_FOUNDER_DECISION_2026-09-08`
 
 **Stratification enforced (corrects prior conflation):**
 
@@ -176,7 +180,7 @@ Reviewer instruction: evaluate ceiling risk as *design adequacy*: do the 30 hard
 
 ## 11. FLOOR_RISK
 
-**Status:** `PENDING_INDEPENDENT_REVIEW`
+**Status:** `INTERNALLY_QUALIFIED — HUMAN_REVIEW_OPTIONAL_PER_FOUNDER_DECISION_2026-09-08`
 
 Floor risk exists if tasks are **too difficult** for any arm (including B5) to answer correctly, yielding near-zero pass rates and `ψ̂ ≈ 0` for a different reason. Like ceiling, floor is `R1_V2_EMPIRICAL` outcome `NOT_YET_OBSERVED` and must not be conflated with thesis falsification.
 
@@ -186,7 +190,7 @@ Floor risk exists if tasks are **too difficult** for any arm (including B5) to a
 
 ## 12. MAINTENANCE_FAIRNESS
 
-**Status:** `PENDING_INDEPENDENT_REVIEW`
+**Status:** `INTERNALLY_QUALIFIED — HUMAN_REVIEW_OPTIONAL_PER_FOUNDER_DECISION_2026-09-08`
 
 Protocol: `MAINTENANCE-V2.md` (R1-V2). Summary per `benchmark-spec-v2.json: maintenance_protocol` and session arithmetic:
 
@@ -203,7 +207,7 @@ Validator `_validate_maintenance_arithmetic` and `_validate_session_arithmetic` 
 
 ## 13. MODEL_IDENTITY_ADMISSIBILITY
 
-**Status:** `PENDING_INDEPENDENT_REVIEW`
+**Status:** `INTERNALLY_QUALIFIED — HUMAN_REVIEW_OPTIONAL_PER_FOUNDER_DECISION_2026-09-08`
 
 Fail-closed policy enforced via `model_identity_admissibility` (`benchmark-spec-v2.json: model_identity_admissibility`). Conditions and handling (PREREG §11–12, VARIANCE-PILOT §4.1):
 
@@ -220,19 +224,19 @@ Fail-closed policy enforced via `model_identity_admissibility` (`benchmark-spec-
 
 ## 14. COST_BOUND
 
-**Status:** `PENDING_INDEPENDENT_REVIEW`
+**Status:** `INTERNALLY_QUALIFIED — HUMAN_REVIEW_OPTIONAL_PER_FOUNDER_DECISION_2026-09-08`
 
 Context budget: `6000` bytes primary tier, `secondary_tier_bytes=null` (single tier — `benchmark-spec-v2.json: context_budget`, validator `_validate_context_budget`). Statistical power prior: `target_power=0.80`, `minimum_meaningful_effect_delta=0.15`, `alpha=0.05`. Session costs: `maintenance_sessions=252`, `comparison_continuation_sessions=600`, `calibration_sessions=120`, `total_variance_pilot_sessions=972` (proved arithmetic). `r_conf` ceiling `20` and `total 3888` max (PREREG §21) bound confirmatory cost. **No B5 accuracy claim without its cost** (PREREG §10).
 
 ## 15. REPRODUCIBILITY
 
-**Status:** `PENDING_INDEPENDENT_REVIEW`
+**Status:** `INTERNALLY_QUALIFIED — HUMAN_REVIEW_OPTIONAL_PER_FOUNDER_DECISION_2026-09-08`
 
 All artifacts deterministic. Single source of truth `benchmark-spec-v2.json`; derived `tasks-v2.json`, `oracles-v2.json`, `corpus-manifest-v2.json` field-level equality verified (validator `_validate_canonical_derived_equality`, `test_validate.py: TestCanonicalDerivedEquality`). Randomized order is seeded and interleaved, realized order written to `runs/execution-order.jsonl`; randomization spec in `benchmark-spec-v2.json: randomization`. Validator script `bench/R1/validate.py`, tests `bench/R1/test_validate.py` (41 tests, 6 classes) and `bench/R1/test_scorer.py` (20 tests) are self-contained and included in exact-head CI `.github/workflows/bench-r1-validation.yml` (5 jobs: `test-scorer`, `test-validator`, `validate`, `canonical-equality`, plus `verify-artifacts`). Current head `0d206ca` CI verified `PASS` for `verify-artifacts` and Bench R1 Validation.
 
 ## 16. FEHREST_FALSIFIABILITY
 
-**Status:** `PENDING_INDEPENDENT_REVIEW`
+**Status:** `INTERNALLY_QUALIFIED — HUMAN_REVIEW_OPTIONAL_PER_FOUNDER_DECISION_2026-09-08`
 
 Fehrest's thesis is **explicitly falsifiable** (PREREG §§23–24, §30; VARIANCE-PILOT §11; `F-1` in `docs/17-FAILURE-CONDITIONS.md`):
 
@@ -243,7 +247,7 @@ Fehrest's thesis is **explicitly falsifiable** (PREREG §§23–24, §30; VARIAN
   THESIS_NOT_SUPPORTED → trigger F-1 review; do not begin Spec 002 by default
   THESIS_FAIL          → halt product expansion
   ```
-  `SECOND_CEILING = THESIS_NOT_SUPPORTED` is **not preregistered** (`SECOND_CEILING = THESIS_NOT_SUPPORTED` is `NOT_PREREGISTERED`) and must not be invented. If a different interpretation were desired for R1-v2, it would require an explicitly preregistered and independently reviewed amendment **before** execution (statistical packet §17).
+  `SECOND_CEILING = THESIS_NOT_SUPPORTED` is **not preregistered** (`SECOND_CEILING = THESIS_NOT_SUPPORTED` is `NOT_PREREGISTERED`) and must not be invented. If a different interpretation were desired for R1-v2, it would require an explicitly preregistered and internally qualified amendment (human review optional per Founder decision 2026-09-08, see statistical packet §17) **before** execution.
 - If **B4 gives essentially the same continuation quality at lower complexity and reasonable maintenance cost**, that is **evidence against** the Fehrest thesis and is reported as such (PREREG §§6.1, 30; MAINTENANCE-V2.md §10 "Why B5 could lose this"). `THESIS_NOT_SUPPORTED` and `THESIS_FAIL` remain distinct terminal verdicts under PREREG §24.
 - No composite score is computed; weighting was not preregistered (PREREG §9). Effect estimates are reported as power-analysis inputs with uncertainty, not as product claims.
 - No feature will be added in response to any R1-v2 result (`GRAPH=NO`, `VECTORS=NO`, `AUTO_MEMORY=NO`, etc. — PREREG §30).
