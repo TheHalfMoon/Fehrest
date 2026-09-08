@@ -49,7 +49,7 @@ R1_V3_ADVERSARIAL_VALIDATION=PASS
 R1_V3_PROMPT_ORACLE_OVERLAP=PASS
 R1_V3_TASK_CLASS_PRESERVATION=DESIGNED_WITH_SAFETY_MARGIN
 R1_V3_SEALED_CANDIDATE_STATUS=SEALED_2026-09-08_VIA_INTERNAL_QUALIFICATION
-R1_V3_VARIANCE_PILOT_STATUS=AUTHORIZED_AFTER_SEAL (PROHIBITED_UNTIL_SEALED -> AUTHORIZED)
+R1_V3_VARIANCE_PILOT_STATUS=AUTHORIZED_AFTER_SEAL_BUT_BLOCKED_ON_PROVIDER_CREDENTIAL (OPENAI_API_KEY not set in current WSL host; harness PREPARE PASS, EXECUTE fail-closed as designed; no model calls executed, no evidence fabricated)
 ```
 
 R1_REPLACEMENT_EXECUTOR_VERSION=11
@@ -183,9 +183,10 @@ SEALING_GOVERNANCE_MERGE_COMMIT=61e7816b9793a30891d20808deab9175d6872a77
 HUMAN_GATE_SUPERSEDED_AT=61e7816
 SEALED_AT=61e7816
 CURRENT_AUTHORIZED_LOCAL_WORK=R1_V3_VARIANCE_PILOT_AUTHORIZED_AFTER_SEAL
+BLOCKER=OPENAI_API_KEY_REQUIRED_FOR_R1_V3_PILOT (sealed model gpt-5.6-terra medium 0.0 1024; harness PREPARE PASS; EXECUTE blocked fail-closed; no evidence fabricated; awaiting secure credential via environment variable)
 PROJECT_COMPLETE=NO
-BLOCKER=NONE (founder decision NEW_PREREGISTRATION_V3 authorizes R1-v3 design; prior pilot preserved)
-NEXT_ACTION=EXECUTE_R1_V3_VARIANCE_PILOT_AFTER_SEAL (follow AGENTS.md SPEC→…→CONVERGE; preserve prior pilot as immutable)
+
+NEXT_ACTION=EXECUTE_R1_V3_VARIANCE_PILOT_WHEN_PROVIDER_AUTHORIZED (requires OPENAI_API_KEY; not mocked) (follow AGENTS.md SPEC→…→CONVERGE; preserve prior pilot as immutable)
 ```
 Issues #43 and #44 remain preserved as historical evidence (exact-candidate binding, CI runs 34169748858/34169748870, 0 qualified verdicts, not PASS/REJECT) and were closed as `SUPERSEDED` on 2026-09-08 after PR #47 merged (not as PASS). Per `docs/canonical/FOUNDER_GOVERNANCE_DECISION_2026-09-08_REMOVE_MANDATORY_HUMAN_REVIEW.md`, `HUMAN_INDEPENDENT_REVIEW=OPTIONAL` and `HUMAN_REVIEW_BLOCKING_AUTHORITY=NO`. Sealing, variance-pilot execution, and subsequent R1 gates now proceed via deterministic internal qualification (validate.py, test_scorer.py 20/20, test_validate.py 41/41, test_r1v2_statistical_design.py 19/19, test_review_binding.py, generate_manifest --check, exact-head CI 7/7 + verify-artifacts) — not via mandatory external human PASS. Model execution remains `PROHIBITED_UNTIL_SEALED` until this sealing commit lands; Spec 002 remains `BLOCKED_BY_R1_TERMINAL_GATE`.
 
