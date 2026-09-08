@@ -11,12 +11,14 @@ ARCHITECTURE=FROZEN
 PHASE_T_IMPLEMENTATION=TECHNICALLY_COMPLETE
 PHASE_T_PRODUCT_THESIS=NOT_YET_TERMINAL
 ACTIVE_EXECUTION_FRONTIER=R1
-ACTIVE_R1_SUBGATE=R1_V2_SEALED_VARIANCE_PILOT_AUTHORIZED
+ACTIVE_R1_SUBGATE=R1_V2_VARIANCE_PILOT_PREPARED_PENDING_EXECUTION
 FOUNDER_GOVERNANCE_DECISION_2026-09-08=REMOVE_MANDATORY_HUMAN_INDEPENDENT_REVIEW_GATE
 R1_V2_SEALED_CANDIDATE_COMMIT=61e7816b9793a30891d20808deab9175d6872a77
 R1_V2_SEALED_CANDIDATE_TREE=43b77fa3d7fd056b5b836f01439c7f1de8ea5ac4
 R1_V2_SEALED_MANIFEST_SHA256=a050c4380937c9cda33c5368c23a2f96eea2b382f5463e2e93e345bfb7246962
 R1_V2_SEALED_CANDIDATE_STATUS=SEALED_2026-09-08_VIA_INTERNAL_QUALIFICATION
+R1_V2_VARIANCE_PILOT_HARNESS=PREPARED_2026-09-08 (bench/R1/run_variance_pilot_v2.py)
+R1_V2_VARIANCE_PILOT_PREPARE_STATUS=PASS_NO_API_PREPARE_GATE_PASS
 R1_REPLACEMENT_EXECUTOR_VERSION=11
 R1_REPLACEMENT_EXECUTOR_SHA256=92ee711067d65bd7d68a0204becc916d3e9322fa975d815d8da6126e8c31dd89
 R1_REPLACEMENT_V8_PREPARE_RESULT=FAIL_CLOSED_BEFORE_MODEL_CALLS
@@ -147,10 +149,10 @@ SEALING_GOVERNANCE_AMENDMENT_COMMIT=f76c77c170f047102371ba2dc0791741495f4292
 SEALING_GOVERNANCE_MERGE_COMMIT=61e7816b9793a30891d20808deab9175d6872a77
 HUMAN_GATE_SUPERSEDED_AT=61e7816
 SEALED_AT=61e7816
-CURRENT_AUTHORIZED_LOCAL_WORK=VARIANCE_PILOT_AUTHORIZED
+CURRENT_AUTHORIZED_LOCAL_WORK=VARIANCE_PILOT_PREPARED_PENDING_PROVIDER
 PROJECT_COMPLETE=NO
-BLOCKER=NONE (sealing complete via internal qualification; variance pilot is next authorized unit)
-NEXT_ACTION=EXECUTE_VARIANCE_PILOT_972_SESSIONS (follow bench/R1/VARIANCE-PILOT-V2.md + benchmark-spec-v2.json; model gpt-5.6-terra medium 0.0 1024)
+BLOCKER=MODEL_PROVIDER_ACCESS_REQUIRED (OPENAI_API_KEY not set; harness ready for 972 sessions, fail-closed without provider)
+NEXT_ACTION=PROVIDE_OPENAI_API_KEY_AND_EXECUTE_VARIANCE_PILOT (or execute in Windows environment with provider; harness: bench/R1/run_variance_pilot_v2.py --execute)
 ```
 Issues #43 and #44 remain preserved as historical evidence (exact-candidate binding, CI runs 34169748858/34169748870, 0 qualified verdicts, not PASS/REJECT) and were closed as `SUPERSEDED` on 2026-09-08 after PR #47 merged (not as PASS). Per `docs/canonical/FOUNDER_GOVERNANCE_DECISION_2026-09-08_REMOVE_MANDATORY_HUMAN_REVIEW.md`, `HUMAN_INDEPENDENT_REVIEW=OPTIONAL` and `HUMAN_REVIEW_BLOCKING_AUTHORITY=NO`. Sealing, variance-pilot execution, and subsequent R1 gates now proceed via deterministic internal qualification (validate.py, test_scorer.py 20/20, test_validate.py 41/41, test_r1v2_statistical_design.py 19/19, test_review_binding.py, generate_manifest --check, exact-head CI 7/7 + verify-artifacts) — not via mandatory external human PASS. Model execution remains `PROHIBITED_UNTIL_SEALED` until this sealing commit lands; Spec 002 remains `BLOCKED_BY_R1_TERMINAL_GATE`.
 
@@ -176,6 +178,27 @@ R1_V2_STATISTICAL_DESIGN_SELF_AUDIT=PASS (18 sections INTERNALLY_QUALIFIED)
 INDEPENDENT_HUMAN_REVIEW_REQUIREMENT=SUPERSEDED_BY_FOUNDER_GOVERNANCE_DECISION_2026-09-08
 ```
 This sealing record is mechanically verified: `git diff 61e7816..HEAD -- bench/R1 docs/canonical .github/workflows` empty for sealed paths (except this CURRENT update and the new seal record, which are sealing documentation); manifest `a050c438...` covers all 18 load-bearing artifacts deterministically. Re-clone at `61e7816` reproduces identical digests (exact-head CI proves). Sealing does not invent `R1_V2_SCIENTIFIC_REVIEW=PASS` or `STATISTICAL_REVIEW=PASS` — it records internal qualification under amended governance.
+
+**R1-v2 variance pilot harness — prepared (2026-09-08):**
+```text
+HARNESS=bench/R1/run_variance_pilot_v2.py
+HARNESS_BRANCH=feat/r1-v2-variance-pilot-harness
+SEALED_CANDIDATE=61e7816b9793a30891d20808deab9175d6872a77
+PREPARE_STATUS=PASS
+NO_API_PREPARE_GATE=PASS
+PREPARE_SEED=b1aeba1de38a2a7e (derived from sealed candidate + manifest)
+EXECUTION_ORDER_ENTRIES=720 (30 tasks × 6 arms × 4 repeats, blocked and interleaved)
+MAINTENANCE_SESSIONS=252 (separate, per MAINTENANCE-V2.md)
+TOTAL_PILOT_SESSIONS=972
+EXECUTION_PLAN=runs/variance-pilot-v2/execution-plan.json
+SEALED_BINDING=runs/variance-pilot-v2/sealed-binding.json
+VALIDATION=bench/R1/validate.py PASS (0 errors) at prepare
+EXECUTE_STATUS=PENDING_PROVIDER (OPENAI_API_KEY not set, fail-closed)
+EXECUTE_COMMAND=python bench/R1/run_variance_pilot_v2.py --execute
+PROVIDER=gpt-5.6-terra medium 0.0 1024 (same as sealed model condition)
+INFRA_FAILURE_THRESHOLD=10% (VARIANCE-PILOT-V2.md §7)
+```
+Harness validates sealed binding, session arithmetic, and generates deterministic execution order (seed `b1aeba1de38a2a7e` from sealed candidate). No model call is made during prepare. Execute requires `OPENAI_API_KEY` and will fail closed if provider identity drifts or infra failures exceed 10%. Per-arm context builders (B-NULL, B0, B1, B3, B4, B5) remain to be fully wired for the 972-session run; current harness scaffolds order and plan and proves prepare gate.
 
 **Review package internal qualification — converged (amended 2026-09-08):**
 ```text
