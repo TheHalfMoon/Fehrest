@@ -1,0 +1,881 @@
+[
+  {
+    "id": "S1-A-NEXT",
+    "scenario": "S1",
+    "checkpoint": 1,
+    "task_class": "NEXT_ACTION",
+    "prompt": "Beacon checkpoint t1: ingestion pipeline is ready for its next configuration update. What is the correct next action? Provide {action, reasoning}.",
+    "output_contract": {
+      "action": "string",
+      "reasoning": "string"
+    },
+    "oracle_id": "O-S1-A-NEXT",
+    "temporal_span": 1,
+    "required_hops": 1,
+    "epoch_boundary": false,
+    "depends_on_evidence": [
+      "S1-T0-DEC-001",
+      "S1-T1-DEC-001"
+    ],
+    "trap_evidence": [
+      "S1-T0-DEC-002"
+    ],
+    "distractor_evidence": [
+      "S1-T1-DIST-001",
+      "S1-T1-DIST-002"
+    ],
+    "historical_as_of": null,
+    "abstention_required": false,
+    "provenance_required": false,
+    "cross_scenario_dependencies": []
+  },
+  {
+    "id": "S1-B-SUPERSESSION",
+    "scenario": "S1",
+    "checkpoint": 2,
+    "task_class": "SUPERSESSION_AVOIDANCE",
+    "prompt": "Beacon checkpoint t2: proposal 'Use JSON for event serialization to improve debugging'. Evaluate. Provide {action, reasoning}.",
+    "output_contract": {
+      "action": "string",
+      "reasoning": "string"
+    },
+    "oracle_id": "O-S1-B-SUPERSESSION",
+    "temporal_span": 2,
+    "required_hops": 2,
+    "epoch_boundary": false,
+    "depends_on_evidence": [
+      "S1-T0-DEC-002",
+      "S1-T1-DEC-002",
+      "S1-T2-DEC-001"
+    ],
+    "trap_evidence": [
+      "S1-T0-DEC-002"
+    ],
+    "distractor_evidence": [
+      "S1-T2-DIST-001"
+    ],
+    "historical_as_of": null,
+    "abstention_required": false,
+    "provenance_required": false,
+    "cross_scenario_dependencies": []
+  },
+  {
+    "id": "S1-C-CONSTRAINT",
+    "scenario": "S1",
+    "checkpoint": 3,
+    "task_class": "CONSTRAINT_RETENTION",
+    "prompt": "Beacon checkpoint t3: new data source with email addresses will be ingested. What must the maintainer ensure? Provide {action, reasoning}.",
+    "output_contract": {
+      "action": "string",
+      "reasoning": "string"
+    },
+    "oracle_id": "O-S1-C-CONSTRAINT",
+    "temporal_span": 3,
+    "required_hops": 1,
+    "epoch_boundary": false,
+    "depends_on_evidence": [
+      "S1-T0-CON-001",
+      "S1-T3-DEC-001"
+    ],
+    "trap_evidence": [],
+    "distractor_evidence": [
+      "S1-T3-DIST-001",
+      "S1-T3-DIST-002"
+    ],
+    "historical_as_of": null,
+    "abstention_required": false,
+    "provenance_required": false,
+    "cross_scenario_dependencies": []
+  },
+  {
+    "id": "S1-D-FAILED",
+    "scenario": "S1",
+    "checkpoint": 4,
+    "task_class": "FAILED_APPROACH_AVOIDANCE",
+    "prompt": "Beacon checkpoint t4: proposal 'Use single Kafka partition with batching for simplicity'. Evaluate. Provide {action, reasoning}.",
+    "output_contract": {
+      "action": "string",
+      "reasoning": "string"
+    },
+    "oracle_id": "O-S1-D-FAILED",
+    "temporal_span": 3,
+    "required_hops": 2,
+    "epoch_boundary": false,
+    "depends_on_evidence": [
+      "S1-T1-DEC-003",
+      "S1-T2-DEC-002",
+      "S1-T4-DEC-001"
+    ],
+    "trap_evidence": [
+      "S1-T1-DEC-003"
+    ],
+    "distractor_evidence": [
+      "S1-T4-DIST-001"
+    ],
+    "historical_as_of": null,
+    "abstention_required": false,
+    "provenance_required": false,
+    "cross_scenario_dependencies": []
+  },
+  {
+    "id": "S1-E-SCOPE",
+    "scenario": "S1",
+    "checkpoint": 5,
+    "task_class": "SCOPE_RESOLUTION",
+    "prompt": "Beacon checkpoint t5: proposal 'Standardize retry and partitioning approaches across Beacon and Marisol'. Evaluate. Provide {action, reasoning}.",
+    "output_contract": {
+      "action": "string",
+      "reasoning": "string"
+    },
+    "oracle_id": "O-S1-E-SCOPE",
+    "temporal_span": 5,
+    "required_hops": 2,
+    "epoch_boundary": true,
+    "depends_on_evidence": [
+      "S1-T5-DEC-001",
+      "S2-T0-DEC-001"
+    ],
+    "trap_evidence": [],
+    "distractor_evidence": [
+      "S1-T5-DIST-001"
+    ],
+    "historical_as_of": null,
+    "abstention_required": false,
+    "provenance_required": false,
+    "cross_scenario_dependencies": [
+      "S2"
+    ]
+  },
+  {
+    "id": "S1-F-CONTRADICTION",
+    "scenario": "S1",
+    "checkpoint": 6,
+    "task_class": "CONTRADICTION_HANDLING",
+    "prompt": "Beacon checkpoint t6: task requires processing non-critical telemetry events under the current ADR set. How should the pipeline be configured? Provide {action, reasoning, conflict_flagged}.",
+    "output_contract": {
+      "action": "string",
+      "reasoning": "string",
+      "conflict_flagged": "boolean"
+    },
+    "oracle_id": "O-S1-F-CONTRADICTION",
+    "temporal_span": 1,
+    "required_hops": 2,
+    "epoch_boundary": false,
+    "depends_on_evidence": [
+      "S1-T5-ADR-012",
+      "S1-T6-ADR-015"
+    ],
+    "trap_evidence": [
+      "S1-T5-ADR-012"
+    ],
+    "distractor_evidence": [
+      "S1-T6-DIST-001"
+    ],
+    "historical_as_of": null,
+    "abstention_required": false,
+    "provenance_required": false,
+    "cross_scenario_dependencies": []
+  },
+  {
+    "id": "S1-G-HISTORICAL",
+    "scenario": "S1",
+    "checkpoint": 7,
+    "task_class": "HISTORICAL_REASONING",
+    "prompt": "What serialization format was Beacon using at checkpoint t1? Provide {answer, as_of_checkpoint}.",
+    "output_contract": {
+      "answer": "string",
+      "as_of_checkpoint": "integer"
+    },
+    "oracle_id": "O-S1-G-HISTORICAL",
+    "temporal_span": 6,
+    "required_hops": 1,
+    "epoch_boundary": false,
+    "depends_on_evidence": [
+      "S1-T1-DEC-002"
+    ],
+    "trap_evidence": [
+      "S1-T7-DEC-001"
+    ],
+    "distractor_evidence": [
+      "S1-T7-DIST-001"
+    ],
+    "historical_as_of": 1,
+    "abstention_required": false,
+    "provenance_required": false,
+    "cross_scenario_dependencies": []
+  },
+  {
+    "id": "S1-H-IDENTITY",
+    "scenario": "S1",
+    "checkpoint": 8,
+    "task_class": "IDENTITY_CONTINUITY",
+    "prompt": "Beacon checkpoint t8: configuration file references module 'ingest-core'. What is the correct current module name? Provide {answer, reasoning}.",
+    "output_contract": {
+      "answer": "string",
+      "reasoning": "string"
+    },
+    "oracle_id": "O-S1-H-IDENTITY",
+    "temporal_span": 8,
+    "required_hops": 3,
+    "epoch_boundary": false,
+    "depends_on_evidence": [
+      "S1-T0-DEC-004",
+      "S1-T3-DEC-002",
+      "S1-T6-DEC-001"
+    ],
+    "trap_evidence": [
+      "S1-T0-DEC-004",
+      "S1-T3-DEC-002"
+    ],
+    "distractor_evidence": [
+      "S1-T8-DIST-001"
+    ],
+    "historical_as_of": null,
+    "abstention_required": false,
+    "provenance_required": false,
+    "cross_scenario_dependencies": []
+  },
+  {
+    "id": "S1-I-ABSENT",
+    "scenario": "S1",
+    "checkpoint": 9,
+    "task_class": "ABSTENTION",
+    "prompt": "Beacon checkpoint t9: what is the measured maximum throughput of the ingestion pipeline? Provide {action, abstain, reasoning}.",
+    "output_contract": {
+      "action": "string",
+      "abstain": "boolean",
+      "reasoning": "string"
+    },
+    "oracle_id": "O-S1-I-ABSENT",
+    "temporal_span": 9,
+    "required_hops": 1,
+    "epoch_boundary": true,
+    "depends_on_evidence": [],
+    "trap_evidence": [
+      "S1-T3-BENCH-001",
+      "S2-T5-BENCH-001"
+    ],
+    "distractor_evidence": [
+      "S1-T9-DIST-001",
+      "S1-T9-DIST-002"
+    ],
+    "historical_as_of": null,
+    "abstention_required": true,
+    "provenance_required": false,
+    "cross_scenario_dependencies": []
+  },
+  {
+    "id": "S1-J-PROVENANCE",
+    "scenario": "S1",
+    "checkpoint": 10,
+    "task_class": "PROVENANCE",
+    "prompt": "Beacon checkpoint t10: raw events retention is 30 days. Which document established this policy? Provide {answer, evidence_id}.",
+    "output_contract": {
+      "answer": "string",
+      "evidence_id": "string"
+    },
+    "oracle_id": "O-S1-J-PROVENANCE",
+    "temporal_span": 10,
+    "required_hops": 1,
+    "epoch_boundary": true,
+    "depends_on_evidence": [
+      "S1-T4-ADR-020"
+    ],
+    "trap_evidence": [
+      "S2-T4-ADR-010",
+      "S3-T4-ADR-005"
+    ],
+    "distractor_evidence": [
+      "S1-T10-DIST-001"
+    ],
+    "historical_as_of": null,
+    "abstention_required": false,
+    "provenance_required": true,
+    "cross_scenario_dependencies": []
+  },
+  {
+    "id": "S1-K-CROSS-SYNTHESIS",
+    "scenario": "S1",
+    "checkpoint": 12,
+    "task_class": "CROSS_FILE_SYNTHESIS",
+    "prompt": "Beacon checkpoint t12: configure a new data source that must satisfy all constraints introduced across the project timeline. What is the correct combined configuration? Provide {action, reasoning, synthesized_from}.",
+    "output_contract": {
+      "action": "string",
+      "reasoning": "string",
+      "synthesized_from": "array"
+    },
+    "oracle_id": "O-S1-K-CROSS-SYNTHESIS",
+    "temporal_span": 12,
+    "required_hops": 3,
+    "epoch_boundary": false,
+    "depends_on_evidence": [
+      "S1-T0-CON-001",
+      "S1-T11-DEC-001",
+      "S1-T12-DEC-001"
+    ],
+    "trap_evidence": [],
+    "distractor_evidence": [
+      "S1-T12-DIST-001"
+    ],
+    "historical_as_of": null,
+    "abstention_required": false,
+    "provenance_required": false,
+    "cross_scenario_dependencies": []
+  },
+  {
+    "id": "S1-L-EPOCH",
+    "scenario": "S1",
+    "checkpoint": 14,
+    "task_class": "EPOCH_BOUNDARY",
+    "prompt": "Beacon (telemetry ingestion) checkpoint t14: which Foundation-epoch decisions remain valid in Maturity and which are deprecated? Provide {valid_decisions, deprecated_decisions}.",
+    "output_contract": {
+      "valid_decisions": "array",
+      "deprecated_decisions": "array",
+      "reasoning": "string"
+    },
+    "oracle_id": "O-S1-L-EPOCH",
+    "temporal_span": 14,
+    "required_hops": 2,
+    "epoch_boundary": true,
+    "depends_on_evidence": [
+      "S1-T0-DEC-001",
+      "S1-T0-DEC-002",
+      "S1-T5-DEP-001",
+      "S1-T10-DEP-001"
+    ],
+    "trap_evidence": [
+      "S1-T5-DEP-001"
+    ],
+    "distractor_evidence": [
+      "S1-T14-DIST-001"
+    ],
+    "historical_as_of": null,
+    "abstention_required": false,
+    "provenance_required": false,
+    "cross_scenario_dependencies": []
+  },
+  {
+    "id": "S2-A-NEXT",
+    "scenario": "S2",
+    "checkpoint": 1,
+    "task_class": "NEXT_ACTION",
+    "prompt": "Marisol checkpoint t1: clinical data pipeline awaits next configuration step. What is the correct next action? Provide {action, reasoning}.",
+    "output_contract": {
+      "action": "string",
+      "reasoning": "string"
+    },
+    "oracle_id": "O-S2-A-NEXT",
+    "temporal_span": 1,
+    "required_hops": 1,
+    "epoch_boundary": false,
+    "depends_on_evidence": [
+      "S2-T0-DEC-001",
+      "S2-T1-DEC-001"
+    ],
+    "trap_evidence": [],
+    "distractor_evidence": [
+      "S2-T1-DIST-001"
+    ],
+    "historical_as_of": null,
+    "abstention_required": false,
+    "provenance_required": false,
+    "cross_scenario_dependencies": []
+  },
+  {
+    "id": "S2-B-SUPERSESSION",
+    "scenario": "S2",
+    "checkpoint": 2,
+    "task_class": "SUPERSESSION_AVOIDANCE",
+    "prompt": "Marisol checkpoint t2: proposal 'Revert to site-based partitioning for simplicity'. Evaluate. Provide {action, reasoning}.",
+    "output_contract": {
+      "action": "string",
+      "reasoning": "string"
+    },
+    "oracle_id": "O-S2-B-SUPERSESSION",
+    "temporal_span": 2,
+    "required_hops": 2,
+    "epoch_boundary": false,
+    "depends_on_evidence": [
+      "S2-T0-DEC-001",
+      "S2-T1-DEC-002",
+      "S2-T2-DEC-001"
+    ],
+    "trap_evidence": [
+      "S2-T0-DEC-001"
+    ],
+    "distractor_evidence": [
+      "S2-T2-DIST-001"
+    ],
+    "historical_as_of": null,
+    "abstention_required": false,
+    "provenance_required": false,
+    "cross_scenario_dependencies": []
+  },
+  {
+    "id": "S2-C-CONSTRAINT",
+    "scenario": "S2",
+    "checkpoint": 3,
+    "task_class": "CONSTRAINT_RETENTION",
+    "prompt": "Marisol checkpoint t3: new API endpoint will handle patient data. What must the maintainer ensure? Provide {action, reasoning}.",
+    "output_contract": {
+      "action": "string",
+      "reasoning": "string"
+    },
+    "oracle_id": "O-S2-C-CONSTRAINT",
+    "temporal_span": 3,
+    "required_hops": 1,
+    "epoch_boundary": false,
+    "depends_on_evidence": [
+      "S2-T0-CON-001",
+      "S2-T3-DEC-001"
+    ],
+    "trap_evidence": [],
+    "distractor_evidence": [
+      "S2-T3-DIST-001"
+    ],
+    "historical_as_of": null,
+    "abstention_required": false,
+    "provenance_required": false,
+    "cross_scenario_dependencies": []
+  },
+  {
+    "id": "S2-D-FAILED",
+    "scenario": "S2",
+    "checkpoint": 5,
+    "task_class": "FAILED_APPROACH_AVOIDANCE",
+    "prompt": "Marisol checkpoint t5: proposal 'Use single database connection pool with increased size'. Evaluate. Provide {action, reasoning}.",
+    "output_contract": {
+      "action": "string",
+      "reasoning": "string"
+    },
+    "oracle_id": "O-S2-D-FAILED",
+    "temporal_span": 3,
+    "required_hops": 2,
+    "epoch_boundary": true,
+    "depends_on_evidence": [
+      "S2-T2-DEC-002",
+      "S2-T3-DEC-002",
+      "S2-T5-DEC-001"
+    ],
+    "trap_evidence": [
+      "S2-T2-DEC-002"
+    ],
+    "distractor_evidence": [
+      "S2-T5-DIST-001"
+    ],
+    "historical_as_of": null,
+    "abstention_required": false,
+    "provenance_required": false,
+    "cross_scenario_dependencies": []
+  },
+  {
+    "id": "S2-E-SCOPE",
+    "scenario": "S2",
+    "checkpoint": 6,
+    "task_class": "SCOPE_RESOLUTION",
+    "prompt": "Marisol checkpoint t6: proposal 'Standardize Marisol and Harbor on protocol-based partitioning and Markdown target'. Evaluate. Provide {action, reasoning}.",
+    "output_contract": {
+      "action": "string",
+      "reasoning": "string"
+    },
+    "oracle_id": "O-S2-E-SCOPE",
+    "temporal_span": 6,
+    "required_hops": 2,
+    "epoch_boundary": false,
+    "depends_on_evidence": [
+      "S2-T1-DEC-002",
+      "S3-T0-DEC-001"
+    ],
+    "trap_evidence": [],
+    "distractor_evidence": [
+      "S2-T6-DIST-001"
+    ],
+    "historical_as_of": null,
+    "abstention_required": false,
+    "provenance_required": false,
+    "cross_scenario_dependencies": [
+      "S3"
+    ]
+  },
+  {
+    "id": "S2-F-CONTRADICTION",
+    "scenario": "S2",
+    "checkpoint": 7,
+    "task_class": "CONTRADICTION_HANDLING",
+    "prompt": "Marisol checkpoint t7: task requires exporting de-identified trial data. How should the export be handled? Provide {action, reasoning, conflict_flagged}.",
+    "output_contract": {
+      "action": "string",
+      "reasoning": "string",
+      "conflict_flagged": "boolean"
+    },
+    "oracle_id": "O-S2-F-CONTRADICTION",
+    "temporal_span": 1,
+    "required_hops": 2,
+    "epoch_boundary": false,
+    "depends_on_evidence": [
+      "S2-T6-ADR-030",
+      "S2-T7-ADR-031"
+    ],
+    "trap_evidence": [
+      "S2-T6-ADR-030"
+    ],
+    "distractor_evidence": [
+      "S2-T7-DIST-001"
+    ],
+    "historical_as_of": null,
+    "abstention_required": false,
+    "provenance_required": false,
+    "cross_scenario_dependencies": []
+  },
+  {
+    "id": "S2-G-HISTORICAL",
+    "scenario": "S2",
+    "checkpoint": 9,
+    "task_class": "HISTORICAL_REASONING",
+    "prompt": "What partitioning strategy was Marisol using at checkpoint t2? Provide {answer, as_of_checkpoint}.",
+    "output_contract": {
+      "answer": "string",
+      "as_of_checkpoint": "integer"
+    },
+    "oracle_id": "O-S2-G-HISTORICAL",
+    "temporal_span": 7,
+    "required_hops": 1,
+    "epoch_boundary": true,
+    "depends_on_evidence": [
+      "S2-T1-DEC-002"
+    ],
+    "trap_evidence": [
+      "S2-T9-DEC-001"
+    ],
+    "distractor_evidence": [
+      "S2-T9-DIST-001"
+    ],
+    "historical_as_of": 2,
+    "abstention_required": false,
+    "provenance_required": false,
+    "cross_scenario_dependencies": []
+  },
+  {
+    "id": "S2-H-IDENTITY",
+    "scenario": "S2",
+    "checkpoint": 10,
+    "task_class": "IDENTITY_CONTINUITY",
+    "prompt": "Marisol checkpoint t10: configuration file references module 'data-flow'. What is the correct current module name? Provide {answer, reasoning}.",
+    "output_contract": {
+      "answer": "string",
+      "reasoning": "string"
+    },
+    "oracle_id": "O-S2-H-IDENTITY",
+    "temporal_span": 10,
+    "required_hops": 3,
+    "epoch_boundary": true,
+    "depends_on_evidence": [
+      "S2-T0-DEC-002",
+      "S2-T4-DEC-001",
+      "S2-T8-DEC-001"
+    ],
+    "trap_evidence": [
+      "S2-T0-DEC-002",
+      "S2-T4-DEC-001"
+    ],
+    "distractor_evidence": [
+      "S2-T10-DIST-001"
+    ],
+    "historical_as_of": null,
+    "abstention_required": false,
+    "provenance_required": false,
+    "cross_scenario_dependencies": []
+  },
+  {
+    "id": "S2-I-ABSENT",
+    "scenario": "S2",
+    "checkpoint": 12,
+    "task_class": "ABSTENTION",
+    "prompt": "Marisol checkpoint t12: what is the average query latency for the reporting module? Provide {action, abstain, reasoning}.",
+    "output_contract": {
+      "action": "string",
+      "abstain": "boolean",
+      "reasoning": "string"
+    },
+    "oracle_id": "O-S2-I-ABSENT",
+    "temporal_span": 12,
+    "required_hops": 1,
+    "epoch_boundary": false,
+    "depends_on_evidence": [],
+    "trap_evidence": [
+      "S2-T5-BENCH-001"
+    ],
+    "distractor_evidence": [
+      "S2-T12-DIST-001",
+      "S2-T12-DIST-002"
+    ],
+    "historical_as_of": null,
+    "abstention_required": true,
+    "provenance_required": false,
+    "cross_scenario_dependencies": []
+  },
+  {
+    "id": "S2-K-CROSS-SYNTHESIS",
+    "scenario": "S2",
+    "checkpoint": 14,
+    "task_class": "CROSS_FILE_SYNTHESIS",
+    "prompt": "Marisol checkpoint t14: configure a new clinical site that must comply with data handling constraints from different epochs. What is the correct combined configuration? Provide {action, reasoning, synthesized_from}.",
+    "output_contract": {
+      "action": "string",
+      "reasoning": "string",
+      "synthesized_from": "array"
+    },
+    "oracle_id": "O-S2-K-CROSS-SYNTHESIS",
+    "temporal_span": 14,
+    "required_hops": 3,
+    "epoch_boundary": false,
+    "depends_on_evidence": [
+      "S2-T0-CON-001",
+      "S2-T13-DEC-001",
+      "S2-T14-DEC-001"
+    ],
+    "trap_evidence": [],
+    "distractor_evidence": [
+      "S2-T14-DIST-001"
+    ],
+    "historical_as_of": null,
+    "abstention_required": false,
+    "provenance_required": false,
+    "cross_scenario_dependencies": []
+  },
+  {
+    "id": "S3-A-NEXT",
+    "scenario": "S3",
+    "checkpoint": 1,
+    "task_class": "NEXT_ACTION",
+    "prompt": "Harbor checkpoint t1: documentation migration awaiting next setup step. What is the correct next action? Provide {action, reasoning}.",
+    "output_contract": {
+      "action": "string",
+      "reasoning": "string"
+    },
+    "oracle_id": "O-S3-A-NEXT",
+    "temporal_span": 1,
+    "required_hops": 1,
+    "epoch_boundary": false,
+    "depends_on_evidence": [
+      "S3-T0-DEC-001",
+      "S3-T1-DEC-001"
+    ],
+    "trap_evidence": [],
+    "distractor_evidence": [
+      "S3-T1-DIST-001"
+    ],
+    "historical_as_of": null,
+    "abstention_required": false,
+    "provenance_required": false,
+    "cross_scenario_dependencies": []
+  },
+  {
+    "id": "S3-B-SUPERSESSION",
+    "scenario": "S3",
+    "checkpoint": 2,
+    "task_class": "SUPERSESSION_AVOIDANCE",
+    "prompt": "Harbor checkpoint t2: proposal 'Revert to manual migration for accuracy'. Evaluate. Provide {action, reasoning}.",
+    "output_contract": {
+      "action": "string",
+      "reasoning": "string"
+    },
+    "oracle_id": "O-S3-B-SUPERSESSION",
+    "temporal_span": 2,
+    "required_hops": 2,
+    "epoch_boundary": false,
+    "depends_on_evidence": [
+      "S3-T0-DEC-002",
+      "S3-T1-DEC-002",
+      "S3-T2-DEC-001"
+    ],
+    "trap_evidence": [
+      "S3-T0-DEC-002"
+    ],
+    "distractor_evidence": [
+      "S3-T2-DIST-001"
+    ],
+    "historical_as_of": null,
+    "abstention_required": false,
+    "provenance_required": false,
+    "cross_scenario_dependencies": []
+  },
+  {
+    "id": "S3-C-CONSTRAINT",
+    "scenario": "S3",
+    "checkpoint": 4,
+    "task_class": "CONSTRAINT_RETENTION",
+    "prompt": "Harbor checkpoint t4: new document type with different addressing schemes will be added. What must the maintainer ensure? Provide {action, reasoning}.",
+    "output_contract": {
+      "action": "string",
+      "reasoning": "string"
+    },
+    "oracle_id": "O-S3-C-CONSTRAINT",
+    "temporal_span": 4,
+    "required_hops": 1,
+    "epoch_boundary": false,
+    "depends_on_evidence": [
+      "S3-T0-CON-001",
+      "S3-T4-DEC-001"
+    ],
+    "trap_evidence": [],
+    "distractor_evidence": [
+      "S3-T4-DIST-001"
+    ],
+    "historical_as_of": null,
+    "abstention_required": false,
+    "provenance_required": false,
+    "cross_scenario_dependencies": []
+  },
+  {
+    "id": "S3-D-FAILED",
+    "scenario": "S3",
+    "checkpoint": 5,
+    "task_class": "FAILED_APPROACH_AVOIDANCE",
+    "prompt": "Harbor checkpoint t5: proposal 'Use regex-based link rewriting with improved patterns'. Evaluate. Provide {action, reasoning}.",
+    "output_contract": {
+      "action": "string",
+      "reasoning": "string"
+    },
+    "oracle_id": "O-S3-D-FAILED",
+    "temporal_span": 3,
+    "required_hops": 2,
+    "epoch_boundary": true,
+    "depends_on_evidence": [
+      "S3-T2-DEC-002",
+      "S3-T3-DEC-001",
+      "S3-T5-DEC-001"
+    ],
+    "trap_evidence": [
+      "S3-T2-DEC-002"
+    ],
+    "distractor_evidence": [
+      "S3-T5-DIST-001"
+    ],
+    "historical_as_of": null,
+    "abstention_required": false,
+    "provenance_required": false,
+    "cross_scenario_dependencies": []
+  },
+  {
+    "id": "S3-F-CONTRADICTION",
+    "scenario": "S3",
+    "checkpoint": 7,
+    "task_class": "CONTRADICTION_HANDLING",
+    "prompt": "Harbor checkpoint t7: task requires migrating a document with 97% confidence. How should migration proceed? Provide {action, reasoning, conflict_flagged}.",
+    "output_contract": {
+      "action": "string",
+      "reasoning": "string",
+      "conflict_flagged": "boolean"
+    },
+    "oracle_id": "O-S3-F-CONTRADICTION",
+    "temporal_span": 1,
+    "required_hops": 2,
+    "epoch_boundary": false,
+    "depends_on_evidence": [
+      "S3-T6-ADR-050",
+      "S3-T7-ADR-051"
+    ],
+    "trap_evidence": [
+      "S3-T6-ADR-050"
+    ],
+    "distractor_evidence": [
+      "S3-T7-DIST-001"
+    ],
+    "historical_as_of": null,
+    "abstention_required": false,
+    "provenance_required": false,
+    "cross_scenario_dependencies": []
+  },
+  {
+    "id": "S3-G-HISTORICAL",
+    "scenario": "S3",
+    "checkpoint": 8,
+    "task_class": "HISTORICAL_REASONING",
+    "prompt": "What migration approach was Harbor using at checkpoint t1? Provide {answer, as_of_checkpoint}.",
+    "output_contract": {
+      "answer": "string",
+      "as_of_checkpoint": "integer"
+    },
+    "oracle_id": "O-S3-G-HISTORICAL",
+    "temporal_span": 7,
+    "required_hops": 1,
+    "epoch_boundary": false,
+    "depends_on_evidence": [
+      "S3-T1-DEC-002"
+    ],
+    "trap_evidence": [
+      "S3-T8-DEC-001"
+    ],
+    "distractor_evidence": [
+      "S3-T8-DIST-001"
+    ],
+    "historical_as_of": 1,
+    "abstention_required": false,
+    "provenance_required": false,
+    "cross_scenario_dependencies": []
+  },
+  {
+    "id": "S3-H-IDENTITY",
+    "scenario": "S3",
+    "checkpoint": 10,
+    "task_class": "IDENTITY_CONTINUITY",
+    "prompt": "Harbor checkpoint t10: configuration references module 'doc-migrate'. What is correct current name? Provide {answer, reasoning}.",
+    "output_contract": {
+      "answer": "string",
+      "reasoning": "string"
+    },
+    "oracle_id": "O-S3-H-IDENTITY",
+    "temporal_span": 10,
+    "required_hops": 3,
+    "epoch_boundary": true,
+    "depends_on_evidence": [
+      "S3-T0-DEC-003",
+      "S3-T4-DEC-002",
+      "S3-T9-DEC-001"
+    ],
+    "trap_evidence": [
+      "S3-T0-DEC-003",
+      "S3-T4-DEC-002"
+    ],
+    "distractor_evidence": [
+      "S3-T10-DIST-001"
+    ],
+    "historical_as_of": null,
+    "abstention_required": false,
+    "provenance_required": false,
+    "cross_scenario_dependencies": []
+  },
+  {
+    "id": "S3-L-EPOCH",
+    "scenario": "S3",
+    "checkpoint": 14,
+    "task_class": "EPOCH_BOUNDARY",
+    "prompt": "Harbor (documentation migration) checkpoint t14: which Foundation-epoch decisions remain valid in Maturity and which are deprecated? Provide {valid_decisions, deprecated_decisions}.",
+    "output_contract": {
+      "valid_decisions": "array",
+      "deprecated_decisions": "array",
+      "reasoning": "string"
+    },
+    "oracle_id": "O-S3-L-EPOCH",
+    "temporal_span": 14,
+    "required_hops": 2,
+    "epoch_boundary": true,
+    "depends_on_evidence": [
+      "S3-T0-DEC-001",
+      "S3-T0-DEC-002",
+      "S3-T5-DEP-001",
+      "S3-T10-DEP-001"
+    ],
+    "trap_evidence": [
+      "S3-T5-DEP-001"
+    ],
+    "distractor_evidence": [
+      "S3-T14-DIST-001"
+    ],
+    "historical_as_of": null,
+    "abstention_required": false,
+    "provenance_required": false,
+    "cross_scenario_dependencies": []
+  }
+]
