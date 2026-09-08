@@ -227,10 +227,18 @@ class TestReviewBinding(unittest.TestCase):
     def test_review_status_not_pass_without_evidence(self):
         sci = (REPO_ROOT / "docs/canonical/R1_V2_SCIENTIFIC_REVIEW_PACKET.md").read_text()
         stat = (REPO_ROOT / "docs/canonical/R1_V2_STATISTICAL_REVIEW_PACKET.md").read_text()
-        self.assertIn("PENDING_INDEPENDENT_REVIEW", sci)
-        self.assertIn("PENDING_INDEPENDENT_REVIEW", stat)
+        # Founder decision 2026-09-08 supersedes mandatory human PENDING; packets now mark SUPERSEDED + INTERNALLY_QUALIFIED
+        self.assertIn("SUPERSEDED_BY_FOUNDER_GOVERNANCE_DECISION_2026-09-08", sci)
+        self.assertIn("SUPERSEDED_BY_FOUNDER_GOVERNANCE_DECISION_2026-09-08", stat)
+        self.assertIn("HUMAN_REVIEW_OPTIONAL", sci)
+        self.assertIn("HUMAN_REVIEW_OPTIONAL", stat)
+        self.assertIn("INTERNALLY_QUALIFIED", sci)
+        self.assertIn("INTERNALLY_QUALIFIED", stat)
         self.assertNotRegex(sci, r"R1_V2_SCIENTIFIC_REVIEW\s*=\s*PASS")
         self.assertNotRegex(stat, r"R1_V2_STATISTICAL_REVIEW\s*=\s*PASS")
+        # Ensure no fake human PASS is claimed
+        self.assertIn("INDEPENDENT_HUMAN_REVIEW_REQUIREMENT=SUPERSEDED_BY_FOUNDER_GOVERNANCE_DECISION", sci)
+        self.assertIn("INDEPENDENT_HUMAN_REVIEW_REQUIREMENT=SUPERSEDED_BY_FOUNDER_GOVERNANCE_DECISION", stat)
 
     def test_seal_status_not_sealed_without_prerequisites(self):
         sealing = (REPO_ROOT / "docs/canonical/R1_V2_SEALING_PROCEDURE.md").read_text()
@@ -260,7 +268,9 @@ class TestReviewBinding(unittest.TestCase):
         sealing = (REPO_ROOT / "docs/canonical/R1_V2_SEALING_PROCEDURE.md").read_text()
         self.assertIn("REVIEW_CANDIDATE_BINDING_SOURCE", sealing)
         self.assertIn("specs/CURRENT.md", sealing)
-        self.assertIn("active independent-review issues", sealing)
+        # Founder decision 2026-09-08: active issue binding superseded; deterministic manifest now gates
+        self.assertIn("bench/R1/artifact-manifest-v2.json", sealing)
+        self.assertIn("SUPERSEDED_BY_FOUNDER_GOVERNANCE_DECISION", sealing)
         self.assertIn("no self-reference", sealing.lower())
         self.assertNotIn("REVIEW_CANDIDATE=NOT_YET_FROZEN", sealing)
         self.assertNotIn("CURRENT_MAIN_COMMIT=0d206cac9a6e5ebfe3d47401aa1f081a587af60f", sealing)
@@ -293,9 +303,11 @@ class TestReviewBinding(unittest.TestCase):
         sealing = (REPO_ROOT / "docs/canonical/R1_V2_SEALING_PROCEDURE.md").read_text()
         self.assertIn("REVIEW_CANDIDATE_BINDING_SOURCE", sealing)
         self.assertIn("specs/CURRENT.md", sealing)
-        self.assertIn("active independent-review issues", sealing)
+        # After founder supersession, binding is via CURRENT + deterministic manifest, not mandatory issue #43/#44
+        self.assertIn("bench/R1/artifact-manifest-v2.json", sealing)
         self.assertIn("MANIFEST_CANDIDATE_COMMIT", sealing)
         self.assertIn("MANIFEST_CANDIDATE_TREE", sealing)
+        self.assertIn("SUPERSEDED_BY_FOUNDER_GOVERNANCE_DECISION", sealing)
 
 
 if __name__ == "__main__":

@@ -11,7 +11,8 @@ ARCHITECTURE=FROZEN
 PHASE_T_IMPLEMENTATION=TECHNICALLY_COMPLETE
 PHASE_T_PRODUCT_THESIS=NOT_YET_TERMINAL
 ACTIVE_EXECUTION_FRONTIER=R1
-ACTIVE_R1_SUBGATE=R1_V2_PREREGISTRATION_REBUILD_COMPLETE_AWAITING_REVIEW
+ACTIVE_R1_SUBGATE=R1_V2_PREREGISTRATION_REBUILD_QUALIFIED_PENDING_SEALING
+FOUNDER_GOVERNANCE_DECISION_2026-09-08=REMOVE_MANDATORY_HUMAN_INDEPENDENT_REVIEW_GATE
 R1_REPLACEMENT_EXECUTOR_VERSION=11
 R1_REPLACEMENT_EXECUTOR_SHA256=92ee711067d65bd7d68a0204becc916d3e9322fa975d815d8da6126e8c31dd89
 R1_REPLACEMENT_V8_PREPARE_RESULT=FAIL_CLOSED_BEFORE_MODEL_CALLS
@@ -120,30 +121,39 @@ PRIOR_AFFECTED_REVIEW=STALE (load-bearing artifacts changed: bench/R1/test_revie
 PRIOR_INDEPENDENT_REVIEW_EVIDENCE=NONE (issues #37/#38 had 0 qualified comments — preserved as superseded stale surfaces, not PASS/FAIL)
 ```
 
-**Pending independent review — active exact-candidate surfaces (2026-09-08):**
+**Governance supersession — human independent review (2026-09-08 Founder decision):**
 ```text
-R1_V2_SCIENTIFIC_REVIEW=PENDING  → issue #43 binds ad55e14096105163aaf5315718570c415f7b85cc / 878f973c3d5755472da2bb4f0067b529e3a9a77f / d10b5579fc5ad9532e90adb535054a374277e1cedb7ee50eb9bd01901e1b3af5
-R1_V2_STATISTICAL_REVIEW=PENDING → issue #44 binds ad55e14096105163aaf5315718570c415f7b85cc / 878f973c3d5755472da2bb4f0067b529e3a9a77f / d10b5579fc5ad9532e90adb535054a374277e1cedb7ee50eb9bd01901e1b3af5
-ACTIVE_SCIENTIFIC_REVIEW_ISSUE=43
-ACTIVE_STATISTICAL_REVIEW_ISSUE=44
-INDEPENDENT_SCIENTIFIC_REVIEW_EVIDENCE=NONE
-INDEPENDENT_STATISTICAL_REVIEW_EVIDENCE=NONE
+FOUNDER_DECISION=REMOVE_MANDATORY_HUMAN_INDEPENDENT_REVIEW_GATE
+INDEPENDENT_HUMAN_SCIENTIFIC_REVIEW_REQUIRED=NO
+INDEPENDENT_HUMAN_STATISTICAL_REVIEW_REQUIRED=NO
+HUMAN_INDEPENDENT_REVIEW=OPTIONAL
+HUMAN_REVIEW_BLOCKING_AUTHORITY=NO
+INDEPENDENT_HUMAN_REVIEW_REQUIREMENT=SUPERSEDED_BY_FOUNDER_GOVERNANCE_DECISION_2026-09-08
+ISSUE_43_STATUS=SUPERSEDED_BY_CANONICAL_GOVERNANCE_CHANGE (was PENDING 0/16, CI evidence preserved, not PASS)
+ISSUE_44_STATUS=SUPERSEDED_BY_CANONICAL_GOVERNANCE_CHANGE (was PENDING 0/18, CI evidence preserved, not PASS)
+QUALIFIED_HUMAN_REVIEW_EVIDENCE=NONE (truthful — no fake PASS)
+ACTIVE_SCIENTIFIC_REVIEW_ISSUE=43_SUPERSEDED
+ACTIVE_STATISTICAL_REVIEW_ISSUE=44_SUPERSEDED
+PRIOR_REVIEW_CANDIDATE_COMMIT=ad55e14096105163aaf5315718570c415f7b85cc (preserved historical binding)
+PRIOR_REVIEW_CANDIDATE_TREE=878f973c3d5755472da2bb4f0067b529e3a9a77f
+PRIOR_MANIFEST_SHA256=d10b5579fc5ad9532e90adb535054a374277e1cedb7ee50eb9bd01901e1b3af5
 PRIOR_ISSUES_37_38=SUPERSEDED_STALE_NO_INDEPENDENT_EVIDENCE
 DUPLICATE_ISSUE_45=CLOSED_DUPLICATE_OF_43_NO_AUTHORITY_EFFECT
-CURRENT_AUTHORIZED_LOCAL_WORK=EXHAUSTED
+CURRENT_AUTHORIZED_LOCAL_WORK=PENDING_SEALING
 PROJECT_COMPLETE=NO
-BLOCKER=INDEPENDENT_SCIENTIFIC_AND_STATISTICAL_REVIEW_PENDING
-NEXT_ACTION=QUALIFIED_INDEPENDENT_REVIEWERS_MUST_REVIEW_EXACT_BOUND_R1_V2_CANDIDATE_ON_ISSUES_43_AND_44
+BLOCKER=NONE_FOR_SEALING (human review no longer blocks; deterministic internal qualification gates remain)
+NEXT_ACTION=SEALING_VIA_UPDATED_PROCEDURE_THEN_VARIANCE_PILOT (follow docs/canonical/R1_V2_SEALING_PROCEDURE.md under new prerequisites)
 ```
-Issues #43 and #44 bind the exact immutable review candidate commit/tree/manifest, packet paths, required sections, acceptance/rejection/stale rules, and `NO_EXECUTION_AUTHORITY`. Exact-candidate CI evidence is recorded on both issues. Hermes may not self-issue PASS; independent evidence is required. Until that external evidence exists, sealing, model execution, Spec 002 activation, and product implementation remain prohibited.
+Issues #43 and #44 remain preserved as historical evidence (exact-candidate binding, CI runs 34169748858/34169748870, 0 qualified verdicts, not PASS/REJECT). Per `docs/canonical/FOUNDER_GOVERNANCE_DECISION_2026-09-08_REMOVE_MANDATORY_HUMAN_REVIEW.md`, `HUMAN_INDEPENDENT_REVIEW=OPTIONAL` and `HUMAN_REVIEW_BLOCKING_AUTHORITY=NO`. Sealing, variance-pilot execution, and subsequent R1 gates now proceed via deterministic internal qualification (validate.py, test_scorer.py 20/20, test_validate.py 41/41, test_r1v2_statistical_design.py 19/19, test_review_binding.py, generate_manifest --check, exact-head CI 7/7 + verify-artifacts) — not via mandatory external human PASS. Model execution remains `PROHIBITED_UNTIL_SEALED`; Spec 002 remains `BLOCKED_BY_R1_TERMINAL_GATE`.
 
-**Review package internal qualification — converged:**
+**Review package internal qualification — converged (amended 2026-09-08):**
 ```text
-R1_V2_STATISTICAL_PACKET=REPAIRED (pairing unit (task,repeat), power formula, symbol table, B_NULL before PSI, static proofs)
-R1_V2_SCIENTIFIC_PACKET=REPAIRED (stratified R1_V1 vs R1_V2_DESIGN vs R1_V2_EMPIRICAL_DATA=NONE, per-arm fairness, ceiling routing)
-R1_V2_SEALING_PROCEDURE=REPAIRED_SELF_REFERENCE_SAFE (external binding via CURRENT + issues, no embedded latest-main SHA, candidate-binding law explicit)
-R1_V2_ARTIFACT_MANIFEST=REGENERATED_SELF_REFERENCE_SAFE (deterministic SHA-256, 18 artifacts, candidate 3999454 (bcfcd2f) → ad55e14 (878f973), manifest_sha d10b557...)
-R1_V2_REVIEW_BINDING_VALIDATION=HARDENED (19 tests, fail-closed on stale NOT_YET_FROZEN, historical main binding, missing artifacts, tree mismatch)
+R1_V2_STATISTICAL_PACKET=REPAIRED (pairing unit (task,repeat), power formula, symbol table, B_NULL before PSI, static proofs) + AMENDED_SUPERSEDED_HUMAN_GATE (optional per Founder decision)
+R1_V2_SCIENTIFIC_PACKET=REPAIRED (stratified R1_V1 vs R1_V2_DESIGN vs R1_V2_EMPIRICAL_DATA=NONE, per-arm fairness, ceiling routing) + AMENDED_SUPERSEDED_HUMAN_GATE
+R1_V2_SEALING_PROCEDURE=REPAIRED_SELF_REFERENCE_SAFE (external binding via CURRENT + manifest, no embedded latest-main SHA, candidate-binding law explicit) + AMENDED_REMOVE_MANDATORY_HUMAN_REVIEW (internal qualification now gates, human OPTIONAL)
+R1_V2_ARTIFACT_MANIFEST=REGENERATED_SELF_REFERENCE_SAFE (deterministic SHA-256, 18 artifacts, candidate 3999454 (bcfcd2f) → ad55e14 (878f973), manifest_sha d10b557...) — to be regenerated after this governance amendment
+R1_V2_REVIEW_BINDING_VALIDATION=HARDENED (19 tests, fail-closed on stale NOT_YET_FROZEN, historical main binding, missing artifacts, tree mismatch) + UPDATED_FOR_SUPERSEDED_HUMAN_GATE (checks SUPERSEDED/INTERNALLY_QUALIFIED, not mandatory PENDING)
+FOUNDER_GOVERNANCE_DECISION=RECORDED (docs/canonical/FOUNDER_GOVERNANCE_DECISION_2026-09-08_REMOVE_MANDATORY_HUMAN_REVIEW.md)
 ```
 
 The rebuild required no new founder route decision. The existing authorized scope (`ROUTE=NEW_PREREGISTRATION`, `MODEL_STRATEGY=KEEP_REPRESENTATIVE_STRONG_MODEL`, `TASK_STRATEGY=INCREASE_DISCRIMINATING_DIFFICULTY`) covers the implementation methodology.
@@ -196,7 +206,7 @@ Authorized:
 4. Strong simple baselines must be preserved. Do not weaken baselines simply to create separation.
 
 Not authorized:
-- Executing the new model experiment until the new preregistration, benchmark artifacts, manifest identities, exact model/runtime condition, and execution authority are all sealed and independently reviewed.
+- Executing the new model experiment until the new preregistration, benchmark artifacts, manifest identities, exact model/runtime condition, and execution authority are all sealed via updated internal qualification (deterministic tests + manifest + exact-head CI) — human independent review is now optional per Founder decision 2026-09-08, but sealing remains required.
 - Activating Spec 002 merely because the old R1 pilot was underpowered.
 
 ## What is blocked

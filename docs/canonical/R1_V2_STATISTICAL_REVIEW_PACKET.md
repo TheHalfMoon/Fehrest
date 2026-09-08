@@ -1,9 +1,10 @@
 # R1-v2 Independent Statistical Review Packet
 
-**Status:** `PENDING_INDEPENDENT_REVIEW`
+**Status:** `SUPERSEDED_BY_FOUNDER_GOVERNANCE_DECISION_2026-09-08 — HUMAN_REVIEW_OPTIONAL, INTERNAL_QUALIFICATION_GATING`
 
 **Created:** 2026-09-04
 **Revised:** 2026-09-07 — convergence repair (branch `review/r1-v2-independent-review-convergence`)
+**Amended:** 2026-09-08 — `FOUNDER_DECISION=REMOVE_MANDATORY_HUMAN_INDEPENDENT_REVIEW_GATE` (see `docs/canonical/FOUNDER_GOVERNANCE_DECISION_2026-09-08_REMOVE_MANDATORY_HUMAN_REVIEW.md`); `HUMAN_INDEPENDENT_REVIEW=OPTIONAL`, `HUMAN_REVIEW_BLOCKING_AUTHORITY=NO`; `INDEPENDENT_HUMAN_REVIEW_REQUIREMENT=SUPERSEDED_BY_FOUNDER_GOVERNANCE_DECISION`; internal deterministic qualification now gates sealing.
 
 **Candidate binding (WORKING_CANDIDATE at this revision):**
 ```text
@@ -21,13 +22,16 @@ Review must bind to an exact immutable `REVIEW_CANDIDATE` commit/tree + artifact
 - R1_V2_MUTATION_TESTING=PASS
 - R1_V2_EXACT_HEAD_CI=PASS
 - `python bench/R1/validate.py`, `test_validate.py`, `test_scorer.py` all PASS on `0d206ca` (verify-artifacts, test-scorer, test-validator, validate, canonical-equality)
+- **Founder governance 2026-09-08:** `INDEPENDENT_HUMAN_REVIEW_REQUIREMENT=SUPERSEDED_BY_FOUNDER_GOVERNANCE_DECISION`, `HUMAN_REVIEW_BLOCKING_AUTHORITY=NO`
 
 **Hard boundaries (must not be violated):**
 - R1_V2_MODEL_EXECUTION=PROHIBITED
 - R1_V2_VARIANCE_PILOT_EXECUTION=PROHIBITED
 - R1_V2_CONFIRMATORY_EXECUTION=PROHIBITED
 - R1_V2_UNBLINDING=PROHIBITED
-- R1_V2_STATISTICAL_REVIEW=PENDING
+- R1_V2_STATISTICAL_REVIEW=HUMAN_REVIEW_OPTIONAL (mandatory gate SUPERSEDED_BY_FOUNDER_GOVERNANCE_DECISION_2026-09-08)
+- R1_V2_STATISTICAL_DESIGN_SELF_AUDIT=REQUIRED (internal 18-section deterministic qualification)
+- R1_V2_SCIENTIFIC_DESIGN_SELF_AUDIT=REQUIRED
 - SPEC_002_ACTIVATION=PROHIBITED
 - PRODUCT_IMPLEMENTATION=PROHIBITED
 
@@ -75,7 +79,7 @@ This packet explicitly distinguishes symbols that were previously conflated. One
 
 ## 1. PAIRING_UNIT
 
-**Status:** `PENDING_INDEPENDENT_REVIEW`
+**Status:** `INTERNALLY_QUALIFIED — HUMAN_REVIEW_OPTIONAL_PER_FOUNDER_DECISION_2026-09-08`
 
 **Canonical definition:** `PAIRING_UNIT = (task, repeat) pair`.
 
@@ -87,7 +91,7 @@ Verified in `benchmark-spec-v2.json: statistical_parameters.pairing_unit = "(tas
 
 ## 2. B_NULL_EXCLUSION_ORDER
 
-**Status:** `PENDING_INDEPENDENT_REVIEW`
+**Status:** `INTERNALLY_QUALIFIED — HUMAN_REVIEW_OPTIONAL_PER_FOUNDER_DECISION_2026-09-08`
 
 **Canonical ordering (§28):**
 1. Apply `B_NULL_exclusion_rule` — tasks where `B-NULL` scores `>0` are excluded. This yields `K_ELIGIBLE` and `B_NULL_EXCLUDED_TASK_COUNT`.
@@ -99,7 +103,7 @@ Verified in `PREREGISTRATION-V2.md` §28.1 (step 1 is B-NULL exclusion) and `VAR
 
 ## 3. K_TOTAL
 
-**Status:** `PENDING_INDEPENDENT_REVIEW`
+**Status:** `INTERNALLY_QUALIFIED — HUMAN_REVIEW_OPTIONAL_PER_FOUNDER_DECISION_2026-09-08`
 
 `K_TOTAL = 30`. This is `TASK_COUNT` (=30) at the design stage before any exclusion. Verified from `benchmark-spec-v2.json: statistical_parameters.K_total = 30`, `session_arithmetic.total_tasks = 30`, `tasks-v2.json` length 30, `oracles-v2.json` length 30, and `task_classes` sum 30. All 30 tasks have exactly 1 oracle view (`task.oracle_id` ↔ `oracle.task_id` 1:1, enforced by `_validate_task_oracle_resolution` and `_validate_canonical_derived_equality`).
 
@@ -107,7 +111,7 @@ Verified in `PREREGISTRATION-V2.md` §28.1 (step 1 is B-NULL exclusion) and `VAR
 
 ## 4. K_ELIGIBLE_TASK_COUNT
 
-**Status:** `PENDING_INDEPENDENT_REVIEW`
+**Status:** `INTERNALLY_QUALIFIED — HUMAN_REVIEW_OPTIONAL_PER_FOUNDER_DECISION_2026-09-08`
 
 ```
 K_ELIGIBLE_TASK_COUNT = K_ELIGIBLE = K_TOTAL − B_NULL_EXCLUDED_TASK_COUNT
@@ -131,7 +135,7 @@ Candidate edge semantics (see §11, §14 for deterministic examples):
 
 ## 5. PSI_HAT
 
-**Status:** `PENDING_INDEPENDENT_REVIEW`
+**Status:** `INTERNALLY_QUALIFIED — HUMAN_REVIEW_OPTIONAL_PER_FOUNDER_DECISION_2026-09-08`
 
 `ψ̂` = proportion of `(task, repeat)` pairs where exactly one of `B5` and `B4` is correct.
 
@@ -148,7 +152,7 @@ Candidate edge semantics (see §11, §14 for deterministic examples):
 
 ## 6. MCNEMAR
 
-**Status:** `PENDING_INDEPENDENT_REVIEW`
+**Status:** `INTERNALLY_QUALIFIED — HUMAN_REVIEW_OPTIONAL_PER_FOUNDER_DECISION_2026-09-08`
 
 Confirmatory analysis is **McNemar's exact test** on paired binary outcomes (PREREG §20, VARIANCE-PILOT §7). The pilot **does not** perform hypothesis testing; it estimates `ψ̂` as input to the power rule.
 
@@ -160,7 +164,7 @@ R1-v1 showed `0` discordant pairs across all contrasts (`NO_DETECTABLE_DISCORDAN
 
 ## 7. N_PAIRS_REQUIRED_BY_POWER
 
-**Status:** `PENDING_INDEPENDENT_REVIEW`
+**Status:** `INTERNALLY_QUALIFIED — HUMAN_REVIEW_OPTIONAL_PER_FOUNDER_DECISION_2026-09-08`
 
 **Correct formula (from `benchmark-spec-v2.json` and PREREG §20):**
 
@@ -182,7 +186,7 @@ That counts unordered task pairs. It is not a function of `ψ̂`, `α`, `δ`, or
 
 ## 8. R_CONF
 
-**Status:** `PENDING_INDEPENDENT_REVIEW`
+**Status:** `INTERNALLY_QUALIFIED — HUMAN_REVIEW_OPTIONAL_PER_FOUNDER_DECISION_2026-09-08`
 
 ```text
 r_conf = ceil( N_pairs / K_eligible )
@@ -209,7 +213,7 @@ See also §11 and §14 for exhaustive static edge cases exercised in `bench/R1/t
 
 ## 9. R_CONF_MIN
 
-**Status:** `PENDING_INDEPENDENT_REVIEW`
+**Status:** `INTERNALLY_QUALIFIED — HUMAN_REVIEW_OPTIONAL_PER_FOUNDER_DECISION_2026-09-08`
 
 `R_CONF_MINIMUM = 3` ( `statistical_parameters.r_conf_minimum` ). Below this, per-task variability is unobservable (with `r=1` the within-task variance is 0; with `r=2` it is minimally estimable but underpowered for heterogeneity). Any raw `r_conf < 3` is raised to `3`. Must be satisfied before any product-thesis verdict.
 
@@ -217,7 +221,7 @@ Machine validation: `_validate_statistical_parameters` asserts `r_conf_minimum =
 
 ## 10. R_CONF_MAX
 
-**Status:** `PENDING_INDEPENDENT_REVIEW`
+**Status:** `INTERNALLY_QUALIFIED — HUMAN_REVIEW_OPTIONAL_PER_FOUNDER_DECISION_2026-09-08`
 
 `R_CONF_MAXIMUM = 20` ( `statistical_parameters.r_conf_maximum` ). Cost ceiling. If the bounded formula demands `r_conf > 20`, report `UNDERPOWERED_FOR_PREREGISTERED_EFFECT` (PREREG §20). Do not relax `δ`, `α`, drop task classes, or switch to one-sided test after seeing `ψ̂`.
 
@@ -225,7 +229,7 @@ Machine validation: `_validate_statistical_parameters` asserts `r_conf_maximum =
 
 ## 11. LOW_K_ROUTE
 
-**Status:** `PENDING_INDEPENDENT_REVIEW`
+**Status:** `INTERNALLY_QUALIFIED — HUMAN_REVIEW_OPTIONAL_PER_FOUNDER_DECISION_2026-09-08`
 
 If `K_ELIGIBLE < minimum_K (=15)` after `B_NULL_exclusion`, the study is `UNDERPOWERED` for the preregistered `δ`. This is the `LOW_K_ROUTE`.
 
@@ -245,7 +249,7 @@ R1-v2 design has 30 tasks with 27 before `t14` for maintenance-lag testing, but 
 
 ## 12. TASK_CLASS_LOSS_ROUTE
 
-**Status:** `PENDING_INDEPENDENT_REVIEW`
+**Status:** `INTERNALLY_QUALIFIED — HUMAN_REVIEW_OPTIONAL_PER_FOUNDER_DECISION_2026-09-08`
 
 If certain task classes are *fully* excluded (e.g., all `ABSTENTION` tasks were prompt-answerable via `B-NULL`, or an entire class shows `ψ̂_class = 0` ceiling), the `TASK_CLASS_LOSS_ROUTE` applies:
 
@@ -263,25 +267,25 @@ No R1-v2 empirical data claimed for this route — these are static design oblig
 
 ## 13. DELTA
 
-**Status:** `PENDING_INDEPENDENT_REVIEW`
+**Status:** `INTERNALLY_QUALIFIED — HUMAN_REVIEW_OPTIONAL_PER_FOUNDER_DECISION_2026-09-08`
 
 `minimum_meaningful_effect_delta = 0.15` (`δ=0.15`). Smallest effect worth detecting for `B5 vs B4` discordant proportion. Ordered such that `ψ̂ > δ²` is required for the power formula to be defined. Preregistered; must not be adjusted post-hoc to achieve significance or to rescue `r_conf > 20`. Mutation test 8 in `test_validate.py` / `validate.py:_validate_mutations` verifies drift detection for `alpha` (and symmetrically `δ` is covered by field-presence + spec-vs-doc consistency).
 
 ## 14. ALPHA
 
-**Status:** `PENDING_INDEPENDENT_REVIEW`
+**Status:** `INTERNALLY_QUALIFIED — HUMAN_REVIEW_OPTIONAL_PER_FOUNDER_DECISION_2026-09-08`
 
 `alpha = 0.05` two-sided. Must not be adjusted post-hoc to achieve significance (PREREG §20; VARIANCE-PILOT §7). One-sided post-hoc switch prohibited. Mutation testing in `validate.py:_validate_mutations` test 8 and `test_validate.py:test_statistical_rule_mutation_detected` verifies `alpha` drift is detected. All derivations reference `z_{1−α/2}=1.959964`.
 
 ## 15. POWER
 
-**Status:** `PENDING_INDEPENDENT_REVIEW`
+**Status:** `INTERNALLY_QUALIFIED — HUMAN_REVIEW_OPTIONAL_PER_FOUNDER_DECISION_2026-09-08`
 
 `target_power = 0.80`. Determines `N_pairs` via the formula in §7. Power analysis must use `ψ̂` **from the variance pilot's eligible observations** (`PSI_USES_ELIGIBLE_OBSERVATIONS`), not assumed values or `R1_V1_HISTORICAL_PSÎ=0.0000`.
 
 ## 16. COST_CEILING
 
-**Status:** `PENDING_INDEPENDENT_REVIEW`
+**Status:** `INTERNALLY_QUALIFIED — HUMAN_REVIEW_OPTIONAL_PER_FOUNDER_DECISION_2026-09-08`
 
 Context budget: `6000` bytes primary tier, `secondary_tier_bytes=null` (single tier — `benchmark-spec-v2.json: context_budget`). Pilots bounded by `session_arithmetic`:
 
@@ -299,7 +303,7 @@ Maintenance sessions computed as `scenarios × maintained_transitions × maintai
 
 ## 17. CEILING_ROUTE
 
-**Status:** `PENDING_INDEPENDENT_REVIEW`
+**Status:** `INTERNALLY_QUALIFIED — HUMAN_REVIEW_OPTIONAL_PER_FOUNDER_DECISION_2026-09-08`
 
 If the **R1-v2 variance pilot** reveals `ψ̂ ≤ δ²` (`NO_DETECTABLE_DISCORDANCE`), the study is reported as a ceiling effect:
 
@@ -324,7 +328,7 @@ R1-v1 established this routing; R1-v2 tasks are designed harder to avoid ceiling
 
 ## 18. FLOOR_ROUTE
 
-**Status:** `PENDING_INDEPENDENT_REVIEW`
+**Status:** `INTERNALLY_QUALIFIED — HUMAN_REVIEW_OPTIONAL_PER_FOUNDER_DECISION_2026-09-08`
 
 If **all arms score near zero** (floor effect), the study is reported as `UNDERPOWERED_FOR_DIFFICULTY`. Tasks are too hard for any arm, and the benchmark provides no useful signal for the preregistered `δ`.
 
@@ -482,7 +486,7 @@ R1_V1_HISTORICAL_IDENTITIES: R1_V1_CEILING_EFFECT_EVIDENCE=d99c21773b50daab9f0fd
 - Packet must contain correct `TASK_COUNT=30`, `ORACLE_COUNT=30`, `EVIDENCE_COUNT=96`, `CHECKPOINT_COUNT=12`, `SESSION_COUNT=972` where stated.
 - Packet must reference the correct power formulas `N_pairs=ceil((z…))` and `r_conf=ceil(N_pairs/K_eligible)` — not `K(K-1)/2`.
 - Packet must state `R1_V2_EMPIRICAL_DATA=NONE` and `R1_V2_VARIANCE_PILOT=NOT_EXECUTED` — never imply R1-v2 already produced data.
-- `R1_V2_SCIENTIFIC_REVIEW` and `R1_V2_STATISTICAL_REVIEW` must remain `PENDING` until independent evidence is recorded; `SEALED` claim without prerequisites fails validation.
+- `INDEPENDENT_HUMAN_REVIEW_REQUIREMENT` is `SUPERSEDED_BY_FOUNDER_GOVERNANCE_DECISION_2026-09-08` — human `PENDING` no longer blocks sealing; `R1_V2_SCIENTIFIC_DESIGN_SELF_AUDIT` and `R1_V2_STATISTICAL_DESIGN_SELF_AUDIT` must be `PASS` via deterministic tests, and `SEALED` claim without those prerequisites fails validation.
 
 ---
 
