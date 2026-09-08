@@ -1,0 +1,123 @@
+{
+  "confirmatory_version": "R1-CONFIRMATORY-v3",
+  "cost_estimate": {
+    "total_sessions": 1404,
+    "within_ceiling_3888": true
+  },
+  "derived_from_pilot": {
+    "pilot_manifest_sha256": "2e2f234063f001b01003a40636e4373ff5e8cafe8b2759456bd1e3f4cab93156",
+    "pilot_raw_seal": "556b3231b6ba6560599499f02abe80529edcb2c872de9acfa84ff6f66dbee029",
+    "pilot_records_sha256": "b4ef081550a5c2e53c774731f8883d3c850c0d2b4d7f607718d2815fdfd2ba34",
+    "pilot_scores_sha256": "751eda5d4bf3c07cdcb6110f0763ab08890f643c048685bce0850e2f95e0cece",
+    "pilot_sealed_candidate": "bec381fe845f7aac4cf0384b4c68918fc896145e",
+    "pilot_statistical_derivation_sha256": "443d842088effc1e2b19c7fa5850d14bbf7ae876d542a39b567194ab4f06fadc"
+  },
+  "eligible_tasks": [
+    "S1-A-NEXT",
+    "S1-B-SUPERSESSION",
+    "S1-C-CONSTRAINT",
+    "S1-E-SCOPE",
+    "S1-F-CONTRADICTION",
+    "S1-G-HISTORICAL",
+    "S1-H-IDENTITY",
+    "S1-J-PROVENANCE",
+    "S1-K-CROSS-SYNTHESIS",
+    "S1-L-EPOCH",
+    "S2-A-NEXT",
+    "S2-B-SUPERSESSION",
+    "S2-C-CONSTRAINT",
+    "S2-E-SCOPE",
+    "S2-F-CONTRADICTION",
+    "S2-G-HISTORICAL",
+    "S2-H-IDENTITY",
+    "S2-K-CROSS-SYNTHESIS",
+    "S3-A-NEXT",
+    "S3-B-SUPERSESSION",
+    "S3-C-CONSTRAINT",
+    "S3-G-HISTORICAL",
+    "S3-H-IDENTITY",
+    "S3-L-EPOCH"
+  ],
+  "excluded_tasks": [
+    "S1-D-FAILED",
+    "S1-I-ABSENT",
+    "S2-D-FAILED",
+    "S2-I-ABSENT",
+    "S3-D-FAILED",
+    "S3-F-CONTRADICTION"
+  ],
+  "execution_order_seed": "b04f34e0f7d484fc",
+  "model_condition": {
+    "max_output_tokens": 1024,
+    "model": "gpt-5.6-terra",
+    "reasoning_effort": "medium",
+    "temperature": 0.0,
+    "tool_set": []
+  },
+  "preregistration_version": "R1-PREREG-v3",
+  "sealed_binding": {
+    "candidate_commit_at_prepare": "5d91959047d2983799bcb13411af3f94ec78229f",
+    "manifest_sha256": "2e2f234063f001b01003a40636e4373ff5e8cafe8b2759456bd1e3f4cab93156",
+    "prepare_seed": "b04f34e0f7d484fc",
+    "sealed_candidate_commit": "bec381fe845f7aac4cf0384b4c68918fc896145e",
+    "sealed_candidate_tree": "a8f79dc66abc187e9af3c592e4eb9c94db75d3ed"
+  },
+  "session_arithmetic": {
+    "B_NULL_excluded": [
+      "S1-D-FAILED",
+      "S1-I-ABSENT",
+      "S2-D-FAILED",
+      "S2-I-ABSENT",
+      "S3-D-FAILED",
+      "S3-F-CONTRADICTION"
+    ],
+    "K_eligible": 24,
+    "K_total": 30,
+    "N_pairs": 187,
+    "alpha": 0.05,
+    "calibration_continuation_sessions": 192,
+    "comparison_continuation_sessions": 960,
+    "delta": 0.15,
+    "maintenance_sessions": 252,
+    "model_condition": {
+      "max_output_tokens": 1024,
+      "model": "gpt-5.6-terra",
+      "reasoning_effort": "medium",
+      "temperature": 0.0,
+      "tool_set": []
+    },
+    "power": 0.8,
+    "psi_hat": 0.5416666666666666,
+    "r_conf": 8,
+    "total_confirmatory_sessions": 1404,
+    "total_continuation_sessions": 1152
+  },
+  "statistical_derivation": {
+    "B_NULL_excluded_count": 6,
+    "B_NULL_excluded_tasks": [
+      "S1-D-FAILED",
+      "S1-I-ABSENT",
+      "S2-D-FAILED",
+      "S2-I-ABSENT",
+      "S3-D-FAILED",
+      "S3-F-CONTRADICTION"
+    ],
+    "K_eligible": 24,
+    "K_min": 15,
+    "K_total": 30,
+    "N_pairs": 187,
+    "N_pairs_ceiling": 600,
+    "N_pairs_floor": 90,
+    "alpha": 0.05,
+    "delta": 0.15,
+    "discordant_pairs": 52,
+    "psi_hat": 0.5416666666666666,
+    "r_conf": 8,
+    "r_conf_max": 20,
+    "r_conf_min": 3,
+    "route": "POWERED",
+    "total_pairs": 96,
+    "z_alpha": 1.959964,
+    "z_power": 0.841621
+  }
+}
