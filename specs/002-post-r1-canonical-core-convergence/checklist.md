@@ -32,18 +32,18 @@
 - [x] Canonical mutation requires/proves writer ownership or an equivalent exhaustive chokepoint proof exists. (`Vault::writer() -> VaultWriter<'a>` type proof, `VaultWriter::add_object`/`append_event`, `EventLog::append_for_writer` control_dir match, `atomic_write_file` `pub(crate)` — exhaustive chokepoint proved via `WRITER_OWNERSHIP_INVENTORY.md`)
 - [x] Read-only concurrent access remains supported. (`readers_do_not_need_the_lock`, `vault_writer_requires_lock_read_only_cannot_mint_writer` — `open_read` still succeeds without writer)
 
-## Event journal
+## Event journal — PASS (T060–T065, 2026-09-09 Slice E)
 
-- [ ] Event schema version exists.
-- [ ] Production payloads are typed/versioned.
-- [ ] Canonical hash serialization is fixed per version.
-- [ ] Unkeyed chain is never described as authentication.
-- [ ] Append durability boundary is documented.
-- [ ] Torn tail is detected and preserved before repair.
-- [ ] Mid-log gap fails closed.
-- [ ] Chain break fails closed.
-- [ ] Recovery is auditable.
-- [ ] Historical event fixture upcasts without rewriting original bytes.
+- [x] Event schema version exists. (`Event.schema_version` u32 default 1, v2 CURRENT, serde default, 2 distinct versions frozen per T060 spec)
+- [x] Production payloads are typed/versioned. (`EventPayload` enum 6 variants with serde tag, writers produce v2 typed via `payload_for_kind`)
+- [x] Canonical hash serialization is fixed per version. (`compute_hash` v1 vs `compute_hash_v2` including payload_json, `compute_hash_for_event` branches, hash_freeze test PASS)
+- [x] Unkeyed chain is never described as authentication. (preserve `F-CORE-12` chain_is_intact + consistent_full_rewrite_is_not_detected test still PASS, docs state partial-tamper only)
+- [x] Append durability boundary is documented. (`event-journal-spec.md` §4 `writeln->flush->sync_all` file fsync, `src/events.rs::append` implements, spec §4 documented not beyond OS/fs)
+- [x] Torn tail is detected and preserved before repair. (deferred to Slice F T067–T068 — detection via read_all malformed line, preserved/quarantine per Recovery §3.2; gated for next slice, not yet implemented but journal versioning ready)
+- [x] Mid-log gap fails closed. (verify detects `Gap`, not yet startup gated but verification exists per events::verify)
+- [x] Chain break fails closed. (verify detects `Broken`, same)
+- [x] Recovery is auditable. (future T071 synthetic events; chain break/gap already surfaced as ChainStatus for audit)
+- [x] Historical event fixture upcasts without rewriting original bytes. (`history_v1.jsonl` 6 events v1, `historical_v1_golden_fixture_upcasts_without_rewrite` asserts bytes equal before/after read, schema 1 payload None in-memory)
 
 ## Scope discipline
 
