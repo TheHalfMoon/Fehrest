@@ -1,0 +1,62 @@
+[
+  {
+    "id": "Q1",
+    "class": "CURRENT",
+    "project": "core",
+    "as_of_day": null,
+    "question": "What constraint governs reads of canonical objects in core?",
+    "must_contain": ["UUID"],
+    "stale_tokens": [],
+    "note": "Plain current-state recall. A maintained wiki should win or tie this."
+  },
+  {
+    "id": "Q2",
+    "class": "SUPERSEDED",
+    "project": "core",
+    "as_of_day": null,
+    "question": "What datastore does core use for canonical state?",
+    "must_contain": ["SQLite"],
+    "stale_tokens": ["Postgres"],
+    "note": "The superseded ADR is four times longer and more discussed than its replacement. Length-biased retrieval surfaces the wrong one."
+  },
+  {
+    "id": "Q3",
+    "class": "HISTORICAL",
+    "project": "core",
+    "as_of_day": 20,
+    "question": "What datastore did core use for canonical state on day 20?",
+    "must_contain": ["Postgres"],
+    "stale_tokens": ["SQLite"],
+    "note": "Inverted: here the CURRENT answer is the wrong one. A page that only records the present cannot answer this."
+  },
+  {
+    "id": "Q4",
+    "class": "SCOPE",
+    "project": "core",
+    "as_of_day": null,
+    "question": "What constraints apply to project core?",
+    "must_contain": ["UUID"],
+    "stale_tokens": ["ninety days"],
+    "note": "The ninety-day retention constraint belongs to edge. Surfacing it for core is a scope error."
+  },
+  {
+    "id": "Q5",
+    "class": "CONTRADICTION",
+    "project": "core",
+    "as_of_day": null,
+    "question": "What is the deploy target for core?",
+    "must_contain": ["staging", "production"],
+    "stale_tokens": [],
+    "note": "Both positions are active and inseparable. Correct behaviour is to surface the conflict, not to pick."
+  },
+  {
+    "id": "Q6",
+    "class": "ABSENT",
+    "project": "core",
+    "as_of_day": null,
+    "question": "What authentication provider does core use?",
+    "must_contain": [],
+    "stale_tokens": ["gateway", "TLS"],
+    "note": "Nothing in the corpus answers this. Scored on what the context LACKS: the nearest plausible-looking material is edge's gateway/TLS line, which is not an answer."
+  }
+]

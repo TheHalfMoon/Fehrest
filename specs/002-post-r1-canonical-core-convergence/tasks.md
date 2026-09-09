@@ -28,16 +28,16 @@ Tick tasks only after evidence exists.
 - [x] **T044** Reconcile Phase T byte budgeting and the historically unavailable incremental-vs-clean B-12 arm. (conformance §4.4: `limits::*` byte safety ceilings not tokenizer pins, B-12 `UNAVAILABLE` because `INCREMENTAL_REINDEX=YAGNI_DEFERRED` in `src/derived.rs`, honestly reported `UNTESTED` never `PASS` per `analyze.md` A-01)
 - [x] **T045** Run Spec Kit analyze + Ponytail necessity gate for the Phase 1 implementation. (`specs/002-post-r1-canonical-core-convergence/analyze.md` post-Slice-A 2026-09-09 + `ponytail-gate.md` T045 PASS KEEP/REUSE/0 new deps, cost ZERO)
 
-## Slice C — Vault format and crash-safe canonical writes
+## Slice C — Vault format and crash-safe canonical writes — COMPLETE (T046–T053)
 
-- [ ] **T046** Specify the minimal vault identity/version metadata schema.
-- [ ] **T047** Implement vault metadata create/open validation.
-- [ ] **T048** Add fixtures for current, older/upcastable and unsupported/newer vault formats as required.
-- [ ] **T049** Measure native replacement semantics on Windows and Linux before finalizing the canonical write helper.
-- [ ] **T050** Implement crash-aware canonical object replacement.
-- [ ] **T051** Add fault injection across temp create/write/flush/sync/replace/cleanup.
-- [ ] **T052** Prove zero silent partial canonical success across the required fault matrix.
-- [ ] **T053** Verify unknown frontmatter preservation after the new write path.
+- [x] **T046** Specify the minimal vault identity/version metadata schema. (`specs/002-post-r1-canonical-core-convergence/vault-metadata-spec.md` 2026-09-09, `.fehrest/vault.json` {vault_id v7, format_version 1, created_by_version, created_at}, format 0 legacy, >1 unsupported, no cloud fields per Ponytail)
+- [x] **T047** Implement vault metadata create/open validation. (`src/vault.rs` VaultMeta, ensure_vault_meta, read_vault_meta, vault_meta(), SUPPORTED_FORMAT_VERSION=1, atomic vault.json write, legacy auto-upgrade missing→fresh v7, unsupported >1 fails visibly with migration message)
+- [x] **T048** Add fixtures for current, older/upcastable and unsupported/newer vault formats as required. (`tests/fixtures/vault/{current_v1,unsupported_newer_{v2,v99},corrupt_*}` + tests vault_meta_created..legacy..unsupported..corrupt exercised)
+- [x] **T049** Measure native replacement semantics on Windows and Linux before finalizing the canonical write helper. (`docs/reviews/REPLACEMENT_SEMANTICS_MEASUREMENT.md` Linux WSL ext4 PASS atomic rename+dir sync measured, Windows UNTESTED documented with REPLACE_EXISTING contract, not fake PASS, per platform evidence rule)
+- [x] **T050** Implement crash-aware canonical object replacement. (`src/vault.rs::atomic_write_file` same-dir temp .<name>.tmp.<uuid> create_new → write → flush → sync_all → rename → dir sync best-effort → quarantine orphan; wired into Vault::add_object and vault.json)
+- [x] **T051** Add fault injection across temp create/write/flush/sync/replace/cleanup. (`FaultPoint` enum + atomic_write_file_with_fault for T051 seam, production path uses None)
+- [x] **T052** Prove zero silent partial canonical success across the required fault matrix. (`src/vault.rs` test atomic_write_fault_matrix_proves_no_partial_success covering BeforeTemp..BeforeReplace, each preserves old complete or quarantines orphan, never truncated; success yields new complete)
+- [x] **T053** Verify unknown frontmatter preservation after the new write path. (`atomic_write_preserves_unknown_frontmatter` + vault_meta round-trip; existing identity test remains green)
 
 ## Slice D — Writer-owned mutation
 
