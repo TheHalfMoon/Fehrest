@@ -333,6 +333,99 @@ impl EventLog {
     pub fn path(&self) -> &Path {
         &self.path
     }
+
+    /// Detect torn final record (T067).
+    ///
+    /// Returns `Some(torn_bytes)` if the last non-empty line fails JSON parse.
+    /// Returns `None` if log is empty or last line parses as Event.
+    /// If a middle line fails, that is **not** torn tail — it is gap/broken and
+    /// will be reported via `verify()` failing closed (T069/T070).
+    pub fn detect_torn_tail(&self) -> Result<Option<String>> {
+        if !self.path.exists() {
+            return Ok(None);
+        }
+        let raw = std::fs::read_to_string(&self.path)
+            .map_err(|e| Error::Event(format!("cannot read event log for torn detection: {e}")))?;
+        if raw.trim().is_empty() {
+            return Ok(None);
+        }
+        // Collect non-empty lines with their order
+        let lines: Vec<&str> = raw.lines().filter(|l| !l.trim().is_empty()).collect();
+        if lines.is_empty() {
+            return Ok(None);
+        }
+        // Try parse each; find first failure index
+        for (idx, line) in lines.iter().enumerate() {
+            let parse: std::result::Result<Event, _> = serde_json::from_str(line);
+            if parse.is_err() {
+                let is_last = idx == lines.len() - 1;
+                if is_last {
+                    return Ok(Some((*line).to_string()));
+                } else {
+                    // Middle malformed — not torn tail, will be treated as gap/broken elsewhere
+                    return Ok(None);
+                }
+            }
+        }
+        Ok(None)
+    }
+
+    /// Quarantine torn bytes and truncate log to last valid record (T068).
+    ///
+    /// Preservation before repair (FR2-021). Quarantine file is
+    /// `<path>.torn.<seq_expected>.<uuid>.quarantine` containing exact torn bytes.
+    /// Returns `Some(quarantine_path)` if repair was performed.
+    pub fn quarantine_and_repair_torn_tail(&self) -> Result<Option<PathBuf>> {
+        let torn = match self.detect_torn_tail()? {
+            Some(t) => t,
+            None => return Ok(None),
+        };
+        // Determine expected seq for quarantine naming: read_all of good prefix tells us count
+        let mut good_count = 0usize;
+        let raw = std::fs::read_to_string(&self.path)
+            .map_err(|e| Error::Event(format!("cannot read for quarantine: {e}")))?;
+        let lines: Vec<&str> = raw.lines().filter(|l| !l.trim().is_empty()).collect();
+        for line in &lines {
+            if serde_json::from_str::<Event>(line).is_ok() {
+                good_count += 1;
+            } else {
+                break; // torn is last, so break here
+            }
+        }
+        let seq_expected = good_count as u64 + 1;
+        let qname = format!(
+            "{}.torn.{}.{:?}.quarantine",
+            self.path.file_name().unwrap().to_string_lossy(),
+            seq_expected,
+            uuid::Uuid::now_v7()
+        );
+        let qpath = self.path.parent().unwrap().join(qname);
+        std::fs::write(&qpath, torn.as_bytes())
+            .map_err(|e| Error::Event(format!("cannot write quarantine: {e}")))?;
+        // Best-effort sync quarantine file
+        let _ = std::fs::File::open(&qpath).and_then(|f| f.sync_all());
+
+        // Truncate original log to last good content
+        let good_lines = &lines[..good_count];
+        let new_content = if good_lines.is_empty() {
+            String::new()
+        } else {
+            good_lines.join("\n") + "\n"
+        };
+        // Atomic-like truncate: write to temp then rename? Simpler: truncate file in place and sync.
+        // We do write + sync to preserve forensic guarantee (original truncated after quarantine).
+        std::fs::write(&self.path, new_content.as_bytes())
+            .map_err(|e| Error::Event(format!("cannot truncate torn tail: {e}")))?;
+        if let Ok(f) = std::fs::File::open(&self.path) {
+            let _ = f.sync_all();
+        }
+        if let Some(parent) = self.path.parent() {
+            if let Ok(df) = std::fs::File::open(parent) {
+                let _ = df.sync_all();
+            }
+        }
+        Ok(Some(qpath))
+    }
 }
 
 #[cfg(test)]
