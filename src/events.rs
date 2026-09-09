@@ -30,12 +30,54 @@ pub enum EventKind {
     ContextCompiled,
 }
 
+fn default_schema_version() -> u32 {
+    1
+}
+
+pub const SCHEMA_VERSION_V1: u32 = 1;
+pub const SCHEMA_VERSION_V2: u32 = 2;
+pub const CURRENT_SCHEMA_VERSION: u32 = SCHEMA_VERSION_V2;
+
+/// Typed payload for v2 events (FR2-012). Only Phase 1 needed variants; not the full future vocabulary.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(tag = "type", content = "data")]
+pub enum EventPayload {
+    VaultCreated {
+        vault_id: String,
+    },
+    ObjectRegistered {
+        object_id: String,
+        path: String,
+    },
+    ObjectConflict {
+        object_id: String,
+        paths: Vec<String>,
+    },
+    MemoryRecorded {
+        memory_id: String,
+        memory_type: String,
+    },
+    MemorySuperseded {
+        superseded_id: String,
+        by_id: String,
+    },
+    ContextCompiled {
+        context_id: String,
+        digest: String,
+        omitted: usize,
+    },
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Event {
+    #[serde(default = "default_schema_version")]
+    pub schema_version: u32,
     pub seq: u64,
     pub kind: EventKind,
     pub subject: String,
     pub detail: String,
+    #[serde(default)]
+    pub payload: Option<EventPayload>,
     pub prev_hash: String,
     pub hash: String,
 }
@@ -51,8 +93,83 @@ const GENESIS: &str = "000000000000000000000000000000000000000000000000000000000
 fn compute_hash(seq: u64, kind: EventKind, subject: &str, detail: &str, prev: &str) -> String {
     // Canonical serialization for hashing: field order is fixed here, not inherited
     // from a serializer whose output could change between versions.
+    // V1 rule: no payload.
     let payload = format!("{seq}|{kind:?}|{subject}|{detail}|{prev}");
     hash_bytes(payload.as_bytes())
+}
+
+fn compute_hash_v2(
+    seq: u64,
+    kind: EventKind,
+    subject: &str,
+    detail: &str,
+    payload: &Option<EventPayload>,
+    prev: &str,
+) -> String {
+    // Frozen per-version order (T062): seq|kind|subject|detail|payload_json|prev
+    // payload_json is serde_json deterministic for this enum (tag+content).
+    let payload_json = match payload {
+        Some(p) => serde_json::to_string(p).unwrap_or_else(|_| "null".into()),
+        None => "null".into(),
+    };
+    let s = format!("{seq}|{kind:?}|{subject}|{detail}|{payload_json}|{prev}");
+    hash_bytes(s.as_bytes())
+}
+
+fn compute_hash_for_event(ev: &Event) -> String {
+    if ev.schema_version >= 2 {
+        compute_hash_v2(
+            ev.seq,
+            ev.kind,
+            &ev.subject,
+            &ev.detail,
+            &ev.payload,
+            &ev.prev_hash,
+        )
+    } else {
+        compute_hash(ev.seq, ev.kind, &ev.subject, &ev.detail, &ev.prev_hash)
+    }
+}
+
+fn payload_for_kind(kind: EventKind, subject: &str, detail: &str) -> Option<EventPayload> {
+    match kind {
+        EventKind::VaultCreated => Some(EventPayload::VaultCreated {
+            vault_id: subject.to_string(),
+        }),
+        EventKind::ObjectRegistered => Some(EventPayload::ObjectRegistered {
+            object_id: subject.to_string(),
+            path: detail.to_string(),
+        }),
+        EventKind::ObjectConflict => Some(EventPayload::ObjectConflict {
+            object_id: subject.to_string(),
+            paths: if detail.is_empty() {
+                vec![]
+            } else {
+                vec![detail.to_string()]
+            },
+        }),
+        EventKind::MemoryRecorded => Some(EventPayload::MemoryRecorded {
+            memory_id: subject.to_string(),
+            memory_type: if detail.is_empty() {
+                "Fact".into()
+            } else {
+                detail.to_string()
+            },
+        }),
+        EventKind::MemorySuperseded => Some(EventPayload::MemorySuperseded {
+            superseded_id: subject.to_string(),
+            by_id: detail.to_string(),
+        }),
+        EventKind::ContextCompiled => Some(EventPayload::ContextCompiled {
+            context_id: subject.to_string(),
+            digest: detail
+                .split_whitespace()
+                .next()
+                .unwrap_or(detail)
+                .to_string(),
+            omitted: 0,
+        }),
+    }
 }
 
 /// The append-only event log.
@@ -131,12 +248,17 @@ impl EventLog {
             Some(e) => (e.seq + 1, e.hash.clone()),
             None => (1, GENESIS.to_string()),
         };
-        let hash = compute_hash(seq, kind, subject, detail, &prev);
+        let payload = payload_for_kind(kind, subject, detail);
+        let schema_version = CURRENT_SCHEMA_VERSION;
+        // Compute hash per frozen per-version rule (T062)
+        let hash = compute_hash_v2(seq, kind, subject, detail, &payload, &prev);
         let ev = Event {
+            schema_version,
             seq,
             kind,
             subject: subject.to_string(),
             detail: detail.to_string(),
+            payload,
             prev_hash: prev,
             hash,
         };
@@ -148,6 +270,9 @@ impl EventLog {
             .open(&self.path)
             .map_err(|e| Error::Event(format!("cannot open event log: {e}")))?;
         writeln!(f, "{line}").map_err(|e| Error::Event(format!("cannot append event: {e}")))?;
+        // Durability boundary (T063): flush + sync_all on file (best-effort); parent dir sync not needed for append
+        let _ = f.flush();
+        let _ = f.sync_all();
         Ok(ev)
     }
 
@@ -172,6 +297,7 @@ impl EventLog {
 
     /// Verify chain integrity. Detects what an unkeyed chain can detect, and the
     /// return type deliberately says nothing about authenticity.
+    /// Supports both v1 (detail-only) and v2 (typed payload) via frozen per-version hash.
     pub fn verify(&self) -> Result<ChainStatus> {
         let events = self.read_all()?;
         let mut prev_hash = GENESIS.to_string();
@@ -189,7 +315,7 @@ impl EventLog {
                     reason: "prev_hash does not match predecessor".into(),
                 });
             }
-            let recomputed = compute_hash(ev.seq, ev.kind, &ev.subject, &ev.detail, &ev.prev_hash);
+            let recomputed = compute_hash_for_event(ev);
             if recomputed != ev.hash {
                 return Ok(ChainStatus::Broken {
                     at_seq: ev.seq,
@@ -201,6 +327,11 @@ impl EventLog {
         Ok(ChainStatus::Intact {
             events: events.len(),
         })
+    }
+
+    /// Expose the path for startup integrity checks (T066).
+    pub fn path(&self) -> &Path {
+        &self.path
     }
 }
 
@@ -310,5 +441,140 @@ mod tests {
             Err(Error::LimitExceeded { .. })
         ));
         let _ = std::fs::remove_dir_all(&d);
+    }
+
+    // — Slice D T060–T065: versioned event journal —
+
+    #[test]
+    fn historical_v1_golden_fixture_upcasts_without_rewrite() {
+        let d = tmp();
+        let fixture = std::path::Path::new("tests/fixtures/events/history_v1.jsonl");
+        let bytes_before = std::fs::read(fixture).unwrap();
+        let dest = d.join("events.jsonl");
+        std::fs::write(&dest, &bytes_before).unwrap();
+        let log = EventLog::open(&d).unwrap();
+        let events = log.read_all().unwrap();
+        assert_eq!(events.len(), 6);
+        for ev in &events {
+            assert_eq!(
+                ev.schema_version, 1,
+                "v1 fixture must read as schema 1 without rewrite"
+            );
+            assert!(
+                ev.payload.is_none(),
+                "v1 payload must be None, upcast is in-memory"
+            );
+        }
+        // Verify via frozen v1 hash must be intact
+        assert_eq!(log.verify().unwrap(), ChainStatus::Intact { events: 6 });
+        // File bytes unchanged after read (no rewrite)
+        let bytes_after = std::fs::read(&dest).unwrap();
+        assert_eq!(
+            bytes_before, bytes_after,
+            "historical bytes must not be rewritten to read them"
+        );
+        let _ = std::fs::remove_dir_all(&d);
+    }
+
+    #[test]
+    fn current_v2_fixture_is_typed_and_verifies() {
+        let d = tmp();
+        let fixture = std::path::Path::new("tests/fixtures/events/current_v2.jsonl");
+        let bytes = std::fs::read(fixture).unwrap();
+        std::fs::write(d.join("events.jsonl"), &bytes).unwrap();
+        let log = EventLog::open(&d).unwrap();
+        let events = log.read_all().unwrap();
+        assert_eq!(events.len(), 6);
+        for ev in &events {
+            assert_eq!(ev.schema_version, 2);
+            assert!(ev.payload.is_some(), "v2 must carry typed payload");
+        }
+        assert_eq!(log.verify().unwrap(), ChainStatus::Intact { events: 6 });
+        let _ = std::fs::remove_dir_all(&d);
+    }
+
+    #[test]
+    fn typed_payload_participates_in_hash() {
+        let d = tmp();
+        let log = EventLog::open(&d).unwrap();
+        let ev = log
+            .append(EventKind::ObjectRegistered, "obj-123", "a.md")
+            .unwrap();
+        assert_eq!(ev.schema_version, CURRENT_SCHEMA_VERSION);
+        assert!(ev.payload.is_some());
+        // Tamper payload JSON without updating hash must break verification
+        let p = d.join("events.jsonl");
+        let text = std::fs::read_to_string(&p).unwrap();
+        // Change payload path
+        let tampered = text.replace("\"path\":\"a.md\"", "\"path\":\"evil.md\"");
+        assert_ne!(text, tampered);
+        std::fs::write(&p, tampered).unwrap();
+        match log.verify().unwrap() {
+            ChainStatus::Broken { at_seq, .. } => assert_eq!(at_seq, 1),
+            s => panic!("payload tamper must be detected, got {s:?}"),
+        }
+        let _ = std::fs::remove_dir_all(&d);
+    }
+
+    #[test]
+    fn append_after_historical_v1_preserves_chain_mixed_versions() {
+        let d = tmp();
+        let fixture = std::path::Path::new("tests/fixtures/events/history_v1.jsonl");
+        let bytes = std::fs::read(fixture).unwrap();
+        std::fs::write(d.join("events.jsonl"), &bytes).unwrap();
+        let log = EventLog::open(&d).unwrap();
+        assert_eq!(log.verify().unwrap(), ChainStatus::Intact { events: 6 });
+        // Append new v2 event after v1 history
+        let ev = log
+            .append(EventKind::ObjectRegistered, "new-obj", "new.md")
+            .unwrap();
+        assert_eq!(ev.seq, 7);
+        assert_eq!(ev.schema_version, 2);
+        assert_eq!(log.verify().unwrap(), ChainStatus::Intact { events: 7 });
+        // File still contains original v1 lines verbatim plus new v2 line
+        let raw = std::fs::read_to_string(d.join("events.jsonl")).unwrap();
+        let lines: Vec<&str> = raw.lines().collect();
+        assert_eq!(lines.len(), 7);
+        assert!(
+            !lines[0].contains("schema_version"),
+            "v1 line must remain without schema_version field, not rewritten"
+        );
+        assert!(
+            lines[6].contains("\"schema_version\":2"),
+            "new line must be v2"
+        );
+        let _ = std::fs::remove_dir_all(&d);
+    }
+
+    #[test]
+    fn hash_freeze_is_versioned() {
+        // Same logical event with different schema versions must hash differently (payload included)
+        let h1 = compute_hash(1, EventKind::VaultCreated, "s", "d", GENESIS);
+        let h2 = compute_hash_v2(
+            1,
+            EventKind::VaultCreated,
+            "s",
+            "d",
+            &Some(EventPayload::VaultCreated {
+                vault_id: "s".into(),
+            }),
+            GENESIS,
+        );
+        assert_ne!(
+            h1, h2,
+            "v1 vs v2 hash must differ because payload participates"
+        );
+        // But v1 event read as v1 must recompute via v1 rule
+        let ev1 = Event {
+            schema_version: 1,
+            seq: 1,
+            kind: EventKind::VaultCreated,
+            subject: "s".into(),
+            detail: "d".into(),
+            payload: None,
+            prev_hash: GENESIS.into(),
+            hash: h1.clone(),
+        };
+        assert_eq!(compute_hash_for_event(&ev1), h1);
     }
 }

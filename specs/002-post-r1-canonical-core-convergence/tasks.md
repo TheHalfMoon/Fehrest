@@ -48,14 +48,14 @@ Tick tasks only after evidence exists.
 - [x] **T058** Preserve visible second-writer failure and no-auto-steal behavior. (`second_writer_still_fails_visibly_and_no_auto_steal` — `WriterLocked` visible holder/path, second `open_write` still fails, after drop new writer succeeds)
 - [x] **T059** Add stale-lock diagnostics only if they do not widen authority or misrepresent PID state as authentication. (`stale_lock_diagnostics_not_used_as_auth` — `pid=` in `writer.lock` diagnostic only, fake `999999` still locked, acquire checks existence not PID)
 
-## Slice E — Versioned event journal
+## Slice E — Versioned event journal — COMPLETE (T060–T065)
 
-- [ ] **T060** Define compatibility for the historical event schema and the next versioned envelope.
-- [ ] **T061** Replace production free-form event-detail usage with the typed payload variants required by Phase 1.
-- [ ] **T062** Freeze canonical hash serialization for each versioned event schema participating in the chain.
-- [ ] **T063** Define and implement the event append flush/sync durability boundary.
-- [ ] **T064** Commit a historical event-log golden fixture.
-- [ ] **T065** Implement read-time upcasting without rewriting historical bytes.
+- [x] **T060** Define compatibility for the historical event schema and the next versioned envelope. (`specs/002/event-journal-spec.md` 2026-09-09 — v1 frozen (free-form detail, no schema_version) + v2 envelope {schema_version:2, payload: EventPayload typed enum 6 variants, serde tag) per FR2-011/012)
+- [x] **T061** Replace production free-form event-detail usage with the typed payload variants required by Phase 1. (`src/events.rs` EventPayload + payload_for_kind maps kind→typed variant on append, writer produces v2 typed)
+- [x] **T062** Freeze canonical hash serialization for each versioned event schema participating in the chain. (`compute_hash` v1 `seq|kind|subject|detail|prev`, `compute_hash_v2` includes `payload_json` deterministic serde, `compute_hash_for_event` branches on `schema_version` per T062)
+- [x] **T063** Define and implement the event append flush/sync durability boundary. (`src/events.rs::append` now `writeln -> flush -> sync_all` best-effort file fsync; documented boundary, not beyond OS/fs, per spec)
+- [x] **T064** Commit a historical event-log golden fixture. (`tests/fixtures/events/history_v1.jsonl` 6 events v1 no schema_version + `current_v2.jsonl` 6 events v2 typed, computed hashes matching frozen rules, committed)
+- [x] **T065** Implement read-time upcasting without rewriting historical bytes. (`read_all` defaults missing schema_version to 1 via serde default, returns Event with payload None in-memory, file bytes unchanged after read verified, mixed v1+ v2 chain preserves)
 
 ## Slice F — Startup integrity and recovery
 
