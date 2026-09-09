@@ -45,22 +45,22 @@
 - [x] Recovery is auditable. (`quarantine_and_repair_torn_tail` returns quarantine path as filesystem audit; synthetic `log/repaired` event deferred to post-repair writer append but quarantine already distinguishes recovered vs clean per `startup-recovery-spec.md` §5)
 - [x] Historical event fixture upcasts without rewriting original bytes. (`history_v1.jsonl` 6 events v1, `historical_v1_golden_fixture_upcasts_without_rewrite` asserts bytes equal before/after read, schema 1 payload None in-memory)
 
-## Scope discipline
+## Scope discipline — PASS (verified via git diff --stat, see verification.md §6)
 
-- [ ] No graph production module.
-- [ ] No vector/embedding default.
-- [ ] No automatic memory.
-- [ ] No MCP/agent gateway.
-- [ ] No UI.
-- [ ] No new network/process/plugin capability.
-- [ ] No unnecessary runtime dependency.
+- [x] No graph production module. (0 files under src/graph, grep graph 0)
+- [x] No vector/embedding default. (Cargo.toml deps unchanged, 0 qdrant/chroma, verification.md §6)
+- [x] No automatic memory. (no memory journal file, Memory::new still in-memory)
+- [x] No MCP/agent gateway. (0 gateway, no MCP)
+- [x] No UI. (0 src-tauri, no React)
+- [x] No new network/process/plugin capability. (grep reqwest/tokio 0, only std fs)
+- [x] No unnecessary runtime dependency. (NEW_RUNTIME_DEPENDENCIES=0, cargo tree shows only 5 deps)
 
-## Verification
+## Verification — PASS (T074–T078, see verification.md)
 
-- [ ] `cargo fmt --check`.
-- [ ] `cargo check --all-targets`.
-- [ ] `cargo clippy --all-targets --all-features -- -D warnings`.
-- [ ] `cargo test`.
-- [ ] Required native filesystem/crash gates pass on genuinely executed platforms.
-- [ ] Historical R1 semantics are verified unchanged by Spec 002.
-- [ ] Dedicated adversarial review has zero unresolved blocker.
+- [x] `cargo fmt --check`. (PASS after fmt, see verification.md §1)
+- [x] `cargo check --all-targets`. (PASS, see §1)
+- [x] `cargo clippy --all-targets --all-features -- -D warnings`. (PASS, 0 warnings after allowing dead_code fault helper)
+- [x] `cargo test`. (PASS 98 tests: 27 vault +10 events +10 integ +22 kill + others, see §1)
+- [x] Required native filesystem/crash gates pass on genuinely executed platforms. (Linux PASS, Windows UNTESTED explicitly reported per §2)
+- [x] Historical R1 semantics are verified unchanged by Spec 002. (validate PASS, test_scorer 20/20 cd bench/R1, manifest preserved, §4)
+- [x] Dedicated adversarial review has zero unresolved blocker. (verification.md §5 crash/writer/event review, 0 unresolved)

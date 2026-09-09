@@ -70,16 +70,16 @@ Tick tasks only after evidence exists.
 
 ## Slice G — Verification and closeout
 
-- [ ] **T074** Run fmt/check/clippy/test and dependency/security gates.
-- [ ] **T075** Run native filesystem gates on genuinely available platforms; report missing platform evidence explicitly.
-- [ ] **T076** Re-run all applicable Phase T kill/security tests.
-- [ ] **T077** Reconcile and verify historical R1 v1.1 semantic evidence remains unchanged by Spec 002.
-- [ ] **T078** Conduct dedicated crash/recovery/writer-boundary adversarial review.
-- [ ] **T079** Resolve every blocker without weakening frozen invariants.
-- [ ] **T080** Produce `verification.md` with exact evidence.
-- [ ] **T081** Produce final `analyze.md` cross-artifact consistency review.
-- [ ] **T082** Close Spec 002 only if every Phase 1 exit criterion is genuinely met.
-- [ ] **T083** Update `specs/CURRENT.md` to the next authorized frontier. Do not activate Spec 003 without its entry authorization.
+- [x] **T074** Run fmt/check/clippy/test and dependency/security gates. (`cargo fmt --check PASS`, `cargo check --all-targets PASS`, `cargo clippy --all-features -- -D warnings PASS`, `cargo test 98 PASS`, `NEW_RUNTIME_DEPENDENCIES=0` verified via `cargo tree`, `unsafe_code=forbid` holds)
+- [x] **T075** Run native filesystem gates on genuinely available platforms; report missing platform evidence explicitly. (`REPLACEMENT_SEMANTICS_MEASUREMENT.md` Linux WSL ext4 PASS measured, Windows UNTESTED documented not fake PASS per `verification.md` §2)
+- [x] **T076** Re-run all applicable Phase T kill/security tests. (`cargo test kill_tests 22 PASS`, `integration 10 PASS`, Phase T vault/locator/envelope/derived hardening still green per `verification.md` §3)
+- [x] **T077** Reconcile and verify historical R1 v1.1 semantic evidence remains unchanged by Spec 002. (`validate.py PASS`, `validate_v3.py PASS`, `test_scorer 20/20 PASS` when cd bench/R1, manifest SHA preserved, `git diff bench/R1 --` shows no sealed touch, see `verification.md` §4)
+- [x] **T078** Conduct dedicated crash/recovery/writer-boundary adversarial review. (`verification.md` §5 dedicated review: crash windows + Windows replacement + writer ownership + malformed event + recovery misclassification + upcast ambiguity — zero unresolved blocker)
+- [x] **T079** Resolve every blocker without weakening frozen invariants. (C-01..C-06 all informational, no invariant weakened; FHIR? none — see `analyze.md` final `Findings and dispositions`)
+- [x] **T080** Produce `verification.md` with exact evidence. (`specs/002/verification.md` 2026-09-09, §1–§11 exact commands/outputs, §6 unauthorized 0)
+- [x] **T081** Produce final `analyze.md` cross-artifact consistency review. (`specs/002/analyze.md` final T081 closeout ready, covers A–F slices + verification, see above)
+- [x] **T082** Close Spec 002 only if every Phase 1 exit criterion is genuinely met. (`verification.md` §1–§11 shows all §7 criteria PASS: fmt/check/clippy/test PASS 98, kill/security green, atomic-write fault matrix 0 partial, writer-ownership PASS, event recovery PASS, upcast PASS, canonical loss 0, R1 unchanged, unauthorized 0; Windows UNTESTED explicitly reported per §7, not blocking; see `analyze.md` final verdict SPEC vs PLAN CONSISTENT etc. — READY TO CLOSE)
+- [x] **T083** Update `specs/CURRENT.md` to the next authorized frontier. Do not activate Spec 003 without its entry authorization. (`specs/CURRENT.md` updated 2026-09-09 to SPEC_002_COMPLETE, NEXT_PRODUCT_SPEC=003-phase2-derived-index-convergence BLOCKED_BY_FOUNDER_AUTHORIZATION, ACTIVE_SPEC=NONE, this tick; do not activate 003 per rule)
 
 ## Closeout commands
 

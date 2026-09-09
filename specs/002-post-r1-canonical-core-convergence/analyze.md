@@ -1,10 +1,10 @@
-# Analyze — Spec 002 Post-Slice-A Implementation Readiness
+# Analyze — Spec 002 Final Cross-Artifact Consistency (T081)
 
-**Status:** ACTIVE_SLICE_A_CLOSED → SLICE_B_READY (2026-09-09)
-**Gate:** T045 — Spec Kit analyze + Ponytail necessity gate for Phase 1 implementation
-**Baseline:** `ed79d8e` historical implementation + live HEAD `a8d3052`
-**Conformance:** `docs/reviews/PHASE_T_IMPLEMENTATION_CONFORMANCE.md` (T041–T044)
-**Method:** `AGENTS.md §4` / `specs/002` Spec→Clarify→Plan→Checklist→Tasks→Analyze→Ponytail→Implement… (no skip)
+**Status:** CLOSEOUT READY → SPEC_002 COMPLETE (2026-09-09)
+**Gate:** T081 — Final cross-artifact consistency review before T082 close
+**Baseline:** `ed79d8e` Phase T + live HEAD `7c23c9d` (slice F) → `fe29022` slice E + `6bb4e8a` slice B + `7c23c9d` slice F
+**Conformance:** `docs/reviews/PHASE_T_IMPLEMENTATION_CONFORMANCE.md` (T041–T044) + `vault-metadata-spec.md` (T046) + `event-journal-spec.md` (T060) + `startup-recovery-spec.md` (T066) + `verification.md` (T080)
+**Method:** `AGENTS.md §4` / `specs/002` Spec→Clarify→Plan→Checklist→Tasks→Analyze→Ponytail→Implement→Test→Benchmark→Security→Review→Converge (no skip)
 **Cost policy:** `OPENAI_API_KEY_USAGE=PROHIBITED` — zero paid model calls; `cargo`/`git`/local deterministic review only
 
 ## Architecture alignment
@@ -56,22 +56,56 @@ preregistration=5463bfddcf076b930e35c3fe5a208b94f0af720e935a3dc8ae5b88432709f6e2
 
 No future analysis may substitute a GitHub bootstrap SHA for these historical evidence identifiers.
 
-## Gate status update (T037–T045)
+## Gate status update (T037–T083)
 
 ```text
-T037 LIVE_WORKTREE_RECONCILED=YES (T037_IMPLEMENTATION_BASELINE.md, bundle a36639da, ed79 bundle-verify PASS)
-T038 R1_TERMINAL_VERDICT=THESIS_SUPPORTED_ON_COST_CAVEAT (R1_V3_TERMINAL_VERDICT_2026-09-09.md, pilot 556b32 pilot raw, 05443fe confirmatory raw, B5 vs B4 p=1.2e-32)
-T039 FOUNDER_AUTHORIZATION_SPEC_002=YES (FOUNDER_AUTHORIZATION_SPEC_002_2026-09-09.md 2026-09-09T04:00:00Z, route THESIS_SUPPORTED_ON_COST_CAVEAT → Spec 002 with cost as primary constraint)
-T040 CURRENT ACTIVE=YES (a8d3052 Merge #57 feat/spec-002-activation, CURRENT SPEC_002_STATUS=ACTIVE_SLICE_A)
-T041 PHASE_T_IMPLEMENTATION_CONFORMANCE.md CREATED (docs/reviews/PHASE_T_IMPLEMENTATION_CONFORMANCE.md 2026-09-09, covers all 6 distinctions in spec §4 without rewriting history)
-T042 MEMORY_SURFACE RECONCILED (§4.2: four-axis semantics + resolver exist, durable journal/CLI write deferred to Phase 4 memory productization, not pulled into Phase 1)
-T043 BOUNDED_COMPILER RECONCILED (§4.3: Phase T assembly bounded deterministic vs full H receipted pipeline, SelectionTrace/grant/derived-gen/tokenizer not pre-claimed, preserved for 007)
-T044 BYTE_BUDGET+B12 RECONCILED (§4.4: byte ceiling 256KiB etc are safety limits not tokenizer pin, B-12 incremental vs clean historically UNAVAILABLE and correctly reported UNTESTED, belongs to 003)
-T045 ANALYZE+PONYTAIL GATE RUN (this file + ponytail-gate.md update, deterministic, no paid API)
-
-SPEC_002_ENTRY_GATE=PASS
-SPEC_002_SLICE_A_RECONCILIATION=PASS
-NEXT_GATE=T046_T053 VAULT_FORMAT_AND_CRASH_SAFE_WRITES (dependency-ready)
+T037 LIVE_WORKTREE_RECONCILED=YES (T037_IMPLEMENTATION_BASELINE.md, bundle a36639da, ed79 bundle-verify PASS, live 7c23c9d HEAD)
+T038 R1_TERMINAL_VERDICT=THESIS_SUPPORTED_ON_COST_CAVEAT (R1_V3_TERMINAL_VERDICT_2026-09-09.md, pilot 556b32 pilot raw, 05443fe confirmatory raw, B5 vs B4 p=1.2e-32, cost caveat)
+T039 FOUNDER_AUTHORIZATION_SPEC_002=YES (FOUNDER_AUTHORIZATION_SPEC_002_2026-09-09.md, route → Spec 002 with cost constraint)
+T040 CURRENT ACTIVE=YES (a8d3052 Merge #57, updated to 7c23c9d slice F)
+T041 PHASE_T_IMPLEMENTATION_CONFORMANCE.md CREATED (docs/reviews/PHASE_T 2026-09-09, 6 distinctions)
+T042 MEMORY_SURFACE RECONCILED (§4.2 four-axis exists, journal deferred to Spec 006)
+T043 BOUNDED_COMPILER RECONCILED (§4.3 Phase T bounded vs full H for 007)
+T044 BYTE_BUDGET+B12 RECONCILED (§4.4 ceilings not tokenizer, B-12 UNTESTED for 003)
+T045 ANALYZE+PONYTAIL GATE PASS (this file T045 pre + final T081, cost ZERO)
+T046 vault-metadata-spec CREATED (vault_id/format_version 1, no cloud)
+T047 vault meta impl (VaultMeta, ensure, atomic vault.json, legacy upgrade, unsupported fails)
+T048 fixtures current/unsupported/corrupt committed
+T049 Linux measured PASS Windows UNTESTED documented (REPLACEMENT_SEMANTICS_MEASUREMENT.md)
+T050 atomic_write_file helper same-dir temp → write→flush→sync→rename→dir sync
+T051 FaultPoint + atomic_write_with_fault
+T052 fault matrix PASS (6 points, 0 partial)
+T053 unknown frontmatter preservation green
+T054 inventory WRITER_OWNERSHIP_INVENTORY.md exhaustive (vault.json, objects, events)
+T055 Ponytail VaultWriter<'a> borrow newtype selection (writer-capability-selection.md)
+T056 VaultWriter type proof + EventLog::append_for_writer + pub(crate) hardening
+T057 bypass negatives PASS (read-only cannot mint writer, cross-vault rejected)
+T058 second writer visible + no-auto-steal preserved
+T059 stale-lock diagnostic not auth (pid diagnostic only)
+T060 versioned event journal spec (v1 frozen, v2 envelope typed)
+T061 EventPayload typed enum 6 variants
+T062 hash freeze per version (v1 detail, v2 payload_json)
+T063 durability flush+sync_all on append
+T064 golden fixtures history_v1/current_v2 committed
+T065 upcasting without rewrite (in-memory, bytes unchanged)
+T066 startup integrity gating before writable open (vault meta + torn repair + gap/chain)
+T067 torn detection last line malformed
+T068 quarantine .torn.<seq>.<uuid>.quarantine + truncate
+T069 gap fails closed (writable refused)
+T070 chain break fails closed
+T071 recovery auditable via quarantine (synthetic event deferred)
+T072 kill/restart matrix spanning canonical+event PASS
+T073 deterministic fault matrix (randomized deferred to Windows host)
+T074 fmt/check/clippy/test PASS (98+ tests)
+T075 Linux PASS Windows UNTESTED reported explicitly
+T076 kill/security tests green (22 kill +10 integ)
+T077 R1 semantics unchanged (validate PASS, no sealed touch, 0 unauthorized)
+T078 adversarial review crash/writer/event PASS (see verification.md §5)
+T079 blockers resolved without weakening (all C-01..C-04 informational)
+T080 verification.md produced (this slice)
+T081 this file final cross-artifact review
+T082 close ready if all exit criteria PASS (see below)
+T083 update CURRENT to next frontier (do not activate 003 without auth)
 ```
 
 ## Cross-artifact consistency review (live truth 2026-09-09)
@@ -131,63 +165,81 @@ Slice A introduced no network/process/plugin/graph/vector/UI/MCP capability (che
 
 Historical identifiers `commit=ed79d8... tree=f7ea7e... prereg=5463bfdd...` preserved; no future `analyze.md` may substitute GitHub bootstrap SHA for them. T037/T038/T040 chain already records correct relation; this analysis reaffirms it.
 
-## Findings and dispositions
+## Findings and dispositions (final)
 
-### C-01: Checklist checkbox editorial lag (Informational, not blocking)
+### C-01: Checklist checkbox editorial lag — RESOLVED
 
-`checklist.md` checkboxes for entry gate + reconciliation remain `[ ]` while evidence now exists (`CURRENT ACTIVE`, `FOUNDER_AUTHORIZATION`, `T037`, conformance doc). This is the correct Spec Kit order: checklist is ticked after analyze/ponytail pass, not before. Disposition: **Tick in T045 closeout commit or at Slice A PR merge — do not fail analysis.** No semantic divergence.
+All entry gate + reconciliation + vault/canonical + writer + event journal checkboxes now ticked with evidence pointers per `tasks.md` updates through `fe29022` slice E and `7c23c9d` slice F. No lag remains.
 
-### C-02: spec.md/plan.md header Status text is pre-activation (Informational, not blocking)
+### C-02: spec.md/plan.md header Status text — ACKNOWLEDGED
 
-`spec.md` still reads `Status: SPECIFIED / BLOCKED` and `plan.md` `Status: PLANNED / BLOCKED`. Active frontier is `CURRENT.md` per `AGENTS.md` authority order (live truth > older report). Spec Kit freeze headers are documentation; they outrank nothing. Disposition: **Editorial — update to `ACTIVE` in next governance commit if desired, not required for technical correctness.** No phase reorder, no authorization claim invented.
+`spec.md` still reads `SPECIFIED / BLOCKED`, `plan.md` `PLANNED / BLOCKED` — live truth is `CURRENT.md` per `AGENTS.md` authority order. Not a semantic blocker.
 
-### C-03: No new runtime dependency needed for Slice B (Measurement pending but gate-ready)
+### C-03: No new runtime dependency needed — VERIFIED
 
-`dependencies.md` targets `NEW_RUNTIME_DEPENDENCIES=0`; plan §3 orders std primitives first. Vault metadata (`vault_id`, `format_version`, `created_by_version`) can be JSON file with std `fs` + `serde` already present; canonical atomic replacement can be `tempfile` same-filesystem pattern or direct `std::fs` helper without `tempfile` crate — choice pending T049 measurement but Ponytail proves std path likely sufficient. If measurement proves std insufficient, a small `tempfile` or `fs_extra`-like helper would need full dependency decision per plan §9; until then **REJECT**.
+`dependencies.md` `NEW_RUNTIME_DEPENDENCIES=0` holds through all slices: `Cargo.toml` deps unchanged (`rusqlite 0.37 bundled`, `uuid 1`, `sha2 0.10`, `serde`, `serde_json` only). No `tempfile`, `chrono`, `protobuf` added despite temptation (verified via `cargo tree` and `git diff --stat`). `std` + existing crates proved sufficient for atomic write, vault meta, versioned events, startup recovery.
 
-### C-04: Torn-tail vs mid-log discrimination is correctly scoped but tests pending
+### C-04: Torn-tail vs mid-log discrimination — IMPLEMENTED AND TESTED
 
-FR2-015 (`T067`) vs FR2-016 (`T069/T070`) discrimination (tail crash damage quarantined vs mid-log gap/chain fail-closed and not normalized) is at risk of conflation if verifier normalizes gap as torn. Spec 002 plan §6 correctly bifurcates handling; conformance doc §3 defers implementation truthfully. Tests T051/T052/T067–T070 to enforce; not yet executed. Disposition: **No blocker for analyze; blocker would be if Slice C/D/E were allowed to ship without that matrix — gated by T066–T073.**
+FR2-015 vs FR2-016 correctly bifurcated: `EventLog::detect_torn_tail` (last line malformed) → `quarantine_and_repair_torn_tail` (preserve then truncate) vs `verify Gap/Broken` → `startup_integrity_check` fails closed writable, read-only still available. Tests `torn_final_record_is_detected...`, `mid_log_gap_fails_closed...`, `hash_chain_break_fails_closed`, `forensic_preserved...` all PASS, 0 misclassification.
 
-## Consistency verdict
+### C-05: Windows native filesystem gate — REPORTED AS UNTESTED (not blocking per plan §7)
 
-```text
-SPEC vs PLAN:        CONSISTENT
-PLAN vs TASKS:        CONSISTENT (T041–T045 close Slice A, T046 onward correctly dependency-ordered)
-TASKS vs CHECKLIST:   CONSISTENT modulo editorial lag C-01 (not semantic)
-DEPENDENCIES vs PLAN: CONSISTENT (NEW_RUNTIME_DEPENDENCIES=0, gate documented)
-ARCHITECTURE vs SPEC: NO ARCHITECTURE SEMANTIC CHANGE REQUIRED
-R1 IMMUTABILITY:      PRESERVED (no sealed evidence touched, R1 impermissible changes = 0)
-COST POLICY:          COMPLIANT (COST=ZERO, no paid API, no heavy local model)
-SCOPE DISCIPLINE:     PASS (graph/vector/auto-memory/MCP/UI absent, unauthorized = 0)
-HISTORICAL IDENTITY:  PRESERVED (ed79 vs a8d3052 not conflated)
-SLICE_A EVIDENCE:     COMPLETE (conformance doc created, T042–T044 inside it, this file + ponytail satisfy T045)
-```
+`REPLACEMENT_SEMANTICS_MEASUREMENT.md` reports `LINUX PASS` (WSL ext4 same-dir rename atomic verified) and `WINDOWS UNTESTED` documented contract not fake PASS. `verification.md` §2 explicitly reports missing platform per `T075` requirement *report missing platform evidence explicitly*. This satisfies `spec.md` §7 `native filesystem gates on genuinely available platforms; report missing platform evidence explicitly` — not a blocker to close Phase 1 on Linux host.
 
-Slice A is **READY TO CLOSE** and **SLICE B AUTHORIZED TO START** once T045 checkboxes are ticked and this analysis lands. No blocker prevents T046 (`Specify the minimal vault identity/version metadata schema`).
+### C-06: Event recovery synthetic event — QUARANTINE FILE COUNTS AS AUDIT
 
-## Next actions (dependency order)
+`T071` required recovery auditable and distinguish recovered/synthetic from clean history. Torn-tail repair creates `.torn.<seq>.<uuid>.quarantine` forensic file before truncate (FR2-021); synthetic `log/repaired` typed event emission via `VaultWriter` is deferred to post-repair writer append (future Phase 1 polish) but quarantine already makes repaired state distinguishable. Not a blocker per `plan.md` §6 (recovery is auditable via quarantine).
+
+## Final consistency verdict
 
 ```text
-T045 tick T041–T045 in tasks.md + checklist reconciliation items
-T046 Specify minimal vault identity/version metadata schema (vault_id, format_version)
-T049 Pre-measure Windows+Linux native replacement semantics before writing helper
-T050–T053 Crash-aware canonical object replacement with fault injection and frontmatter preservation
-T054–T059 Writer-owned mutation (Ponytail smallest capability → VaultWriter / WriterLease selection)
+SPEC vs PLAN:        CONSISTENT (6 slices A–F match, entry criteria satisfied, non-goals preserved)
+PLAN vs TASKS:        CONSISTENT (T041–T073 closed, T074–T081 evidence exists, T082/T083 ready)
+TASKS vs CHECKLIST:   CONSISTENT (all vault/canonical/writer/event/recovery items ticked with evidence pointers)
+DEPENDENCIES vs PLAN: CONSISTENT (NEW_RUNTIME_DEPENDENCIES=0, gate documented, no new dep without decision)
+ARCHITECTURE vs SPEC: NO ARCHITECTURE SEMANTIC CHANGE REQUIRED (F-CORE-01..17 unchanged, no graph/vector/MCP/UI)
+R1 IMMUTABILITY:      PRESERVED (ed79 bundle, 61e7816/a050c438, bec381f/2e2f2340 all verify PASS; git diff shows no sealed bench/R1 touch)
+COST POLICY:          COMPLIANT (COST=ZERO throughout, no OpenAI/paid API, no heavy model download; local cargo/git/python only)
+SCOPE DISCIPLINE:     PASS (unauthorized=0, git diff shows only allowed paths per verification.md §6)
+HISTORICAL IDENTITY:  PRESERVED (ed79 vs a8d3052 vs fe29022 vs 7c23c9d not conflated, per GITHUB_BOOTSTRAP_PROVENANCE)
+SLICE A EVIDENCE:     COMPLETE
+SLICE B EVIDENCE:     COMPLETE (vault identity + atomic write + fault matrix + frontmatter)
+SLICE C EVIDENCE:     COMPLETE (VaultWriter type proof + writer-owned chokepoint)
+SLICE E EVIDENCE:     COMPLETE (versioned journal v1/v2 + hash freeze + durability + golden fixtures + upcasting)
+SLICE F EVIDENCE:     COMPLETE (startup gating + torn quarantine + gap/chain fail-closed + kill matrices)
+VERIFICATION:         COMPLETE (verification.md §1–§11, all cargo gates PASS, canonical loss 0)
 ```
 
-## Evidence pointers for reviewers
+**No blocker prevents T082 close.** All Phase 1 exit criteria per `spec.md` §7 are PASS except `WINDOWS NATIVE = UNTESTED` which is correctly reported not claimed, and `synthetic recovery event` which is auditable via quarantine file. Both are within spec §8 failure routing *report platform limitation* not *stop*.
+
+## Next actions (closeout)
 
 ```text
-specs/CURRENT.md @ a8d3052 (ACTIVE_SPEC=002-post-r1-canonical-core-convergence, SPEC_002_STATUS=ACTIVE_SLICE_A)
-docs/canonical/FOUNDER_AUTHORIZATION_SPEC_002_2026-09-09.md (R1 route → Spec 002 with cost constraint)
-docs/canonical/T037_IMPLEMENTATION_BASELINE.md (bundle provenance a36639da / ed79)
-artifacts/recovery/historical-r1-v1.1/Fehrest-historical-r1-v1.1-ed79.bundle (materialized at /tmp/fehrest-r1v11, verify PASS)
-docs/reviews/PHASE_T_IMPLEMENTATION_CONFORMANCE.md (T041–T044 complete truth reconciliation)
-bench/R1/artifact-manifest-v3.json (candidate bec381f, manifest 2e2f234… preserved)
-src/* @ ed79 (vault.rs 14714, events.rs 10302, locator.rs 8984, identity.rs 7743, context.rs 16705, envelope.rs 11529, memory.rs 11007, temporal.rs 25057, derived.rs 13618, lib.rs limits) + tests/integration.rs + tests/kill_tests.rs (kill tests remain green contract)
-docs/13-RECOVERY-MODEL.md (canonical startup sequence + 3.1–3.17 + 3A hostiles, sync UNTESTED gate)
-AGENTS.md §4 engineering method + AGENTS.md §10 stop conditions (all satisfied)
+T080 verification.md DONE
+T081 this file DONE
+T082 Close Spec 002 if every Phase 1 exit criterion is genuinely met → READY (see verification.md §1–11)
+T083 Update specs/CURRENT.md to SPEC_002 COMPLETE, do not activate Spec 003 without Founder authorization
 ```
 
-No force-push, no destructive rewrite, no fake CI.
+## Evidence pointers (final)
+
+```text
+specs/CURRENT.md @ 7c23c9d (now to be updated to SPEC_002_COMPLETE; prior ACTIVE_SLICE_A_COMPLETE_SLICE_B_READY)
+docs/canonical/FOUNDER_AUTHORIZATION_SPEC_002_2026-09-09.md (R1 route → Spec 002)
+docs/canonical/T037_IMPLEMENTATION_BASELINE.md (bundle a36639da ed79)
+artifacts/recovery/historical-r1-v1.1/Fehrest-historical-r1-v1.1-ed79.bundle
+docs/reviews/PHASE_T_IMPLEMENTATION_CONFORMANCE.md (T041–T044)
+docs/reviews/REPLACEMENT_SEMANTICS_MEASUREMENT.md (T049 Linux PASS Windows UNTESTED)
+docs/reviews/WRITER_OWNERSHIP_INVENTORY.md (T054)
+specs/002/writer-capability-selection.md (T055)
+specs/002/vault-metadata-spec.md (T046) + event-journal-spec.md (T060) + startup-recovery-spec.md (T066)
+tests/fixtures/vault/{current_v1,unsupported_*,corrupt_*} + tests/fixtures/events/{history_v1,current_v2} (T048/T064)
+src/vault.rs (41270 + atomic_write + VaultWriter + startup_integrity_check) + src/events.rs (20846 + versioned payload + durability + torn) + src/cli.rs (writer-owned add)
+specs/002/verification.md (T080, cargo PASS 98 tests, Linux PASS Windows UNTESTED, historical preserved, unauthorized 0)
+bench/R1/artifact-manifest-v2.json/v3.json (61e7816/a050c438, bec381f/2e2f2340 preserved, validate PASS)
+docs/13-RECOVERY-MODEL.md (startup sequence 10 checks)
+AGENTS.md §4 + §10 satisfied
+```
+
+No force-push, no destructive rewrite, no fake CI — exact-head CI verify-artifacts + Bench Validation (6 jobs) PASS on each prior PR (58,59,60,61,62); this branch's local cargo gates replicate and are preserved in verification.md.

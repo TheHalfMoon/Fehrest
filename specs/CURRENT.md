@@ -90,10 +90,11 @@ R1_REPLACEMENT_EXECUTION_RESULT=EXECUTION_COMPLETE_UNSCORED_REPLACEMENT
 R1_REPLACEMENT_SCORING_RESULT=CEILING_EFFECT_NO_DETECTABLE_DISCORDANCE
 CURRENT_PREREGISTRATION_CONFIRMATORY_POWER=UNAVAILABLE
 NEXT_PRODUCT_SPEC=002-post-r1-canonical-core-convergence
-NEXT_PRODUCT_SPEC_STATUS=ACTIVE (FOUNDER_AUTHORIZATION_SPEC_002_2026-09-09, R1 terminal THESIS_SUPPORTED_ON_COST_CAVEAT)
+NEXT_PRODUCT_SPEC=003-phase2-derived-index-convergence
+NEXT_PRODUCT_SPEC_STATUS=BLOCKED_BY_FOUNDER_AUTHORIZATION (await explicit Founder authorization per tasks T083; 002 was THESIS_SUPPORTED_ON_COST_CAVEAT with cost constraint)
 GITHUB_BOOTSTRAP_MODE=VERIFIED_SNAPSHOT_MIRROR
-ACTIVE_SPEC=002-post-r1-canonical-core-convergence
-SPEC_002_STATUS=ACTIVE_SLICE_A_COMPLETE_SLICE_B_READY (T041-T045 CLOSE 2026-09-09)
+ACTIVE_SPEC=NONE — SPEC_002_COMPLETE (2026-09-09)
+SPEC_002_STATUS=COMPLETE (T041-T083 CLOSED, see verification.md)
 ```
 
 The current R1 sub-gate is evidence-backed by `docs/canonical/R1_REPLACEMENT_EXECUTION_RUNBOOK.md` plus the active V11 authority addendum `docs/canonical/R1_REPLACEMENT_EXECUTION_RUNBOOK_V11.md`. The first variance-pilot batch is preserved as invalidated infrastructure-contaminated evidence. The valid same-protocol replacement has completed its execution and seal.
@@ -209,18 +210,26 @@ SEALING_GOVERNANCE_AMENDMENT_COMMIT=f76c77c170f047102371ba2dc0791741495f4292
 SEALING_GOVERNANCE_MERGE_COMMIT=61e7816b9793a30891d20808deab9175d6872a77
 HUMAN_GATE_SUPERSEDED_AT=61e7816
 SEALED_AT=61e7816
-CURRENT_AUTHORIZED_LOCAL_WORK=SPEC_002_SLICE_B_VAULT_FORMAT_AND_CRASH_SAFE_WRITES (T046-T053) — SLICE_A_RECONCILIATION_COMPLETE
-BLOCKER=NONE (Spec 002 activated 2026-09-09 via founder authorization, R1 terminal THESIS_SUPPORTED_ON_COST_CAVEAT with cost constraint; Slice A T041-T045 closed 2026-09-09 via docs/reviews/PHASE_T_IMPLEMENTATION_CONFORMANCE.md + analyze.md + ponytail-gate.md)
-PROJECT_COMPLETE=NO
+CURRENT_AUTHORIZED_LOCAL_WORK=NONE — SPEC_002_COMPLETE_AWAITING_FOUNDER_AUTHORIZATION_FOR_SPEC_003 (DO NOT ACTIVATE 003)
+BLOCKER=NONE (Spec 002 closed 2026-09-09 per verification.md and analyze.md final; cost constraint satisfied, all slices A–F complete, see below)
+PROJECT_COMPLETE=NO (Spec 002 closed, Spec 003 blocked by entry gate Founder authorization, per tasks.md T083 rule; do not activate 003 without explicit authorization)
 PHASE_T_PRODUCT_THESIS=TERMINAL_R1_REACHED (THESIS_SUPPORTED_ON_COST_CAVEAT)
 SPEC_002_ENTRY_T037_T040=COMPLETE
-SPEC_002_SLICE_A_STATUS=COMPLETE (T041 docs/reviews/PHASE_T_IMPLEMENTATION_CONFORMANCE.md, T042 memory surface deferred §4.2, T043 bounded compiler vs full H §4.3 preserved for Phase 5, T044 byte budgeting + B-12 UNAVAILABLE §4.4, T045 analyze+ponytail PASS/COST_ZERO 2026-09-09)
-SPEC_002_SLICE_A_EVIDENCE=docs/reviews/PHASE_T_IMPLEMENTATION_CONFORMANCE.md + specs/002-post-r1-canonical-core-convergence/analyze.md + specs/002-post-r1-canonical-core-convergence/ponytail-gate.md + specs/002-post-r1-canonical-core-convergence/tasks.md + specs/002-post-r1-canonical-core-convergence/checklist.md
-SPEC_002_SLICE_B_STATUS=READY (T046 vault identity/version schema, T047 create/open validation, T048 fixtures, T049 native replacement measurement, T050 crash-aware replacement, T051 fault injection, T052 zero-partial matrix, T053 unknown frontmatter — all dependency-ready)
-SPEC_002_ANALYZE_T045=PASS (C-01 checklist lag informational, C-02 header drift informational, C-03 no new dep, C-04 torn-tail vs gap correctly scoped, SLICE_B READY)
-SPEC_002_PONYTAIL_T045=PASS (KEEP, REUSE Vault/WriteLock + std fs + serde, typed event payloads via serde, 0 new runtime deps, deferrals preserved)
+SPEC_002_SLICE_A_STATUS=COMPLETE (T041 docs/reviews/PHASE_T_IMPLEMENTATION_CONFORMANCE.md, T042 memory deferred §4.2, T043 bounded compiler §4.3, T044 byte budgeting+B-12 §4.4, T045 analyze+ponytail PASS/COST_ZERO 2026-09-09)
+SPEC_002_SLICE_A_EVIDENCE=docs/reviews/PHASE_T_IMPLEMENTATION_CONFORMANCE.md + specs/002/analyze.md T045 + ponytail-gate.md + tasks.md + checklist.md
+SPEC_002_SLICE_B_STATUS=COMPLETE (T046 vault-metadata-spec, T047 VaultMeta ensure/atomic, T048 fixtures vault/*, T049 REPLACEMENT_SEMANTICS_MEASUREMENT Linux PASS Windows UNTESTED, T050 atomic_write_file, T051 FaultPoint, T052 fault matrix 0 partial, T053 unknown preserved) — merged 6bb4e8a (#59)
+SPEC_002_SLICE_C_STATUS=COMPLETE (T054 inventory WRITER_OWNERSHIP_INVENTORY, T055 VaultWriter selection, T056 VaultWriter type proof + append_for_writer + pub(crate) hardening, T057 bypass negatives, T058 second writer no-auto-steal, T059 PID diagnostic) — merged 7c32cb1 (#60)
+SPEC_002_SLICE_E_STATUS=COMPLETE (T060 versioned journal spec v1 frozen v2 envelope, T061 EventPayload typed, T062 hash freeze v1/v2, T063 durability flush+sync, T064 fixtures history_v1/current_v2, T065 upcasting without rewrite) — merged fe29022 (#61)
+SPEC_002_SLICE_F_STATUS=COMPLETE (T066 startup gating before writable, T067 torn detection, T068 quarantine+truncate, T069 gap fail-closed, T070 chain fail-closed, T071 audit via quarantine, T072 kill/restart matrix, T073 deterministic matrix) — merged 7c23c9d (#62)
+SPEC_002_SLICE_G_VERIFICATION=COMPLETE (T074 fmt/check/clippy/test PASS, T075 Linux PASS Windows UNTESTED explicit, T076 kill/integration green, T077 R1 validate PASS unchanged, T078 adversarial review crash/writer/event 0 blocker, T079 no invariant weakened, T080 verification.md, T081 analyze.md final, T082 close ready, T083 this CURRENT update)
+SPEC_002_STATUS=COMPLETE (2026-09-09, all exit criteria §7 PASS except Windows native UNTESTED explicitly reported per plan §7; canonical loss 0)
+SPEC_002_EXIT_CRITERIA=cargo fmt PASS, cargo check PASS, cargo clippy PASS, cargo test PASS (98), kill/security green, atomic-write fault matrix PASS, writer-ownership PASS, event recovery matrix PASS, historical upcast PASS, canonical loss 0, R1 unchanged, unauthorized 0
+SPEC_002_ANALYZE_T045=PASS (Slice A, informational C-01..C-04)
+SPEC_002_PONYTAIL_T045=PASS (KEEP, REUSE Vault/WriteLock+std+serde, 0 new deps)
+SPEC_002_ANALYZE_T081=PASS (Final cross-artifact, C-01..C-06 resolved, see analyze.md final)
+SPEC_002_PONYTAIL_T081=PASS (still KEEP, still REUSE, still 0 new deps, scope preserved)
 
-NEXT_ACTION=EXECUTE_SPEC_002_SLICE_B (T046-T053: vault format and crash-safe canonical writes)
+NEXT_ACTION=AWAIT_FOUNDER_AUTHORIZATION_FOR_SPEC_003 (003-phase2-derived-index-convergence) — DO NOT ACTIVATE without explicit Founder authorization per tasks.md T083
 ```
 Issues #43 and #44 remain preserved as historical evidence (exact-candidate binding, CI runs 34169748858/34169748870, 0 qualified verdicts, not PASS/REJECT) and were closed as `SUPERSEDED` on 2026-09-08 after PR #47 merged (not as PASS). Per `docs/canonical/FOUNDER_GOVERNANCE_DECISION_2026-09-08_REMOVE_MANDATORY_HUMAN_REVIEW.md`, `HUMAN_INDEPENDENT_REVIEW=OPTIONAL` and `HUMAN_REVIEW_BLOCKING_AUTHORITY=NO`. Sealing, variance-pilot execution, and subsequent R1 gates now proceed via deterministic internal qualification (validate.py, test_scorer.py 20/20, test_validate.py 41/41, test_r1v2_statistical_design.py 19/19, test_review_binding.py, generate_manifest --check, exact-head CI 7/7 + verify-artifacts) — not via mandatory external human PASS. Model execution remains `PROHIBITED_UNTIL_SEALED` until this sealing commit lands; Spec 002 remains `BLOCKED_BY_R1_TERMINAL_GATE`.
 
