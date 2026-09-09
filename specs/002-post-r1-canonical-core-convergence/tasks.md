@@ -1,6 +1,8 @@
 # Tasks — Spec 002 Post-R1 Canonical Core Convergence
 
-**Status:** ALL IMPLEMENTATION TASKS BLOCKED UNTIL ENTRY GATE
+**Status:** GATE_A_CLOSED → SLICE_A_ACTIVE (T041–T045) → SLICE_B_READY (T046 onward)
+**Frontier:** `specs/CURRENT.md` ACTIVE_SPEC=002-post-r1-canonical-core-convergence SPEC_002_STATUS=ACTIVE_SLICE_A
+**Policy:** `OPENAI_API_KEY_USAGE=PROHIBITED` — zero paid model calls; this file ticked only after evidence exists.
 
 Tick tasks only after evidence exists.
 
@@ -11,13 +13,20 @@ Tick tasks only after evidence exists.
 - [x] **T039** Record explicit founder authorization for Spec 002. (docs/canonical/FOUNDER_AUTHORIZATION_SPEC_002_2026-09-09.md)
 - [x] **T040** Update `specs/CURRENT.md` from `BLOCKED` to `ACTIVE` in the activation commit. (this commit)
 
-## Slice B — Phase T truth reconciliation
+## Slice A — Activation (Gate A) — CLOSED
 
-- [ ] **T041** Create `docs/reviews/PHASE_T_IMPLEMENTATION_CONFORMANCE.md`.
-- [ ] **T042** Reconcile Phase T memory requirements against the absence of a durable product memory journal/CLI write surface; preserve historical truth and defer product memory to its planned phase.
-- [ ] **T043** Reconcile the Phase T bounded compiler against the full Context Compiler specification; preserve production convergence for Phase 5.
-- [ ] **T044** Reconcile Phase T byte budgeting and the historically unavailable incremental-vs-clean B-12 arm.
-- [ ] **T045** Run Spec Kit analyze + Ponytail necessity gate for the Phase 1 implementation.
+- [x] **T037** Record live GitHub/local implementation state used for work and reconcile it against the historical R1 v1.1 anchor. (`docs/canonical/T037_IMPLEMENTATION_BASELINE.md`, bundle `a36639da` verify PASS, HEAD `ed79d8e`/`f7ea7e0f`)
+- [x] **T038** Record the R1 terminal verdict and the route it authorizes. (R1-v3 `THESIS_SUPPORTED_ON_COST_CAVEAT`, `docs/canonical/R1_V3_TERMINAL_VERDICT_2026-09-09.md`, pilot `556b32` 972, confirmatory `05443fe6` 1404, B5 vs B4 p=1.2e-32, cost caveat)
+- [x] **T039** Record explicit founder authorization for Spec 002. (`docs/canonical/FOUNDER_AUTHORIZATION_SPEC_002_2026-09-09.md` 2026-09-09T04:00:00Z, route permits Phase 1 with cost as primary constraint)
+- [x] **T040** Update `specs/CURRENT.md` from `BLOCKED` to `ACTIVE` in the activation commit. (`a8d3052` Merge #57 `feat/spec-002-activation` c54734d)
+
+## Slice B — Phase T truth reconciliation — COMPLETE (T041–T045)
+
+- [x] **T041** Create `docs/reviews/PHASE_T_IMPLEMENTATION_CONFORMANCE.md`. (`docs/reviews/PHASE_T_IMPLEMENTATION_CONFORMANCE.md` 2026-09-09, §1–§8 covers source baseline `ed79`, fully vs minimized, R1-exercised vs deferred, 6 spec §4 distinctions, bootstrap constraint preserved)
+- [x] **T042** Reconcile Phase T memory requirements against the absence of a durable product memory journal/CLI write surface; preserve historical truth and defer product memory to its planned phase. (conformance §4.2: four-axis semantics + temporal resolver implemented in `src/memory.rs`/`temporal.rs`, durable CLI/journal absent and correctly deferred to Spec 006 `phase4-memory-productization`, not silently pulled into Phase 1)
+- [x] **T043** Reconcile the Phase T bounded compiler against the full Context Compiler specification; preserve production convergence for Phase 5. (conformance §4.3: Phase T bounded deterministic assembly (`src/context.rs`) vs full H receipted pipeline (`SelectionTrace`, grant/digest/high-water, tokenizer, gateway) preserved for Spec 007 `phase5-context-compiler-agent-gateway`)
+- [x] **T044** Reconcile Phase T byte budgeting and the historically unavailable incremental-vs-clean B-12 arm. (conformance §4.4: `limits::*` byte safety ceilings not tokenizer pins, B-12 `UNAVAILABLE` because `INCREMENTAL_REINDEX=YAGNI_DEFERRED` in `src/derived.rs`, honestly reported `UNTESTED` never `PASS` per `analyze.md` A-01)
+- [x] **T045** Run Spec Kit analyze + Ponytail necessity gate for the Phase 1 implementation. (`specs/002-post-r1-canonical-core-convergence/analyze.md` post-Slice-A 2026-09-09 + `ponytail-gate.md` T045 PASS KEEP/REUSE/0 new deps, cost ZERO)
 
 ## Slice C — Vault format and crash-safe canonical writes
 

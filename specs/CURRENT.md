@@ -93,7 +93,7 @@ NEXT_PRODUCT_SPEC=002-post-r1-canonical-core-convergence
 NEXT_PRODUCT_SPEC_STATUS=ACTIVE (FOUNDER_AUTHORIZATION_SPEC_002_2026-09-09, R1 terminal THESIS_SUPPORTED_ON_COST_CAVEAT)
 GITHUB_BOOTSTRAP_MODE=VERIFIED_SNAPSHOT_MIRROR
 ACTIVE_SPEC=002-post-r1-canonical-core-convergence
-SPEC_002_STATUS=ACTIVE_SLICE_A
+SPEC_002_STATUS=ACTIVE_SLICE_A_COMPLETE_SLICE_B_READY (T041-T045 CLOSE 2026-09-09)
 ```
 
 The current R1 sub-gate is evidence-backed by `docs/canonical/R1_REPLACEMENT_EXECUTION_RUNBOOK.md` plus the active V11 authority addendum `docs/canonical/R1_REPLACEMENT_EXECUTION_RUNBOOK_V11.md`. The first variance-pilot batch is preserved as invalidated infrastructure-contaminated evidence. The valid same-protocol replacement has completed its execution and seal.
@@ -209,14 +209,18 @@ SEALING_GOVERNANCE_AMENDMENT_COMMIT=f76c77c170f047102371ba2dc0791741495f4292
 SEALING_GOVERNANCE_MERGE_COMMIT=61e7816b9793a30891d20808deab9175d6872a77
 HUMAN_GATE_SUPERSEDED_AT=61e7816
 SEALED_AT=61e7816
-CURRENT_AUTHORIZED_LOCAL_WORK=SPEC_002_ACTIVE_SLICE_A_RECONCILIATION (T041-T045)
-BLOCKER=NONE (Spec 002 activated 2026-09-09 via founder authorization, R1 terminal THESIS_SUPPORTED_ON_COST_CAVEAT with cost constraint)
+CURRENT_AUTHORIZED_LOCAL_WORK=SPEC_002_SLICE_B_VAULT_FORMAT_AND_CRASH_SAFE_WRITES (T046-T053) — SLICE_A_RECONCILIATION_COMPLETE
+BLOCKER=NONE (Spec 002 activated 2026-09-09 via founder authorization, R1 terminal THESIS_SUPPORTED_ON_COST_CAVEAT with cost constraint; Slice A T041-T045 closed 2026-09-09 via docs/reviews/PHASE_T_IMPLEMENTATION_CONFORMANCE.md + analyze.md + ponytail-gate.md)
 PROJECT_COMPLETE=NO
 PHASE_T_PRODUCT_THESIS=TERMINAL_R1_REACHED (THESIS_SUPPORTED_ON_COST_CAVEAT)
 SPEC_002_ENTRY_T037_T040=COMPLETE
-SPEC_002_SLICE_A_STATUS=READY
+SPEC_002_SLICE_A_STATUS=COMPLETE (T041 docs/reviews/PHASE_T_IMPLEMENTATION_CONFORMANCE.md, T042 memory surface deferred §4.2, T043 bounded compiler vs full H §4.3 preserved for Phase 5, T044 byte budgeting + B-12 UNAVAILABLE §4.4, T045 analyze+ponytail PASS/COST_ZERO 2026-09-09)
+SPEC_002_SLICE_A_EVIDENCE=docs/reviews/PHASE_T_IMPLEMENTATION_CONFORMANCE.md + specs/002-post-r1-canonical-core-convergence/analyze.md + specs/002-post-r1-canonical-core-convergence/ponytail-gate.md + specs/002-post-r1-canonical-core-convergence/tasks.md + specs/002-post-r1-canonical-core-convergence/checklist.md
+SPEC_002_SLICE_B_STATUS=READY (T046 vault identity/version schema, T047 create/open validation, T048 fixtures, T049 native replacement measurement, T050 crash-aware replacement, T051 fault injection, T052 zero-partial matrix, T053 unknown frontmatter — all dependency-ready)
+SPEC_002_ANALYZE_T045=PASS (C-01 checklist lag informational, C-02 header drift informational, C-03 no new dep, C-04 torn-tail vs gap correctly scoped, SLICE_B READY)
+SPEC_002_PONYTAIL_T045=PASS (KEEP, REUSE Vault/WriteLock + std fs + serde, typed event payloads via serde, 0 new runtime deps, deferrals preserved)
 
-NEXT_ACTION=EXECUTE_SPEC_002_SLICE_A (T041-T045: Phase T truth reconciliation, analyze, ponytail gate)
+NEXT_ACTION=EXECUTE_SPEC_002_SLICE_B (T046-T053: vault format and crash-safe canonical writes)
 ```
 Issues #43 and #44 remain preserved as historical evidence (exact-candidate binding, CI runs 34169748858/34169748870, 0 qualified verdicts, not PASS/REJECT) and were closed as `SUPERSEDED` on 2026-09-08 after PR #47 merged (not as PASS). Per `docs/canonical/FOUNDER_GOVERNANCE_DECISION_2026-09-08_REMOVE_MANDATORY_HUMAN_REVIEW.md`, `HUMAN_INDEPENDENT_REVIEW=OPTIONAL` and `HUMAN_REVIEW_BLOCKING_AUTHORITY=NO`. Sealing, variance-pilot execution, and subsequent R1 gates now proceed via deterministic internal qualification (validate.py, test_scorer.py 20/20, test_validate.py 41/41, test_r1v2_statistical_design.py 19/19, test_review_binding.py, generate_manifest --check, exact-head CI 7/7 + verify-artifacts) — not via mandatory external human PASS. Model execution remains `PROHIBITED_UNTIL_SEALED` until this sealing commit lands; Spec 002 remains `BLOCKED_BY_R1_TERMINAL_GATE`.
 

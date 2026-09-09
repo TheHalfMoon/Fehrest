@@ -1,20 +1,20 @@
 # Checklist — Spec 002 Post-R1 Canonical Core Convergence
 
-## Entry gate
+## Entry gate — PASS (T037–T040, evidence on `a8d3052`)
 
-- [ ] R1 terminal verdict exists.
-- [ ] R1 route permits Phase 1.
-- [ ] Founder explicitly authorized Spec 002.
-- [ ] Historical R1 v1.1 anchor is reconciled against the implementation/evidence source used for work.
-- [ ] Live HEAD/worktree/source provenance is recorded before mutation.
+- [x] R1 terminal verdict exists. (`docs/canonical/R1_V3_TERMINAL_VERDICT_2026-09-09.md`, `THESIS_SUPPORTED_ON_COST_CAVEAT`, confirmatory 05443fe6, pilot 556b32)
+- [x] R1 route permits Phase 1. (`EXECUTION_MASTER_PLAN.md §4` THESIS_SUPPORTED_ON_COST → Founder may authorize Spec 002 with cost as primary constraint; FOUNDER_AUTHORIZATION_SPEC_002_2026-09-09 record)
+- [x] Founder explicitly authorized Spec 002. (`docs/canonical/FOUNDER_AUTHORIZATION_SPEC_002_2026-09-09.md` 2026-09-09T04:00:00Z)
+- [x] Historical R1 v1.1 anchor is reconciled against the implementation/evidence source used for work. (`docs/canonical/T037_IMPLEMENTATION_BASELINE.md` bundle `a36639da` ed79/f7ea7e0, GITHUB_BOOTSTRAP_PROVENANCE)
+- [x] Live HEAD/worktree/source provenance is recorded before mutation. (`specs/CURRENT.md` LIVE a8d3052, activation commit c54734d, status bytes 0)
 
-## Reconciliation
+## Reconciliation — PASS (T041–T044, 2026-09-09 Slice A)
 
-- [ ] Phase T implementation vs specification delta is recorded without rewriting history.
-- [ ] Existing Vault/WriteLock single-writer mechanism is credited accurately.
-- [ ] Missing durable product memory surface remains deferred to its proper phase.
-- [ ] Phase T compiler subset vs full production compiler is recorded.
-- [ ] Historically unavailable B-12 incremental arm remains recorded honestly.
+- [x] Phase T implementation vs specification delta is recorded without rewriting history. (`docs/reviews/PHASE_T_IMPLEMENTATION_CONFORMANCE.md` §1–§8, ed79 bundle-verify PASS, 10 src files, 823833 bytes, without rewriting historical reports)
+- [x] Existing Vault/WriteLock single-writer mechanism is credited accurately. (§4.1: `src/vault.rs:292-321 create_new/O_EXCL` atomic, `second_writer_fails_visibly`, `no auto-steal`)
+- [x] Missing durable product memory surface remains deferred to its proper phase. (§4.2: `src/memory.rs` four-axis semantics exists, CLI journal absent → deferred to Spec 006 Phase 4, not pulled into Phase 1)
+- [x] Phase T compiler subset vs full production compiler is recorded. (§4.3: `src/context.rs 16705` bounded deterministic vs full H with SelectionTrace/receipt/agent gateway → Phase 5 Spec 007)
+- [x] Historically unavailable B-12 incremental arm remains recorded honestly. (§4.4: `src/derived.rs INCREMENTAL_REINDEX=YAGNI_DEFERRED`, B-12 UNTESTED never PASS, belongs to 003)
 
 ## Vault / canonical writes
 
