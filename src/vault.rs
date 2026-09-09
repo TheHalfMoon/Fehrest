@@ -280,6 +280,10 @@ impl Vault {
     }
 
     /// Write a new canonical object, allocating an identity.
+    ///
+    /// This is the legacy runtime-checked path (call checks `has_write_lock`).
+    /// Product code should prefer `VaultWriter::add_object` which proves
+    /// ownership via the type system (FR2-008).
     pub fn add_object(
         &self,
         rel_path: &str,
@@ -290,30 +294,7 @@ impl Vault {
         if !self.has_write_lock() {
             return Err(Error::Vault("write requires the vault write lock".into()));
         }
-        if body.len() > limits::MAX_OBJECT_BYTES {
-            return Err(Error::LimitExceeded {
-                what: "object body",
-                limit: limits::MAX_OBJECT_BYTES,
-                actual: body.len(),
-            });
-        }
-        let safe = crate::locator::Locator::new(rel_path);
-        let id = ObjectId::generate();
-        let fm = identity::Frontmatter {
-            id,
-            title: title.map(str::to_string),
-            project: project.map(str::to_string),
-            unknown: Vec::new(),
-        };
-        let content = identity::serialize(&fm, body);
-
-        // Reuse the containment check for the write path by resolving through the
-        // same rejection rules, then writing under the root via crash-aware
-        // atomic replacement (FR2-003). Persistence boundary per FR2-004 is
-        // documented on atomic_write_file: durable after rename+dir sync.
-        let target = self.resolve_for_write(safe.as_str())?;
-        atomic_write_file(&target, content.as_bytes())?;
-        Ok(id)
+        self.add_object_inner(rel_path, title, project, body)
     }
 
     fn resolve_for_write(&self, rel: &str) -> Result<PathBuf> {
@@ -335,6 +316,93 @@ impl Vault {
             }
         }
         Ok(self.root.join(rel))
+    }
+
+    /// Obtain a writer capability that structurally proves ownership.
+    ///
+    /// Per FR2-008 the API SHOULD require/prove writer ownership where practical.
+    /// `VaultWriter` holds a borrow of the Vault with `WriteLock` present; it
+    /// cannot be constructed from a read-only Vault or bare path.
+    pub fn writer(&self) -> Result<VaultWriter<'_>> {
+        if !self.has_write_lock() {
+            return Err(Error::Vault(
+                "write requires writer ownership; use Vault::writer() on an open_write vault"
+                    .into(),
+            ));
+        }
+        Ok(VaultWriter {
+            vault: self,
+            _private: (),
+        })
+    }
+
+    /// Legacy path: `add_object` via `&Vault` checks `has_write_lock` at runtime
+    /// (convention). Preferred product path is `VaultWriter::add_object`.
+    fn add_object_inner(
+        &self,
+        rel_path: &str,
+        title: Option<&str>,
+        project: Option<&str>,
+        body: &str,
+    ) -> Result<ObjectId> {
+        if body.len() > limits::MAX_OBJECT_BYTES {
+            return Err(Error::LimitExceeded {
+                what: "object body",
+                limit: limits::MAX_OBJECT_BYTES,
+                actual: body.len(),
+            });
+        }
+        let safe = crate::locator::Locator::new(rel_path);
+        let id = ObjectId::generate();
+        let fm = identity::Frontmatter {
+            id,
+            title: title.map(str::to_string),
+            project: project.map(str::to_string),
+            unknown: Vec::new(),
+        };
+        let content = identity::serialize(&fm, body);
+        let target = self.resolve_for_write(safe.as_str())?;
+        atomic_write_file(&target, content.as_bytes())?;
+        Ok(id)
+    }
+}
+
+/// Writer capability — structurally proves the vault is held for mutation.
+///
+/// Holds a borrow of `Vault` that has `WriteLock`; field is private so it
+/// cannot be forged from an arbitrary path string. This satisfies
+/// AS2-3 direct mutation bypass without inventing a new lock framework.
+#[derive(Debug)]
+pub struct VaultWriter<'a> {
+    vault: &'a Vault,
+    _private: (),
+}
+
+impl<'a> VaultWriter<'a> {
+    pub fn vault(&self) -> &'a Vault {
+        self.vault
+    }
+
+    /// Type-proven canonical object creation.
+    pub fn add_object(
+        &self,
+        rel_path: &str,
+        title: Option<&str>,
+        project: Option<&str>,
+        body: &str,
+    ) -> Result<ObjectId> {
+        self.vault.add_object_inner(rel_path, title, project, body)
+    }
+
+    /// Convenience: append an event through the writer-owned chokepoint.
+    pub fn append_event(
+        &self,
+        log: &crate::events::EventLog,
+        kind: crate::events::EventKind,
+        subject: &str,
+        detail: &str,
+    ) -> Result<crate::events::Event> {
+        log.append_for_writer(self, kind, subject, detail)
     }
 }
 
@@ -430,7 +498,7 @@ fn chrono_like_now_iso8601() -> String {
 ///
 /// Failures before rename leave old complete file intact; after rename new complete file is durable.
 /// Never leaves truncated success (FR2-005).
-pub fn atomic_write_file(target: &Path, content: &[u8]) -> Result<()> {
+pub(crate) fn atomic_write_file(target: &Path, content: &[u8]) -> Result<()> {
     atomic_write_file_inner(target, content, None)
 }
 
@@ -446,7 +514,8 @@ pub enum FaultPoint {
     AfterReplace,
 }
 
-pub fn atomic_write_file_with_fault(
+#[allow(dead_code)]
+pub(crate) fn atomic_write_file_with_fault(
     target: &Path,
     content: &[u8],
     fault: Option<FaultPoint>,
@@ -873,6 +942,134 @@ mod tests {
             "orphan temp after success: {entries:?}"
         );
         drop(v);
+        let _ = fs::remove_dir_all(&root);
+    }
+
+    // — Slice C T057-T059: writer-owned mutation chokepoint —
+
+    #[test]
+    fn vault_writer_requires_lock_read_only_cannot_mint_writer() {
+        let root = tmp();
+        let w = Vault::create(&root).unwrap();
+        let r = Vault::open_read(&root).unwrap();
+        assert!(r.writer().is_err(), "read-only vault must not mint writer");
+        assert!(w.writer().is_ok(), "write-locked vault must mint writer");
+        // Writer token proves ownership: can add via writer
+        let writer = w.writer().unwrap();
+        let id = writer
+            .add_object("writer-proof.md", None, None, "body via writer")
+            .unwrap();
+        assert!(w.scan().unwrap().objects.iter().any(|o| o.id == id));
+        drop(r);
+        drop(w);
+        let _ = fs::remove_dir_all(&root);
+    }
+
+    #[test]
+    fn vault_add_object_via_writer_preserves_allowlists() {
+        let root = tmp();
+        let v = Vault::create(&root).unwrap();
+        let w = v.writer().unwrap();
+        assert!(w.add_object(".git/evil.md", None, None, "b").is_err());
+        assert!(w.add_object(".fehrest/evil.md", None, None, "b").is_err());
+        assert!(w.add_object("evil.pdf", None, None, "b").is_err());
+        assert!(w.add_object("../escape.md", None, None, "b").is_err());
+        assert!(w.add_object("ok.md", None, None, "b").is_ok());
+        drop(v);
+        let _ = fs::remove_dir_all(&root);
+    }
+
+    #[test]
+    fn legacy_write_requires_lock_still_fails_without_writer() {
+        let root = tmp();
+        let v = Vault::create(&root).unwrap();
+        drop(v);
+        let r = Vault::open_read(&root).unwrap();
+        // Legacy path Vault::add_object still checks has_write_lock
+        assert!(r.add_object("nope.md", None, None, "b").is_err());
+        drop(r);
+        let _ = fs::remove_dir_all(&root);
+    }
+
+    #[test]
+    fn event_append_for_writer_requires_matching_vault() {
+        let root = tmp();
+        let root2 = tmp();
+        let v = Vault::create(&root).unwrap();
+        let _v2 = Vault::create(&root2).unwrap();
+        let w = v.writer().unwrap();
+        let log = crate::events::EventLog::open(&v.control_dir()).unwrap();
+        let log2 = crate::events::EventLog::open(&_v2.control_dir()).unwrap();
+        // Correct writer + correct log succeeds
+        w.append_event(&log, crate::events::EventKind::ObjectRegistered, "s", "d")
+            .unwrap();
+        // Writer for vault A cannot append to vault B log
+        let err = w
+            .append_event(&log2, crate::events::EventKind::ObjectRegistered, "s", "d")
+            .unwrap_err();
+        assert!(format!("{err}").contains("writer vault mismatch"));
+        drop(v);
+        drop(_v2);
+        let _ = fs::remove_dir_all(&root);
+        let _ = fs::remove_dir_all(&root2);
+    }
+
+    #[test]
+    fn second_writer_still_fails_visibly_and_no_auto_steal() {
+        let root = tmp();
+        let v1 = Vault::create(&root).unwrap();
+        // v1 holds lock via Vault::create's open_write
+        let err = Vault::open_write(&root).unwrap_err();
+        match err {
+            Error::WriterLocked { holder, path } => {
+                assert!(
+                    !holder.is_empty(),
+                    "stale lock must be visible, holder not empty"
+                );
+                assert!(path.contains("writer.lock"));
+                // PID diagnostics must NOT be treated as auth: acquiring again still fails, not auto-stolen
+                assert!(
+                    Vault::open_write(&root).is_err(),
+                    "stale lock must not be auto-stolen"
+                );
+            }
+            other => panic!("expected WriterLocked, got {other:?}"),
+        }
+        // Even with writer token, second writer cannot be minted
+        assert!(Vault::open_read(&root).unwrap().writer().is_err());
+        drop(v1);
+        // After drop, lock released, new writer succeeds
+        let v2 = Vault::open_write(&root).unwrap();
+        assert!(v2.writer().is_ok());
+        drop(v2);
+        let _ = fs::remove_dir_all(&root);
+    }
+
+    #[test]
+    fn stale_lock_diagnostics_not_used_as_auth() {
+        let root = tmp();
+        let v = Vault::create(&root).unwrap();
+        let lock_path = root.join(CONTROL_DIR).join("writer.lock");
+        let holder_before = fs::read_to_string(&lock_path).unwrap();
+        // holder is diagnostic (pid=...) but acquiring again does NOT compare PID, just existence
+        assert!(holder_before.contains("pid="));
+        // Simulate stale holder content: overwrite with fake pid, still locked
+        drop(v);
+        // Recreation leaves no lock; manually create stale file
+        fs::write(&lock_path, "pid=999999\n").unwrap();
+        let err = Vault::open_write(&root).unwrap_err();
+        match err {
+            Error::WriterLocked { holder, .. } => {
+                assert!(
+                    holder.contains("999999"),
+                    "diagnostic holder preserved, not interpreted as permission"
+                );
+            }
+            other => panic!("expected WriterLocked, got {other:?}"),
+        }
+        // Cleanup: remove fake stale, then succeed
+        let _ = fs::remove_file(&lock_path);
+        assert!(Vault::open_write(&root).is_ok());
         let _ = fs::remove_dir_all(&root);
     }
 }

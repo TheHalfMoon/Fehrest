@@ -39,14 +39,14 @@ Tick tasks only after evidence exists.
 - [x] **T052** Prove zero silent partial canonical success across the required fault matrix. (`src/vault.rs` test atomic_write_fault_matrix_proves_no_partial_success covering BeforeTemp..BeforeReplace, each preserves old complete or quarantines orphan, never truncated; success yields new complete)
 - [x] **T053** Verify unknown frontmatter preservation after the new write path. (`atomic_write_preserves_unknown_frontmatter` + vault_meta round-trip; existing identity test remains green)
 
-## Slice D — Writer-owned mutation
+## Slice D — Writer-owned mutation — COMPLETE (T054–T059)
 
-- [ ] **T054** Inventory every canonical mutation entry point.
-- [ ] **T055** Select the smallest writer-capability/chokepoint design using Ponytail.
-- [ ] **T056** Refactor canonical mutation to require/prove writer ownership.
-- [ ] **T057** Add direct-bypass negative tests.
-- [ ] **T058** Preserve visible second-writer failure and no-auto-steal behavior.
-- [ ] **T059** Add stale-lock diagnostics only if they do not widen authority or misrepresent PID state as authentication.
+- [x] **T054** Inventory every canonical mutation entry point. (`docs/reviews/WRITER_OWNERSHIP_INVENTORY.md` 2026-09-09 — vault.json, vault objects via `Vault::add_object`/`atomic_write_file`, events.jsonl via `EventLog::append`; derived rebuild excluded as non-canonical)
+- [x] **T055** Select the smallest writer-capability/chokepoint design using Ponytail. (`specs/002/writer-capability-selection.md` — `VaultWriter<'a>` borrow newtype + `Vault::writer()` checking `has_write_lock`, reuse `WriteLock O_EXCL`, no new lock framework, `EventLog::append_for_writer` requires writer + control_dir match, `atomic_write*` reduced to `pub(crate)`)
+- [x] **T056** Refactor canonical mutation to require/prove writer ownership. (`src/vault.rs` `VaultWriter<'a>` with `add_object`/`append_event`, `Vault::writer()` type proof, `add_object_inner`, `src/events.rs` `append_for_writer` cross-vault check, `src/cli.rs` add now uses writer chokepoint)
+- [x] **T057** Add direct-bypass negative tests. (`vault_writer_requires_lock...`, `vault_add_object_via_writer...`, `legacy_write...`, `event_append_for_writer_requires_matching_vault` — read-only cannot mint writer, cross-vault writer rejected)
+- [x] **T058** Preserve visible second-writer failure and no-auto-steal behavior. (`second_writer_still_fails_visibly_and_no_auto_steal` — `WriterLocked` visible holder/path, second `open_write` still fails, after drop new writer succeeds)
+- [x] **T059** Add stale-lock diagnostics only if they do not widen authority or misrepresent PID state as authentication. (`stale_lock_diagnostics_not_used_as_auth` — `pid=` in `writer.lock` diagnostic only, fake `999999` still locked, acquire checks existence not PID)
 
 ## Slice E — Versioned event journal
 

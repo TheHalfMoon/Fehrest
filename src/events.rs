@@ -90,6 +90,34 @@ impl EventLog {
         })
     }
 
+    /// Type-proven append that requires a `VaultWriter` token.
+    ///
+    /// Per FR2-008 the API SHOULD structurally require writer ownership.
+    /// The writer's vault control_dir must match this log's directory;
+    /// this prevents a writer for vault A from appending to vault B's log
+    /// via a forged path.
+    pub fn append_for_writer(
+        &self,
+        writer: &crate::vault::VaultWriter<'_>,
+        kind: EventKind,
+        subject: &str,
+        detail: &str,
+    ) -> Result<Event> {
+        // Verify control_dir identity — prevents cross-vault forgery
+        let writer_control = writer.vault().control_dir();
+        let self_parent = self.path.parent().unwrap_or(self.path.as_path());
+        // Canonicalize both where possible, else string compare; we want strict equality.
+        // Use string compare for portability (no extra syscall on read-only path that may not exist yet)
+        if writer_control != self_parent {
+            return Err(Error::Event(format!(
+                "writer vault mismatch: writer holds {}, log at {}",
+                writer_control.display(),
+                self.path.display()
+            )));
+        }
+        self.append(kind, subject, detail)
+    }
+
     pub fn append(&self, kind: EventKind, subject: &str, detail: &str) -> Result<Event> {
         if detail.len() > crate::limits::MAX_EVENT_BYTES {
             return Err(Error::LimitExceeded {

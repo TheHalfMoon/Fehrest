@@ -96,14 +96,16 @@ pub fn run(argv: &[String]) -> Result<i32> {
 
         "add" => {
             let v = Vault::open_write(args.vault_root()?)?;
-            let id = v.add_object(
+            let w = v.writer()?;
+            let id = w.add_object(
                 args.require("path")?,
                 args.get("title"),
                 args.get("project"),
                 args.require("body")?,
             )?;
             let log = EventLog::open(&v.control_dir())?;
-            log.append(
+            w.append_event(
+                &log,
                 EventKind::ObjectRegistered,
                 &id.to_string(),
                 args.require("path")?,

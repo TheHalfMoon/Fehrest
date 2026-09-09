@@ -25,12 +25,12 @@
 - [x] Fault injection before/after replacement never produces silent partial canonical success. (`FaultPoint` + `atomic_write_fault_matrix_proves_no_partial_success` — BeforeTemp..BeforeReplace each preserves old or quarantines orphan, never truncated, 0 partial)
 - [x] Unknown frontmatter preservation remains green. (`atomic_write_preserves_unknown_frontmatter`, identity round-trip test still PASS)
 
-## Writer ownership
+## Writer ownership — PASS (T054–T059)
 
-- [ ] Second writer fails visibly.
-- [ ] Stale lock is never auto-stolen.
-- [ ] Canonical mutation requires/proves writer ownership or an equivalent exhaustive chokepoint proof exists.
-- [ ] Read-only concurrent access remains supported.
+- [x] Second writer fails visibly. (`second_writer_still_fails_visibly_and_no_auto_steal` — `WriterLocked` with holder/path, second `open_write` still fails; kill_tests k24 still PASS)
+- [x] Stale lock is never auto-stolen. (same test — overwrite holder still locked, after drop new succeeds; per Recovery Model §1.5)
+- [x] Canonical mutation requires/proves writer ownership or an equivalent exhaustive chokepoint proof exists. (`Vault::writer() -> VaultWriter<'a>` type proof, `VaultWriter::add_object`/`append_event`, `EventLog::append_for_writer` control_dir match, `atomic_write_file` `pub(crate)` — exhaustive chokepoint proved via `WRITER_OWNERSHIP_INVENTORY.md`)
+- [x] Read-only concurrent access remains supported. (`readers_do_not_need_the_lock`, `vault_writer_requires_lock_read_only_cannot_mint_writer` — `open_read` still succeeds without writer)
 
 ## Event journal
 
