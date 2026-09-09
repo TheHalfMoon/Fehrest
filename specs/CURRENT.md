@@ -90,8 +90,10 @@ R1_REPLACEMENT_EXECUTION_RESULT=EXECUTION_COMPLETE_UNSCORED_REPLACEMENT
 R1_REPLACEMENT_SCORING_RESULT=CEILING_EFFECT_NO_DETECTABLE_DISCORDANCE
 CURRENT_PREREGISTRATION_CONFIRMATORY_POWER=UNAVAILABLE
 NEXT_PRODUCT_SPEC=002-post-r1-canonical-core-convergence
-NEXT_PRODUCT_SPEC_STATUS=BLOCKED_BY_R1_TERMINAL_GATE_AND_FOUNDER_AUTHORIZATION
+NEXT_PRODUCT_SPEC_STATUS=ACTIVE (FOUNDER_AUTHORIZATION_SPEC_002_2026-09-09, R1 terminal THESIS_SUPPORTED_ON_COST_CAVEAT)
 GITHUB_BOOTSTRAP_MODE=VERIFIED_SNAPSHOT_MIRROR
+ACTIVE_SPEC=002-post-r1-canonical-core-convergence
+SPEC_002_STATUS=ACTIVE_SLICE_A
 ```
 
 The current R1 sub-gate is evidence-backed by `docs/canonical/R1_REPLACEMENT_EXECUTION_RUNBOOK.md` plus the active V11 authority addendum `docs/canonical/R1_REPLACEMENT_EXECUTION_RUNBOOK_V11.md`. The first variance-pilot batch is preserved as invalidated infrastructure-contaminated evidence. The valid same-protocol replacement has completed its execution and seal.
@@ -207,12 +209,14 @@ SEALING_GOVERNANCE_AMENDMENT_COMMIT=f76c77c170f047102371ba2dc0791741495f4292
 SEALING_GOVERNANCE_MERGE_COMMIT=61e7816b9793a30891d20808deab9175d6872a77
 HUMAN_GATE_SUPERSEDED_AT=61e7816
 SEALED_AT=61e7816
-CURRENT_AUTHORIZED_LOCAL_WORK=POST_R1_SPEC_002_AUTHORIZATION_PENDING_FOUNDER_DECISION
-BLOCKER=FOUNDER_DECISION_REQUIRED_FOR_SPEC_002 (terminal verdict THESIS_SUPPORTED_ON_COST_CAVEAT per EXECUTION_MASTER_PLAN, founder may authorize Spec 002 with cost constraint)
+CURRENT_AUTHORIZED_LOCAL_WORK=SPEC_002_ACTIVE_SLICE_A_RECONCILIATION (T041-T045)
+BLOCKER=NONE (Spec 002 activated 2026-09-09 via founder authorization, R1 terminal THESIS_SUPPORTED_ON_COST_CAVEAT with cost constraint)
 PROJECT_COMPLETE=NO
 PHASE_T_PRODUCT_THESIS=TERMINAL_R1_REACHED (THESIS_SUPPORTED_ON_COST_CAVEAT)
+SPEC_002_ENTRY_T037_T040=COMPLETE
+SPEC_002_SLICE_A_STATUS=READY
 
-NEXT_ACTION=AWAIT_FOUNDER_AUTHORIZATION_FOR_SPEC_002 (R1 terminal reached, confirmatory complete, raw seals and blinded scoring preserved; do not fabricate Spec 002 start without authorization)
+NEXT_ACTION=EXECUTE_SPEC_002_SLICE_A (T041-T045: Phase T truth reconciliation, analyze, ponytail gate)
 ```
 Issues #43 and #44 remain preserved as historical evidence (exact-candidate binding, CI runs 34169748858/34169748870, 0 qualified verdicts, not PASS/REJECT) and were closed as `SUPERSEDED` on 2026-09-08 after PR #47 merged (not as PASS). Per `docs/canonical/FOUNDER_GOVERNANCE_DECISION_2026-09-08_REMOVE_MANDATORY_HUMAN_REVIEW.md`, `HUMAN_INDEPENDENT_REVIEW=OPTIONAL` and `HUMAN_REVIEW_BLOCKING_AUTHORITY=NO`. Sealing, variance-pilot execution, and subsequent R1 gates now proceed via deterministic internal qualification (validate.py, test_scorer.py 20/20, test_validate.py 41/41, test_r1v2_statistical_design.py 19/19, test_review_binding.py, generate_manifest --check, exact-head CI 7/7 + verify-artifacts) — not via mandatory external human PASS. Model execution remains `PROHIBITED_UNTIL_SEALED` until this sealing commit lands; Spec 002 remains `BLOCKED_BY_R1_TERMINAL_GATE`.
 
