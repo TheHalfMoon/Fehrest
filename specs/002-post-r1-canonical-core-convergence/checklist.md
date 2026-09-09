@@ -16,14 +16,14 @@
 - [x] Phase T compiler subset vs full production compiler is recorded. (§4.3: `src/context.rs 16705` bounded deterministic vs full H with SelectionTrace/receipt/agent gateway → Phase 5 Spec 007)
 - [x] Historically unavailable B-12 incremental arm remains recorded honestly. (§4.4: `src/derived.rs INCREMENTAL_REINDEX=YAGNI_DEFERRED`, B-12 UNTESTED never PASS, belongs to 003)
 
-## Vault / canonical writes
+## Vault / canonical writes — PASS (T046–T053, 2026-09-09 Slice B)
 
-- [ ] Vault identity is explicit.
-- [ ] Vault format/schema version is explicit.
-- [ ] Unsupported/newer format fails visibly.
-- [ ] Canonical replacement is crash-aware under the documented platform contract.
-- [ ] Fault injection before/after replacement never produces silent partial canonical success.
-- [ ] Unknown frontmatter preservation remains green.
+- [x] Vault identity is explicit. (`specs/002 vault-metadata-spec.md` vault_id v7 at `.fehrest/vault.json`, `src/vault.rs::VaultMeta`, `cargo test` vault_meta_created...)
+- [x] Vault format/schema version is explicit. (`format_version: 1 SUPPORTED, 0 legacy, >1 unsupported, serde_json field, checked in read_vault_meta`)
+- [x] Unsupported/newer format fails visibly. (`unsupported_newer_format_fails_visibly` test, Error::Vault unsupported format_version 2 newest supported is 1)
+- [x] Canonical replacement is crash-aware under the documented platform contract. (`atomic_write_file` same-dir temp → write → flush → sync_all → rename → dir sync, measured Linux PASS Windows UNTESTED per REPLACEMENT_SEMANTICS_MEASUREMENT.md)
+- [x] Fault injection before/after replacement never produces silent partial canonical success. (`FaultPoint` + `atomic_write_fault_matrix_proves_no_partial_success` — BeforeTemp..BeforeReplace each preserves old or quarantines orphan, never truncated, 0 partial)
+- [x] Unknown frontmatter preservation remains green. (`atomic_write_preserves_unknown_frontmatter`, identity round-trip test still PASS)
 
 ## Writer ownership
 
