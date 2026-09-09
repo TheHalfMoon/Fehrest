@@ -7,9 +7,9 @@ Tick tasks only after evidence exists.
 ## Gate A — Activation
 
 - [x] **T037** Record live GitHub/local implementation state used for work and reconcile it against the historical R1 v1.1 anchor.
-- [ ] **T038** Record the R1 terminal verdict and the route it authorizes.
-- [ ] **T039** Record explicit founder authorization for Spec 002.
-- [ ] **T040** Update `specs/CURRENT.md` from `BLOCKED` to `ACTIVE` in the activation commit.
+- [x] **T038** Record the R1 terminal verdict and the route it authorizes. (R1-v3 terminal THESIS_SUPPORTED_ON_COST_CAVEAT, docs/canonical/R1_V3_TERMINAL_VERDICT_2026-09-09.md, pilot 556b32..., confirmatory 05443fe6..., B5 vs B4 p=1.2e-32)
+- [x] **T039** Record explicit founder authorization for Spec 002. (docs/canonical/FOUNDER_AUTHORIZATION_SPEC_002_2026-09-09.md)
+- [x] **T040** Update `specs/CURRENT.md` from `BLOCKED` to `ACTIVE` in the activation commit. (this commit)
 
 ## Slice B — Phase T truth reconciliation
 
