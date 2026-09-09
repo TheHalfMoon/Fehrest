@@ -32,17 +32,17 @@
 - [x] Canonical mutation requires/proves writer ownership or an equivalent exhaustive chokepoint proof exists. (`Vault::writer() -> VaultWriter<'a>` type proof, `VaultWriter::add_object`/`append_event`, `EventLog::append_for_writer` control_dir match, `atomic_write_file` `pub(crate)` — exhaustive chokepoint proved via `WRITER_OWNERSHIP_INVENTORY.md`)
 - [x] Read-only concurrent access remains supported. (`readers_do_not_need_the_lock`, `vault_writer_requires_lock_read_only_cannot_mint_writer` — `open_read` still succeeds without writer)
 
-## Event journal — PASS (T060–T065, 2026-09-09 Slice E)
+## Event journal — PASS (T060–T071, 2026-09-09 Slice E+F)
 
 - [x] Event schema version exists. (`Event.schema_version` u32 default 1, v2 CURRENT, serde default, 2 distinct versions frozen per T060 spec)
 - [x] Production payloads are typed/versioned. (`EventPayload` enum 6 variants with serde tag, writers produce v2 typed via `payload_for_kind`)
 - [x] Canonical hash serialization is fixed per version. (`compute_hash` v1 vs `compute_hash_v2` including payload_json, `compute_hash_for_event` branches, hash_freeze test PASS)
 - [x] Unkeyed chain is never described as authentication. (preserve `F-CORE-12` chain_is_intact + consistent_full_rewrite_is_not_detected test still PASS, docs state partial-tamper only)
 - [x] Append durability boundary is documented. (`event-journal-spec.md` §4 `writeln->flush->sync_all` file fsync, `src/events.rs::append` implements, spec §4 documented not beyond OS/fs)
-- [x] Torn tail is detected and preserved before repair. (deferred to Slice F T067–T068 — detection via read_all malformed line, preserved/quarantine per Recovery §3.2; gated for next slice, not yet implemented but journal versioning ready)
-- [x] Mid-log gap fails closed. (verify detects `Gap`, not yet startup gated but verification exists per events::verify)
-- [x] Chain break fails closed. (verify detects `Broken`, same)
-- [x] Recovery is auditable. (future T071 synthetic events; chain break/gap already surfaced as ChainStatus for audit)
+- [x] Torn tail is detected and preserved before repair. (`src/events.rs` `detect_torn_tail` last line malformed → `quarantine_and_repair_torn_tail` writes `.torn.<seq>.<uuid>.quarantine` with exact bytes then truncates + sync, startup auto-repairs; test `torn_final_record_is_detected...`)
+- [x] Mid-log gap fails closed. (`verify Gap` → `startup_integrity_check` returns Err \"gap detected ... writable continuation refused\" not normalized as torn; test `mid_log_gap_fails_closed...` read-only still ok, no torn quarantine)
+- [x] Chain break fails closed. (`verify Broken` → same fail-closed; test `hash_chain_break_fails_closed`; read-only still ok)
+- [x] Recovery is auditable. (`quarantine_and_repair_torn_tail` returns quarantine path as filesystem audit; synthetic `log/repaired` event deferred to post-repair writer append but quarantine already distinguishes recovered vs clean per `startup-recovery-spec.md` §5)
 - [x] Historical event fixture upcasts without rewriting original bytes. (`history_v1.jsonl` 6 events v1, `historical_v1_golden_fixture_upcasts_without_rewrite` asserts bytes equal before/after read, schema 1 payload None in-memory)
 
 ## Scope discipline

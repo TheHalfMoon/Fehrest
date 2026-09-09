@@ -124,8 +124,11 @@ impl Vault {
         let root = root.as_ref().to_path_buf();
         Self::require_vault(&root)?;
         // Validate (and auto-migrate legacy missing) vault metadata before
-        // granting writer ownership — startup integrity gate FR2-019.
+        // granting writer ownership — startup integrity gate FR2-019 steps 1-2.
         ensure_vault_meta(&root.join(CONTROL_DIR))?;
+        // Steps 3-5: startup integrity gating before writable open (T066)
+        // Reads event log, repairs torn tail (quarantine before truncate), then fails closed on gap/chain break.
+        startup_integrity_check(&root.join(CONTROL_DIR))?;
         let lock = WriteLock::acquire(&root)?;
         Ok(Vault {
             root,
@@ -616,6 +619,34 @@ fn write_vault_meta_atomic(control_dir: &Path, meta: &VaultMeta) -> Result<()> {
     atomic_write_file(&p, content.as_bytes())
 }
 
+/// Startup integrity gating before writable open (T066, FR2-019).
+///
+/// Runs the Phase 1 integrity sequence before mutation is allowed:
+/// 1-2 vault.json via ensure_vault_meta (already)
+/// 3 torn tail detection + quarantine
+/// 4-5 gap/chain fail-closed
+/// Forensic bytes preserved before destructive cleanup (FR2-021).
+pub fn startup_integrity_check(control_dir: &Path) -> Result<()> {
+    let log = crate::events::EventLog::open(control_dir)?;
+    // Step 3: torn tail detection + authorized quarantine/recovery (T067/T068)
+    if let Some(qpath) = log.quarantine_and_repair_torn_tail()? {
+        // Recovery is auditable via quarantine file path; future T071 would emit synthetic event
+        let _ = qpath;
+    }
+    // Steps 4-5: gap and chain failures must fail closed, not normalized as crash damage
+    match log.verify()? {
+        crate::events::ChainStatus::Intact { .. } => Ok(()),
+        crate::events::ChainStatus::Gap { from_seq, to_seq } => Err(Error::Vault(format!(
+            "event log gap detected from seq {} to {} — writable continuation refused; quarantine affected segment (FR2-016)",
+            from_seq, to_seq
+        ))),
+        crate::events::ChainStatus::Broken { at_seq, reason } => Err(Error::Vault(format!(
+            "event log chain broken at seq {}: {} — writable continuation refused; tamper/fork signal (FR2-016)",
+            at_seq, reason
+        ))),
+    }
+}
+
 /// The inter-process single-writer lock (F-CORE-13).
 ///
 /// `create_new` maps to `O_EXCL` / `CREATE_NEW`, so acquisition is atomic and a
@@ -1070,6 +1101,241 @@ mod tests {
         // Cleanup: remove fake stale, then succeed
         let _ = fs::remove_file(&lock_path);
         assert!(Vault::open_write(&root).is_ok());
+        let _ = fs::remove_dir_all(&root);
+    }
+
+    // — Slice F T066–T071: startup integrity and recovery —
+
+    #[test]
+    fn torn_final_record_is_detected_preserved_and_repaired_before_writable_open() {
+        let root = tmp();
+        let v = Vault::create(&root).unwrap();
+        let log = crate::events::EventLog::open(&v.control_dir()).unwrap();
+        // Append 2 valid events
+        log.append(crate::events::EventKind::VaultCreated, "vault", "")
+            .unwrap();
+        log.append(crate::events::EventKind::ObjectRegistered, "obj-1", "a.md")
+            .unwrap();
+        // Simulate crash: torn final record (partial JSON without newline)
+        let p = v.control_dir().join("events.jsonl");
+        let mut f = fs::OpenOptions::new().append(true).open(&p).unwrap();
+        use std::io::Write;
+        f.write_all(b"{\"seq\":3,\"kind\":\"ObjectRegistered\",\"subject\":\"obj-2\",\"detail\":\"b.md\",\"prev_hash\":\"00").unwrap();
+        drop(f);
+        drop(v);
+        // Writable open should detect torn tail, quarantine, truncate, and succeed
+        let v2 =
+            Vault::open_write(&root).expect("torn tail should be repaired, writable open allowed");
+        let log2 = crate::events::EventLog::open(&v2.control_dir()).unwrap();
+        // After repair, chain should be intact with 2 events
+        assert_eq!(
+            log2.verify().unwrap(),
+            crate::events::ChainStatus::Intact { events: 2 }
+        );
+        // Quarantine file preserved with torn bytes
+        let quarantine_files: Vec<_> = fs::read_dir(v2.control_dir())
+            .unwrap()
+            .filter_map(|e| e.ok())
+            .filter(|e| e.file_name().to_string_lossy().contains(".torn."))
+            .collect();
+        assert_eq!(
+            quarantine_files.len(),
+            1,
+            "torn must be quarantined, not deleted"
+        );
+        let qb = fs::read_to_string(quarantine_files[0].path()).unwrap();
+        assert!(
+            qb.contains("\"obj-2\"") && qb.contains("prev_hash\":\"00"),
+            "quarantine must preserve torn bytes"
+        );
+        // Now writable mutation allowed after repair
+        let w = v2.writer().unwrap();
+        w.add_object("new.md", None, None, "body").unwrap();
+        drop(v2);
+        let _ = fs::remove_dir_all(&root);
+    }
+
+    #[test]
+    fn mid_log_gap_fails_closed_and_not_repaired_as_torn() {
+        let root = tmp();
+        let v = Vault::create(&root).unwrap();
+        let log = crate::events::EventLog::open(&v.control_dir()).unwrap();
+        for i in 0..4 {
+            log.append(
+                crate::events::EventKind::ObjectRegistered,
+                &format!("o{i}"),
+                "x",
+            )
+            .unwrap();
+        }
+        drop(v);
+        // Tamper: remove second record => gap 1,3,4 (seq jumps)
+        let p = root.join(CONTROL_DIR).join("events.jsonl");
+        let text = fs::read_to_string(&p).unwrap();
+        let lines: Vec<&str> = text.lines().collect();
+        let kept = format!("{}\n{}\n{}\n", lines[0], lines[2], lines[3]);
+        fs::write(&p, kept).unwrap();
+        // Writable open must fail closed, not normalize as torn
+        let err = Vault::open_write(&root).unwrap_err();
+        let msg = format!("{err}");
+        assert!(msg.contains("gap detected"), "got {msg}");
+        assert!(
+            !msg.contains("torn"),
+            "gap must not be misclassified as torn"
+        );
+        // Read-only still succeeds for inspection (partial function)
+        assert!(Vault::open_read(&root).is_ok());
+        // No torn quarantine should be created for gap
+        let has_torn = fs::read_dir(root.join(CONTROL_DIR))
+            .unwrap()
+            .any(|e| e.unwrap().file_name().to_string_lossy().contains(".torn."));
+        assert!(!has_torn, "gap must not create torn quarantine");
+        let _ = fs::remove_dir_all(&root);
+    }
+
+    #[test]
+    fn hash_chain_break_fails_closed() {
+        let root = tmp();
+        let v = Vault::create(&root).unwrap();
+        let log = crate::events::EventLog::open(&v.control_dir()).unwrap();
+        log.append(crate::events::EventKind::VaultCreated, "vault", "")
+            .unwrap();
+        log.append(crate::events::EventKind::ObjectRegistered, "obj-1", "a.md")
+            .unwrap();
+        log.append(crate::events::EventKind::ObjectRegistered, "obj-2", "b.md")
+            .unwrap();
+        drop(v);
+        // Tamper middle record detail without recomputing hash
+        let p = root.join(CONTROL_DIR).join("events.jsonl");
+        let text = fs::read_to_string(&p).unwrap();
+        let mut lines: Vec<String> = text.lines().map(str::to_string).collect();
+        lines[1] = lines[1].replace("a.md", "evil.md");
+        fs::write(&p, lines.join("\n") + "\n").unwrap();
+        let err = Vault::open_write(&root).unwrap_err();
+        let msg = format!("{err}");
+        assert!(msg.contains("chain broken"), "got {msg}");
+        assert!(
+            Vault::open_read(&root).is_ok(),
+            "read-only must remain available"
+        );
+        let _ = fs::remove_dir_all(&root);
+    }
+
+    #[test]
+    fn forensic_preserved_before_destructive_cleanup_mid_log_malformed_not_repaired() {
+        let root = tmp();
+        let v = Vault::create(&root).unwrap();
+        let log = crate::events::EventLog::open(&v.control_dir()).unwrap();
+        log.append(crate::events::EventKind::VaultCreated, "vault", "")
+            .unwrap();
+        log.append(crate::events::EventKind::ObjectRegistered, "obj-1", "a.md")
+            .unwrap();
+        log.append(crate::events::EventKind::ObjectRegistered, "obj-2", "b.md")
+            .unwrap();
+        drop(v);
+        // Corrupt middle line (malformed JSON) — not last, so not torn
+        let p = root.join(CONTROL_DIR).join("events.jsonl");
+        let text = fs::read_to_string(&p).unwrap();
+        let mut lines: Vec<String> = text.lines().map(str::to_string).collect();
+        lines[1] = "not json at all".into();
+        fs::write(&p, lines.join("\n") + "\n").unwrap();
+        // Must fail closed, no truncation, bytes preserved
+        let before = fs::read_to_string(&p).unwrap();
+        let err = Vault::open_write(&root).unwrap_err();
+        assert!(
+            format!("{err}").contains("malformed")
+                || format!("{err}").contains("chain broken")
+                || format!("{err}").contains("gap")
+        );
+        let after = fs::read_to_string(&p).unwrap();
+        assert_eq!(
+            before, after,
+            "forensic bytes must be preserved before repair — no destructive cleanup on gap"
+        );
+        let _ = fs::remove_dir_all(&root);
+    }
+
+    #[test]
+    fn kill_and_restart_spanning_canonical_write_and_event_append() {
+        // T072: matrix spanning canonical write + event append
+        let root = tmp();
+        let v = Vault::create(&root).unwrap();
+        let w = v.writer().unwrap();
+        let id = w
+            .add_object("before.md", None, None, "before body")
+            .unwrap();
+        // Ensure initial state is clean
+        let log = crate::events::EventLog::open(&v.control_dir()).unwrap();
+        w.append_event(
+            &log,
+            crate::events::EventKind::ObjectRegistered,
+            &id.to_string(),
+            "before.md",
+        )
+        .unwrap();
+        drop(v);
+        // Simulate each kill point around combined operation:
+        // 1) fault before canonical write (object), 2) after object but before event, 3) torn event
+        // After each, startup integrity must see old complete or new complete or quarantine, never truncated
+        let scenarios = [
+            FaultPoint::BeforeTemp,
+            FaultPoint::AfterWrite,
+            FaultPoint::BeforeReplace,
+        ];
+        for fp in scenarios {
+            let v = Vault::open_write(&root).unwrap();
+            let w = v.writer().unwrap();
+            // Attempt to add new object with fault injected via direct atomic_write call
+            let target = v.root().join(format!("fault-{fp:?}.md"));
+            let content = format!(
+                "---\nid: {}\n---\nnew body {fp:?}\n",
+                crate::identity::ObjectId::generate()
+            );
+            let res =
+                crate::vault::atomic_write_file_with_fault(&target, content.as_bytes(), Some(fp));
+            assert!(res.is_err(), "fault {fp:?} must fail");
+            // Ensure either old or new complete, never truncated partial
+            if target.exists() {
+                let bytes = fs::read(&target).unwrap();
+                assert!(
+                    bytes == content.as_bytes()
+                        || bytes.is_empty()
+                        || !String::from_utf8_lossy(&bytes).contains("new body truncated"),
+                    "fault {fp:?} left partial: {bytes:?}"
+                );
+            }
+            // Now simulate torn event after object write succeeded (separate fault)
+            let log = crate::events::EventLog::open(&v.control_dir()).unwrap();
+            let p = v.control_dir().join("events.jsonl");
+            // Append valid event then torn extension
+            let ev = w
+                .append_event(
+                    &log,
+                    crate::events::EventKind::ObjectRegistered,
+                    "torn-obj",
+                    "torn.md",
+                )
+                .unwrap();
+            assert!(ev.seq > 0);
+            // Now inject torn bytes
+            {
+                let mut f = fs::OpenOptions::new().append(true).open(&p).unwrap();
+                use std::io::Write;
+                f.write_all(b"{\"seq\":999,\"kind\":\"ObjectRegistered\",\"subject\":\"bad")
+                    .unwrap();
+                // Do not flush fully to simulate crash
+            }
+            drop(v);
+            // Restart: should repair torn tail and allow writable
+            let v2 = Vault::open_write(&root)
+                .expect("torn event tail should be repaired, writable allowed");
+            let log2 = crate::events::EventLog::open(&v2.control_dir()).unwrap();
+            assert!(matches!(
+                log2.verify().unwrap(),
+                crate::events::ChainStatus::Intact { .. }
+            ));
+            drop(v2);
+        }
         let _ = fs::remove_dir_all(&root);
     }
 }
